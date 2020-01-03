@@ -194,10 +194,8 @@ def export_baseline_hfc_raw(parties):
             period = reporting_periods[year]
             submission = Submission.latest_submitted(art7, party, period)
 
-            if submission is None:
-                raise RuntimeError(f"No art7 submission for {party} {period}")
-
-            yield from baseline_hfc_raw_page(submission, substance_filter)
+            if submission is not None:
+                yield from baseline_hfc_raw_page(submission, substance_filter)
 
 
 class BaselineHfcRawReport(Report):
