@@ -41,6 +41,11 @@ class User(GuardianUserMixin, AbstractUser):
     )
 
     email = models.EmailField(_('email address'))
+    is_notified = models.BooleanField(
+        default=True,
+        verbose_name='is notified',
+        help_text="Automatic e-mail notifications are not sent if set to false"
+    )
 
     @property
     def role(self):
