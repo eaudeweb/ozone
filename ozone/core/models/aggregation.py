@@ -626,13 +626,13 @@ class ProdCons(BaseProdCons):
             ):
                 self.baseline_bdn = self.baseline_prod
 
-    def update_limits_and_baselines(self):
+    def update_limits_and_baselines(self, invalidate_cache=False):
         """
         Used when needing to save just baselines and limits without performing
         any extra totals calculations.
         """
         self.populate_limits_and_baselines()
-        super().save()
+        super().save(invalidate_cache)
 
     def __str__(self):
         return f'Aggregation for {self.party.name}, ' \

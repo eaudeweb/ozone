@@ -8,6 +8,7 @@ from ozone.core.models import (
     Party,
     ReportingPeriod,
 )
+from ozone.core.utils.cache import invalidate_party_cache
 
 logger = logging.getLogger(__name__)
 
@@ -94,3 +95,11 @@ class Command(BaseCommand):
                     f"limit consumption: {a.limit_cons},\n"
                     f"limit bdn: {a.limit_bdn}\n"
                 )
+
+        if options['confirm']:
+            party_set = set(
+                prodcons_queryset.values_list('party_id', flat=True)
+            )
+            for party in party_set:
+                logger.info(f'Invalidating cache for party id: {party}')
+                invalidate_party_cache(party)

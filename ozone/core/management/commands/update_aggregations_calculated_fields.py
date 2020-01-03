@@ -105,6 +105,10 @@ class Command(BaseCommand):
             else:
                 logger.debug(f"Found MT aggregation {a.id}")
 
-        for party in set(prodcons_queryset.values_list('party_id', flat=True)):
-            logger.info(f'Invalidating cache for: {party}')
-            invalidate_party_cache(party)
+        if options['confirm']:
+            party_set = set(
+                prodcons_queryset.values_list('party_id', flat=True)
+            )
+            for party in party_set:
+                logger.info(f'Invalidating cache for party id: {party}')
+                invalidate_party_cache(party)
