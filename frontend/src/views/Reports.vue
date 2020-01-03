@@ -1,7 +1,7 @@
 <template>
   <div v-if="parties && periods && reports">
     <b-row>
-      <b-col sm="7">
+      <b-col sm="12" xl="9">
         <b-card>
           <div slot="header">
             <strong>

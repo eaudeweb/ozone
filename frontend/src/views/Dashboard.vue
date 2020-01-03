@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-page animated fadeIn">
     <b-row>
-      <b-col v-if="basicDataReady && !currentUser.is_read_only" sm="6">
+      <b-col v-if="basicDataReady && !currentUser.is_read_only" sm="12" xl="6">
         <b-card>
           <div slot="header">
             <strong>
@@ -62,7 +62,7 @@
         </b-card>
       </b-col>
 
-      <b-col>
+      <b-col sm="12" xl="6">
         <b-card v-if="basicDataReady">
           <div slot="header">
             <strong>
