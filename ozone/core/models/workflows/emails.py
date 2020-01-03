@@ -69,9 +69,13 @@ def notify_workflow_transitioned(workflow, transition):
         'version': str(submission.version),
         'site_name': get_site_name(),
     }
-
-    to_emails = set(u.email for u in User.objects.filter(is_secretariat=True))
-    cc_emails = set(u.email for u in submission.party.users.all())
+    to_emails = set(u.email for u in User.objects.filter(
+        is_secretariat=True,
+        is_notified=True,
+    ))
+    cc_emails = set(u.email for u in submission.party.users.filter(
+        is_notified=True,
+    ))
     cc_emails.add(submission.info.email)
 
     send_mail_from_template(
