@@ -392,6 +392,9 @@ class Blend(models.Model):
     def has_read_rights(self, user):
         if self.party is None:
             return True
+        # This is a custom blend; can only be seen by OS or same-party users.
+        if user is None:
+            return False
         return user.is_secretariat or self.party == user.party
 
     @staticmethod
@@ -399,7 +402,12 @@ class Blend(models.Model):
         """
         Returns True if `user` can create a custom blend associated with `party`
         """
-        if party is None or user.is_read_only:
+        if (
+            party is None
+            or user is None
+            or user.is_anonymous
+            or user.is_read_only
+        ):
             return False
         return user.is_secretariat or party == user.party
 
@@ -409,7 +417,12 @@ class Blend(models.Model):
         Returns True if `user` can change a custom blend
         associated with `party`.
         """
-        if party is None or user.is_read_only:
+        if (
+            party is None
+            or user is None
+            or user.is_anonymous
+            or user.is_read_only
+        ):
             return False
         return user.is_secretariat or party == user.party
 

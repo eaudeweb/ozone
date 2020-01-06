@@ -1,4 +1,3 @@
-from datetime import datetime
 from base64 import b64encode
 from collections import OrderedDict
 from copy import deepcopy
@@ -26,7 +25,9 @@ from rest_framework.filters import (
     BaseFilterBackend, OrderingFilter, SearchFilter
 )
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.reverse import reverse
@@ -409,7 +410,8 @@ class GroupSubstanceViewSet(ReadOnlyMixin, viewsets.ModelViewSet):
 
     queryset = Group.objects.all()
     serializer_class = GroupSubstanceSerializer
-    permission_classes = (IsAuthenticated,)
+    # Allows unauthenticatd GET requests
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         return Group.objects.all().prefetch_related('substances')
@@ -447,16 +449,17 @@ class BlendViewSet(viewsets.ModelViewSet):
     Get the list of all non-custom blends, plus the custom ones that belongs
     to the user's party.
     """
-
-    permission_classes = (IsAuthenticated, IsSecretariatOrSamePartyBlend, )
+    # Allows unauthenticated GET requests
+    permission_classes = (
+        IsAuthenticatedOrReadOnly, IsSecretariatOrSamePartyBlend,
+    )
 
     def get_queryset(self):
         queryset = Blend.objects.all().prefetch_related(
             'components__substance__group__annex'
         )
-        party = self.request.user.party or self.request.query_params.get(
-            'party', None
-        )
+        party = getattr(self.request.user, 'party', None) or \
+            self.request.query_params.get('party', None)
         if party is not None:
             queryset = queryset.filter(
                 party=party

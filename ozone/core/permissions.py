@@ -219,6 +219,8 @@ class IsSecretariatOrSamePartySubmissionRelated(BasePermission):
 class IsSecretariatOrSamePartyBlend(BasePermission):
     """
     This is used for evaluating permissions on Blend views.
+
+    It allows unauthenticated users to list non-custom blends.
     """
     def has_permission(self, request, view):
         if request.method not in SAFE_METHODS:
