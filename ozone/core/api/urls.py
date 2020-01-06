@@ -443,5 +443,10 @@ urlpatterns = (
             views.GetReportingChannelsViewSet.as_view(),
             name='get_reporting_channels'
         ),
+        path(
+            'ping/',
+            views.GetCurrentTimeView.as_view(),
+            name='ping'
+        ),
     ]
 )

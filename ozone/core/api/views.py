@@ -4,6 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 from decimal import Decimal
 from functools import partial
+from datetime import datetime
 import logging
 import urllib.parse
 import os
@@ -2944,3 +2945,10 @@ class EssentialCriticalMTViewSet(EssentialCriticalViewSet):
 
     # Custom class attribute needed for list() to properly work
     odp_tons = False
+
+
+class GetCurrentTimeView(ReadOnlyMixin, views.APIView):
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    def get(self, request, *args, **kwargs):
+        return Response(datetime.now().strftime('%d %B %Y %H:%M:%S'))
