@@ -39,7 +39,7 @@ const getCommonLabels = ($gettext) => {
     email: $gettext('E-mail'),
     date: $gettext('Date'),
     fill_nomination: $gettext('Submit nomination'),
-    submitted_at: $gettext('Date of submission'),
+    submitted_at: $gettext('Date submission'),
     art7: $gettext('Article 7'),
     hat: $gettext('HAT'),
     submission_format: $gettext('Submission format'),

@@ -24,6 +24,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.lib.units import mm
 
+from ozone.core.models import Obligation
 from ozone.core.models import Party
 from ozone.core.models import ReportingPeriod
 from ozone.core.models import Submission
@@ -473,6 +474,45 @@ def mk_table_blends(grouping, row_fct, comp_fct, c_header, c_style, c_widths):
         style=c_style,
         widths=c_widths
     )
+
+
+def format_date(date_obj):
+    return date_obj.strftime('%d %B %Y') if date_obj else None
+
+
+def get_submission_dates(submission):
+    """ Returns two date objects:
+        When multiple versions have been submitted:
+        - date received, the original date of submission
+        - date revised, the latest date of submission
+        When no previous versions have been submitted and not recalled:
+        - date received is the date of the current submission
+        - date revised is None
+    """
+    if submission.version > 1 and submission.obligation.has_versions:
+        # This is not the first version, must check history
+        versions = (
+            Submission.objects.filter(
+                obligation=submission.obligation,
+                party=submission.party,
+                reporting_period=submission.reporting_period,
+            )
+            .exclude(pk=submission.pk)
+            .exclude(_current_state__in=submission.editable_states)
+            .exclude(_current_state__in=submission.incorrect_states)
+            .order_by('version')
+        )
+        first = versions.first()
+        if first:
+            first_date = first.submitted_at
+            revised_date = submission.submitted_at or submission.info.date
+        else:
+            first_date = submission.submitted_at or submission.info.date
+            revised_date = None
+    else:
+        first_date = submission.submitted_at or submission.info.date
+        revised_date = None
+    return first_date, revised_date
 
 
 def get_date_of_reporting_str(submission):

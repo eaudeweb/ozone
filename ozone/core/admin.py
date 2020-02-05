@@ -84,6 +84,12 @@ from .models import (
     IllegalTrade,
     ORMReport,
     MultilateralFund,
+    TEAPReportType,
+    TEAPReport,
+    TEAPIndicativeNumberOfReports,
+    ImpComBody,
+    ImpComTopic,
+    ImpComRecommendation,
 )
 
 
@@ -972,7 +978,7 @@ class LicensingSystemAdmin(BaseCountryPofileAdmin, admin.ModelAdmin):
 
     list_display = (
         'party', 'has_ods', 'date_reported_ods', 'has_hfc', 'date_reported_hfc',
-        'remarks'
+        'date_kigali_ratification', 'remarks',
     )
     inlines = (
         LicensingSystemFileInline,
@@ -984,6 +990,7 @@ class LicensingSystemAdmin(BaseCountryPofileAdmin, admin.ModelAdmin):
         'has_ods', 'has_hfc'
     )
     ordering = ('party__name', )
+    readonly_fields = ('date_kigali_ratification', )
 
 
 @admin.register(Website)
@@ -1097,6 +1104,86 @@ class MultilateralFund(BaseCountryPofileAdmin, admin.ModelAdmin):
     list_filter = (
         ('party', MainPartyFilter),
     )
+
+
+@admin.register(ImpComTopic)
+class ImpComTopicAdmin(admin.ModelAdmin):
+    list_display = ('name', )
+    search_fields = ('name', )
+    ordering = ('name', )
+
+
+@admin.register(ImpComBody)
+class ImpComBodyAdmin(admin.ModelAdmin):
+    list_display = ('sort_order', 'name', )
+    search_fields = ('name', )
+    ordering = ('sort_order', 'name', )
+
+
+@admin.register(ImpComRecommendation)
+class ImpComRecommendationAdmin(admin.ModelAdmin):
+    def get_topics(self, obj):
+        return ', '.join(
+            [t.name for t in obj.topics.all()]
+        ) if obj.topics else ''
+    get_topics.short_description = 'Topics'
+
+    def get_bodies(self, obj):
+        return ', '.join(
+            [b.name for b in obj.bodies.all()]
+        ) if obj.bodies else ''
+    get_bodies.short_description = 'Bodies'
+
+    list_display = (
+        'reporting_period', 'recommendation_number', 'get_bodies', 'get_topics'
+    )
+    search_fields = ('recommendation_number', 'excerpt', 'table_data', 'resulting_decisions')
+    list_filter = (
+        ('reporting_period__name', custom_title_dropdown_filter('period')),
+        ('topics', RelatedDropdownFilter),
+        ('bodies', RelatedDropdownFilter),
+    )
+    ordering = ('-reporting_period__name', 'sort_order')
+
+    formfield_overrides = {
+        CharField: {'widget': Textarea(attrs={'rows': 4, 'cols': 120})},
+        TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 120})},
+    }
+
+
+@admin.register(TEAPReportType)
+class TEAPReportTypeAdmin(admin.ModelAdmin):
+    list_display = ('sort_order', 'name')
+    ordering = ('sort_order', )
+
+
+@admin.register(TEAPIndicativeNumberOfReports)
+class TEAPIndicativeNumberOfReportsAdmin(admin.ModelAdmin):
+    list_display = ('reporting_period', 'number_of_reports', 'remarks')
+    search_fields = ('reporting_period__name',)
+    list_filter = (
+        ('reporting_period__name', custom_title_dropdown_filter('period')),
+    )
+    ordering = ('reporting_period__name',)
+
+
+@admin.register(TEAPReport)
+class TEAPReportAdmin(admin.ModelAdmin):
+    list_display = (
+        'sort_order', 'reporting_period', 'report_type', 'decision',
+        'report_to_be_produced',
+    )
+    search_fields = ('reporting_period__name', 'decision__decision_id')
+    list_filter = (
+        ('reporting_period__name', custom_title_dropdown_filter('period')),
+        'report_type',
+    )
+    ordering = ('sort_order',)
+
+    formfield_overrides = {
+        CharField: {'widget': TextInput(attrs={'size': '120'})},
+        TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 120})},
+    }
 
 
 class LogEntryChangeList(ChangeList):

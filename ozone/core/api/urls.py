@@ -414,6 +414,42 @@ multilateral_funds.register(
 router.extend(multilateral_funds)
 
 
+teap_reports = routers.SimpleRouter()
+teap_reports.register(
+    'teap/reports',
+    views.TEAPReportViewSet,
+    base_name='teap/reports'
+)
+router.extend(teap_reports)
+
+
+teap_report_types = routers.SimpleRouter()
+teap_report_types.register(
+    'teap/report-types',
+    views.TEAPReportTypeViewSet,
+    base_name='teap/report-types'
+)
+router.extend(teap_report_types)
+
+
+teap_indicative_reports = routers.SimpleRouter()
+teap_indicative_reports.register(
+    'teap/indicative-reports',
+    views.TEAPIndicativeNumberOfReportsViewSet,
+    base_name='teap/indicative-reports'
+)
+router.extend(teap_indicative_reports)
+
+
+impcom_recommendations = routers.SimpleRouter()
+impcom_recommendations.register(
+    'impcom-recommendations',
+    views.ImpComRecommendationViewSet,
+    base_name='impcom-recommendations'
+)
+router.extend(impcom_recommendations)
+
+
 urlpatterns = (
     router.urls
     + [url for router in nested_routers for url in router.urls]

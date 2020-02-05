@@ -114,7 +114,7 @@ const getTabSubInfo = ($gettext) => {
 
           if (this.submitted_at.validation) {
             // This is a special case because this field is required only for secretariat users and validation property is set from outside
-            invalid.push($gettext('Date of submission'))
+            invalid.push($gettext('Date submission'))
           }
         }
 
