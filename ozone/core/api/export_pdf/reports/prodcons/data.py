@@ -15,12 +15,15 @@ from ozone.core.models import ProdCons
 from ozone.core.models import Region
 from ozone.core.models import Submission
 from ozone.core.models.utils import round_decimal_half_up
-from ozone.core.api.export_pdf.util import get_date_of_reporting_str
-from ozone.core.api.export_pdf.util import b_l
-from ozone.core.api.export_pdf.util import DOUBLE_HEADER_TABLE_STYLES
-from ozone.core.api.export_pdf.util import col_widths
-from ozone.core.api.export_pdf.util import format_decimal
-from ozone.core.api.export_pdf.util import TableBuilder
+from ozone.core.api.export_pdf.util import (
+    b_l,
+    DOUBLE_HEADER_TABLE_STYLES,
+    col_widths,
+    TableBuilder,
+    get_submission_dates,
+    format_date,
+    format_decimal,
+)
 from . import render
 
 
@@ -162,9 +165,10 @@ def get_date_reported(prodcons_qs):
     sub = Submission.objects.filter(id=submission_id).first()
     if sub:
         # There should only be one current submission.
-        return get_date_of_reporting_str(sub)
+        date_reported, date_revised = get_submission_dates(sub)
+        return format_date(date_reported), format_date(date_revised)
     else:
-        return "-"
+        return "-", None
 
 
 class ProdConsTable:
@@ -185,7 +189,7 @@ class ProdConsTable:
         self.format = ValueFormatter()
 
         prodcons_qs = ProdCons.objects.filter(party=party, reporting_period=period)
-        self.date_reported = get_date_reported(prodcons_qs)
+        self.date_reported, self.date_revised = get_date_reported(prodcons_qs)
         self.prodcons_data = {row.group: row for row in prodcons_qs}
 
     def get_limit(self, group, limit_type):
@@ -286,20 +290,24 @@ class SubmissionTable(ProdConsTable):
 
         # We need to get the actual data from *this* submission
         self.prodcons_data = submission.get_aggregated_data()
-        self.date_reported = get_date_of_reporting_str(self.submission)
+        date_reported, date_revised = get_submission_dates(self.submission)
+        self.date_reported = format_date(date_reported)
+        self.date_revised = format_date(date_revised)
 
 
-def render_party_history(party, history, date_reported):
+def render_party_history(party, history, date_reported, date_revised):
     vars = {
         'party_name': party.name,
         'date_reported': date_reported,
+        'date_revised': date_revised,
         'party_type': history.party_type.abbr,
         'party_region': party.subregion.region.abbr,
         'population': '{:,}'.format(history.population) if history.population else '',
     }
     paragraph = b_l(
         _(
-            "{party_name} - Date Reported: {date_reported} "
+            "{party_name} - Date Reported: {date_reported} " +
+            ("Date Revised: {date_revised} " if date_revised else "") +
             "{party_type} {party_region} - Population*: {population}"
         ).format(**vars))
     paragraph.keepWithNext = True
@@ -356,7 +364,7 @@ def submission_table(party, period, submission, all_groups):
     else:
         table = ProdConsTable(party, period, history, all_groups)
 
-    yield render_party_history(party, history, table.date_reported)
+    yield render_party_history(party, history, table.date_reported, table.date_revised)
     yield render_submission_table(period, table)
     yield render.Paragraph('', style=render.h1_style)
 
@@ -582,15 +590,19 @@ class SummaryParties(ProdConsSummary):
 
         return self.period.start_date >= phase_out
 
-    def render_heading(self, party, history, date_reported):
+    def render_heading(self, party, history, date_reported, date_revised):
         if history.is_article5:
             is_art5_txt = "A5"
         else:
             is_art5_txt = "Non-A5"
 
-        return (f"{party.name}  (Date Reported: {date_reported}) - {is_art5_txt}  "
-                f"{party.subregion.region.abbr}  "
-                f"(Population: {format_decimal(history.population)})")
+        return (
+            f"{party.name}  Date Reported: {date_reported}" +
+            (f" Date Revised: {date_revised}" if date_revised else "") +
+            f" - {is_art5_txt}  "
+            f"{party.subregion.region.abbr}  "
+            f"(Population: {format_decimal(history.population)})"
+        )
 
     def render_data(self, table_builder):
         histories = (
@@ -617,9 +629,9 @@ class SummaryParties(ProdConsSummary):
             )
 
             prodcons_groups = self.get_prodcons_groups(prodcons_qs)
-            date_reported = get_date_reported(prodcons_qs)
+            date_reported, date_revised = get_date_reported(prodcons_qs)
 
-            heading = self.render_heading(party, history, date_reported)
+            heading = self.render_heading(party, history, date_reported, date_revised)
             table_builder.add_heading(heading)
 
             self.render_groups(

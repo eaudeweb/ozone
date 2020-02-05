@@ -16,7 +16,8 @@ from ozone.core.api.export_pdf.util import h2_style
 from ozone.core.api.export_pdf.util import DOUBLE_HEADER_TABLE_STYLES
 from ozone.core.api.export_pdf.util import col_widths
 from ozone.core.api.export_pdf.util import TableBuilder
-from ozone.core.api.export_pdf.util import get_date_of_reporting_str
+from ozone.core.api.export_pdf.util import get_submission_dates
+from ozone.core.api.export_pdf.util import format_date
 from ozone.core.api.export_pdf.util import format_decimal
 from ozone.core.api.export_pdf.util import Report
 
@@ -150,7 +151,7 @@ class ProdImpExpTable:
         ])
         return builder
 
-    def party_heading(self, party, history, date_reported):
+    def party_heading(self, party, history, date_reported, date_revised):
         badges = []
 
         if history.is_article5:
@@ -164,7 +165,9 @@ class ProdImpExpTable:
         if history.is_eu_member:
             badges.append("EU")
 
-        return (f"{party.name}  (Date Reported: {date_reported}) - {' '.join(badges)}  "
+        return (f"{party.name}  (Date Reported: {date_reported})" +
+                (f" Date revised: {date_revised}" if date_revised else "") +
+                f" - {' '.join(badges)}  "
                 f"(Population: {format_decimal(history.population)})")
 
     def format_comparison(self, group, party, value, baseline):
@@ -185,8 +188,13 @@ class ProdImpExpTable:
             return
 
         history = self.history_map[party]
-        date_reported = get_date_of_reporting_str(submission)
-        heading = self.party_heading(party, history, date_reported)
+        date_reported, date_revised = get_submission_dates(submission)
+        heading = self.party_heading(
+            party,
+            history,
+            format_date(date_reported),
+            format_date(date_revised),
+        )
         self.builder.add_heading(heading)
         baselines_map = dict(self.get_baselines(party))
         _blank_baseline = {f: None for f in self.fields}
