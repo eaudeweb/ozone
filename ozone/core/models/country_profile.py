@@ -4,6 +4,7 @@ from django.db import models
 
 from . import (
     Obligation,
+    PartyRatification,
     Party,
     ReportingPeriod,
     Submission,
@@ -225,6 +226,7 @@ class LicensingSystem(models.Model):
     date_reported_ods = models.DateField(null=True, blank=True)
     has_hfc = models.BooleanField(default=False)
     date_reported_hfc = models.DateField(null=True, blank=True)
+
     remarks = models.CharField(max_length=9999, blank=True)
 
     submission = models.ForeignKey(
@@ -234,6 +236,15 @@ class LicensingSystem(models.Model):
         null=True,
         blank=True
     )
+
+    @property
+    def date_kigali_ratification(self):
+        kigali_ratification = PartyRatification.objects.filter(
+            treaty__treaty_id='KA', party=self.party
+        ).first()
+        if kigali_ratification is not None:
+            return kigali_ratification.ratification_date
+        return None
 
     class Meta:
         db_table = "licensing_system"

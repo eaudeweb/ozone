@@ -86,6 +86,10 @@ from ..models import (
     IllegalTrade,
     ORMReport,
     MultilateralFund,
+    TEAPReportType,
+    TEAPReport,
+    TEAPIndicativeNumberOfReports,
+    ImpComRecommendation,
     eu_party_id,
 )
 from ..permissions import (
@@ -169,6 +173,10 @@ from ..serializers import (
     IllegalTradeSerializer,
     ORMReportSerializer,
     MultilateralFundSerializer,
+    TEAPReportTypeSerializer,
+    TEAPReportSerializer,
+    TEAPIndicativeNumberOfReportsSerializer,
+    ImpComRecommendationSerializer,
     EssentialCriticalSerializer,
     EssentialCriticalMTSerializer,
 )
@@ -2608,6 +2616,9 @@ class LicensingSystemFilterSet(BaseCountryProfileFilterSet):
     has_hfc = filters.BooleanFilter(
         "has_hfc", help_text="Filter by has_hfc boolean field"
     )
+    party = MultiValueNumberFilter(
+        "party", help_text="Filter by party ID"
+    )
 
 
 class LicensingSystemViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -2693,6 +2704,73 @@ class MultilateralFundViewSet(mixins.ListModelMixin, GenericViewSet):
         filters.DjangoFilterBackend,
     )
     filterset_class = BaseCountryProfileFilterSet
+
+
+class TEAPReportTypeViewSet(mixins.ListModelMixin, GenericViewSet):
+    queryset = TEAPReportType.objects.all()
+    serializer_class = TEAPReportTypeSerializer
+    permission_classes = (IsAuthenticated,)
+
+
+class TEAPIndicativeNumberOfReportsViewSet(
+    mixins.ListModelMixin, GenericViewSet
+):
+    queryset = TEAPIndicativeNumberOfReports.objects.all()
+    serializer_class = TEAPIndicativeNumberOfReportsSerializer
+    permission_classes = (IsAuthenticated,)
+
+
+class TEAPReportFilterSet(filters.FilterSet):
+    party = MultiValueNumberFilter(
+        "party", help_text="Filter by party ID"
+    )
+    reporting_period = MultiValueNumberFilter(
+        "reporting_period", help_text="Filter by Reporting Period ID"
+    )
+    report_type = MultiValueCharFilter(
+        "report_type__name", help_text="Filter by report type"
+    )
+    decision = MultiValueCharFilter(
+        "decision__decision_id", help_text="Filter by decision number"
+    )
+
+
+class TEAPReportViewSet(mixins.ListModelMixin, GenericViewSet):
+    queryset = TEAPReport.objects.all()
+    serializer_class = TEAPReportSerializer
+    permission_classes = (IsAuthenticated,)
+    filter_backends = (
+        filters.DjangoFilterBackend,
+    )
+    filterset_class = TEAPReportFilterSet
+
+
+class ImpComRecommendationFilterSet(filters.FilterSet):
+    reporting_period = MultiValueNumberFilter(
+        "reporting_period", help_text="Filter by Reporting Period ID"
+    )
+    recommendation_number = MultiValueCharFilter(
+        "recommendation_number", help_text="Filter by recommendation number"
+    )
+    # TODO: maybe these should match with "contains"
+    body = MultiValueCharFilter(
+        "body", help_text="Filter by Country/Body"
+    )
+    topic = MultiValueCharFilter(
+        "topic", help_text ="Filter by topic"
+    )
+
+
+class ImpComRecommendationViewSet(mixins.ListModelMixin, GenericViewSet):
+    queryset = ImpComRecommendation.objects.all().prefetch_related(
+        'reporting_period'
+    )
+    serializer_class = ImpComRecommendationSerializer
+    permission_classes = (IsAuthenticated,)
+    filter_backends = (
+        filters.DjangoFilterBackend,
+    )
+    filterset_class = ImpComRecommendationFilterSet
 
 
 class EssentialCriticalPaginator(PageNumberPagination):

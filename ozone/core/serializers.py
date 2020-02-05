@@ -73,6 +73,10 @@ from .models import (
     IllegalTrade,
     ORMReport,
     MultilateralFund,
+    TEAPReportType,
+    TEAPReport,
+    TEAPIndicativeNumberOfReports,
+    ImpComRecommendation,
 )
 from ozone.core.api.export_pdf import reports
 
@@ -1989,10 +1993,14 @@ class LicensingSystemSerializer(serializers.ModelSerializer):
     )
     files = LicensingSystemFileSerializer(read_only=True, many=True)
     urls = LicensingSystemURLSerializer(read_only=True, many=True)
+    date_kigali_ratification = serializers.SerializerMethodField()
 
     class Meta:
         model = LicensingSystem
         exclude = ('submission', )
+
+    def get_date_kigali_ratification(self, obj):
+        return obj.date_kigali_ratification
 
 
 class WebsiteSerializer(serializers.ModelSerializer):
@@ -2066,6 +2074,41 @@ class MultilateralFundSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MultilateralFund
+        fields = "__all__"
+
+
+class TEAPReportTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TEAPReportType
+        fields = "__all__"
+
+
+class TEAPIndicativeNumberOfReportsSerializer(serializers.ModelSerializer):
+    reporting_period = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = TEAPIndicativeNumberOfReports
+        fields = "__all__"
+
+
+class TEAPReportSerializer(serializers.ModelSerializer):
+    report_type = serializers.StringRelatedField(read_only=True)
+    reporting_period = serializers.StringRelatedField(read_only=True)
+    decision =  serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = TEAPReport
+        fields = "__all__"
+
+
+class ImpComRecommendationSerializer(serializers.ModelSerializer):
+    reporting_period = serializers.StringRelatedField(read_only=True)
+
+    bodies = serializers.StringRelatedField(many=True, read_only=True)
+    topics = serializers.StringRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = ImpComRecommendation
         fields = "__all__"
 
 
