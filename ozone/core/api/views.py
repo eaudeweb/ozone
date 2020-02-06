@@ -90,6 +90,8 @@ from ..models import (
     TEAPReport,
     TEAPIndicativeNumberOfReports,
     ImpComRecommendation,
+    ImpComBody,
+    ImpComTopic,
     eu_party_id,
 )
 from ..permissions import (
@@ -177,6 +179,8 @@ from ..serializers import (
     TEAPReportSerializer,
     TEAPIndicativeNumberOfReportsSerializer,
     ImpComRecommendationSerializer,
+    ImpComTopicSerializer,
+    ImpComBodySerializer,
     EssentialCriticalSerializer,
     EssentialCriticalMTSerializer,
 )
@@ -2771,6 +2775,18 @@ class ImpComRecommendationViewSet(mixins.ListModelMixin, GenericViewSet):
         filters.DjangoFilterBackend,
     )
     filterset_class = ImpComRecommendationFilterSet
+
+
+class ImpComBodyViewSet(mixins.ListModelMixin, GenericViewSet):
+    queryset = ImpComBody.objects.all()
+    serializer_class = ImpComBodySerializer
+    permission_classes = (IsAuthenticated,)
+
+
+class ImpComTopicViewSet(mixins.ListModelMixin, GenericViewSet):
+    queryset = ImpComTopic.objects.all()
+    serializer_class = ImpComTopicSerializer
+    permission_classes = (IsAuthenticated,)
 
 
 class EssentialCriticalPaginator(PageNumberPagination):

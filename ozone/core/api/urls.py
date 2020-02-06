@@ -450,6 +450,24 @@ impcom_recommendations.register(
 router.extend(impcom_recommendations)
 
 
+impcom_bodies = routers.SimpleRouter()
+impcom_bodies.register(
+    'impcom-bodies',
+    views.ImpComBodyViewSet,
+    base_name='impcom-bodies'
+)
+router.extend(impcom_bodies)
+
+
+impcom_topics = routers.SimpleRouter()
+impcom_topics.register(
+    'impcom-topics',
+    views.ImpComTopicViewSet,
+    base_name='impcom-topics'
+)
+router.extend(impcom_topics)
+
+
 urlpatterns = (
     router.urls
     + [url for router in nested_routers for url in router.urls]
