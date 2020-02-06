@@ -77,6 +77,8 @@ from .models import (
     TEAPReport,
     TEAPIndicativeNumberOfReports,
     ImpComRecommendation,
+    ImpComTopic,
+    ImpComBody,
 )
 from ozone.core.api.export_pdf import reports
 
@@ -2109,6 +2111,20 @@ class ImpComRecommendationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ImpComRecommendation
+        fields = "__all__"
+
+
+class ImpComTopicSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ImpComTopic
+        fields = "__all__"
+
+
+class ImpComBodySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ImpComBody
         fields = "__all__"
 
 

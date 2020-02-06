@@ -90,6 +90,8 @@ from ..models import (
     TEAPReport,
     TEAPIndicativeNumberOfReports,
     ImpComRecommendation,
+    ImpComBody,
+    ImpComTopic,
     eu_party_id,
 )
 from ..permissions import (
@@ -177,6 +179,8 @@ from ..serializers import (
     TEAPReportSerializer,
     TEAPIndicativeNumberOfReportsSerializer,
     ImpComRecommendationSerializer,
+    ImpComTopicSerializer,
+    ImpComBodySerializer,
     EssentialCriticalSerializer,
     EssentialCriticalMTSerializer,
 )
@@ -2773,6 +2777,18 @@ class ImpComRecommendationViewSet(mixins.ListModelMixin, GenericViewSet):
     filterset_class = ImpComRecommendationFilterSet
 
 
+class ImpComBodyViewSet(mixins.ListModelMixin, GenericViewSet):
+    queryset = ImpComBody.objects.all()
+    serializer_class = ImpComBodySerializer
+    permission_classes = (IsAuthenticated,)
+
+
+class ImpComTopicViewSet(mixins.ListModelMixin, GenericViewSet):
+    queryset = ImpComTopic.objects.all()
+    serializer_class = ImpComTopicSerializer
+    permission_classes = (IsAuthenticated,)
+
+
 class EssentialCriticalPaginator(PageNumberPagination):
     page_query_param = "page"
     page_size_query_param = "page_size"
@@ -2866,13 +2882,15 @@ class EssentialCriticalViewSet(viewsets.ReadOnlyModelViewSet):
     )
     pagination_class = EssentialCriticalPaginator
 
-    # Custom class attribute needed for list() to properly work
+    # Custom class attributes needed for list() to properly work
     odp_tons = True
+    allowed_aggregates = ('party', 'group', 'substance', )
 
     def get_queryset(self):
         return ExemptionApproved.objects.all().prefetch_related(
             'submission__party', 'submission__reporting_period',
-            'substance__group', 'submission__party__subregion__region'
+            'submission__party__subregion__region',
+            'substance__group',
         )
 
     @action(methods=["get",], detail=False)
@@ -2890,13 +2908,16 @@ class EssentialCriticalViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
 
         aggregates = request.query_params.get('aggregation', None)
-        aggregates = aggregates.split(',') if aggregates else None
+        aggregates = aggregates.split(',') if aggregates else []
+        aggregates = [
+            agg for agg in aggregates if agg in self.allowed_aggregates
+        ]
         groupings = request.query_params.get('group_by', None)
         groupings = groupings.split(',') if groupings else []
 
         # If there are no aggregations to perform, behave like a normal
         # ModelViewSet.
-        if not aggregates or ('party' not in aggregates and 'group' not in aggregates):
+        if not aggregates:
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True)
@@ -3010,6 +3031,37 @@ class EssentialCriticalViewSet(viewsets.ReadOnlyModelViewSet):
                                 ret, entries, self.odp_tons
                             )
                             data.append(ret)
+                elif 'substance' in aggregates:
+                    for party in parties:
+                        for group in groups:
+                            # Do initial filtering by party & group
+                            entries = [
+                                entry for entry in to_add
+                                if entry['substance__group'] == group and
+                                    entry['submission__party'] == party
+                            ]
+                            # Now create individual entries for each substance
+                            entries_by_substance = {}
+                            for entry in entries:
+                                substance = entry['substance_id']
+                                if substance in entries_by_substance:
+                                    entries_by_substance[substance].append(
+                                        entry
+                                    )
+                                else:
+                                    entries_by_substance[substance] = [entry, ]
+                            for sub, entries in entries_by_substance.items():
+                                ret = dict({
+                                    'reporting_period': reporting_period,
+                                    'party': party,
+                                    'group': group,
+                                    'substance': sub,
+                                    **params_dict
+                                })
+                                populate_essencrit_aggregation(
+                                    ret, entries, self.odp_tons
+                                )
+                                data.append(ret)
 
         return Response(data)
 

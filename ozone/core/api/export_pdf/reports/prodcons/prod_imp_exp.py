@@ -165,7 +165,7 @@ class ProdImpExpTable:
         if history.is_eu_member:
             badges.append("EU")
 
-        return (f"{party.name}  (Date Reported: {date_reported})" +
+        return (f"{party.name}  (Date received: {date_reported})" +
                 (f" Date revised: {date_revised}" if date_revised else "") +
                 f" - {' '.join(badges)}  "
                 f"(Population: {format_decimal(history.population)})")
