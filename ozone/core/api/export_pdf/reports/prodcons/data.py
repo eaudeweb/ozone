@@ -306,7 +306,7 @@ def render_party_history(party, history, date_reported, date_revised):
     }
     paragraph = b_l(
         _(
-            "{party_name} - Date Reported: {date_reported} " +
+            "{party_name} - Date Received: {date_reported} " +
             ("Date Revised: {date_revised} " if date_revised else "") +
             "{party_type} {party_region} - Population*: {population}"
         ).format(**vars))
@@ -597,7 +597,7 @@ class SummaryParties(ProdConsSummary):
             is_art5_txt = "Non-A5"
 
         return (
-            f"{party.name}  Date Reported: {date_reported}" +
+            f"{party.name}  Date Received: {date_reported}" +
             (f" Date Revised: {date_revised}" if date_revised else "") +
             f" - {is_art5_txt}  "
             f"{party.subregion.region.abbr}  "
