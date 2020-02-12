@@ -682,11 +682,15 @@ def populate_aggregation(
         # ODP tons values should be rounded
         rounding_method = partial(round_decimal_half_up, decimals=2)
 
+    # These fields should be aggregated using a special rule: if any value is
+    # null, then the sum of all values is considered null.
+    limit_fields = ('limit_prod', 'limit_cons')
+
     for field in fields:
         # A null value in any limit field means that the sum of all
         # values for that field across an aggregation should be null
         # (because null means no limits)
-        if field.startswith('limit_'):
+        if field in limit_fields:
             aggregation[field] = (
                 None if any([a[field] is None for a in to_add]) else
                 rounding_method(sum([a[field] for a in to_add]))
