@@ -1993,6 +1993,10 @@ class LicensingSystemSerializer(serializers.ModelSerializer):
         source="party.iso_alpha3_code",
         read_only=True,
     )
+    party_id = serializers.StringRelatedField(
+        source="party.id",
+        read_only=True
+    )
     files = LicensingSystemFileSerializer(read_only=True, many=True)
     urls = LicensingSystemURLSerializer(read_only=True, many=True)
     date_kigali_ratification = serializers.SerializerMethodField()
