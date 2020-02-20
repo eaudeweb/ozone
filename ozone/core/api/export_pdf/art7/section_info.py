@@ -107,7 +107,7 @@ def get_submission_info(info):
         Paragraph(
             '%s: %s' % (_('Address country'), info.country.name),
             style=no_spacing_style
-        ) if info.country else '',
+        ) if info.country else None,
         _kv(info, 'Phone', 'phone'),
         _kv(info, 'E-mail', 'email'),
         p_l(''),
