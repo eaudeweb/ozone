@@ -1,0 +1,36 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<form method="POST">
+{% csrf_token %}
+  <p>
+    First choose party and reporting period. You will be able to provide more
+    data after this.
+  </p>
+
+  <p>
+    <label>
+      Party
+      <select name="party">
+        {% for party in parties %}
+          <option value="{{ party.pk }}">{{ party }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </p>
+
+  <p>
+    <label>
+      Period
+      <select name="period">
+        {% for period in periods %}
+          <option value="{{ period.pk }}" {% if period.pk == default_period.pk %} selected {% endif %}>{{ period }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </p>
+
+  <input type="hidden" name="step" value="continue">
+  <button type="submit">Continue editing</button>
+</form>
+{% endblock %}

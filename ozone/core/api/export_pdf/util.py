@@ -24,7 +24,6 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.lib.units import mm
 
-from ozone.core.models import Obligation
 from ozone.core.models import Party
 from ozone.core.models import ReportingPeriod
 from ozone.core.models import Submission

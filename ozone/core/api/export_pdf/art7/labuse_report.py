@@ -6,7 +6,6 @@ from reportlab.platypus import Paragraph
 
 from ozone.core.models import Obligation
 from ozone.core.models import ObligationTypes
-from ozone.core.models import Party
 from ozone.core.models import Submission
 
 from .section_labuses import join_labuse_data
@@ -20,12 +19,11 @@ def number_cell(value):
     return ""
 
 
-def export_labuse_report(periods):
+def export_labuse_report(periods, parties):
     table_styles = list(util.SINGLE_HEADER_TABLE_STYLES)
     column_widths = util.col_widths([8, 2, 2, 3, 3])
 
     art7 = Obligation.objects.get(_obligation_type=ObligationTypes.ART7.value)
-    main_parties = Party.get_main_parties()
 
     for period in periods:
         title = f"Laboratory and Analytical Uses of ODSs in {period.name} (Tonnes)"
@@ -34,7 +32,7 @@ def export_labuse_report(periods):
         latest_submissions = Submission.latest_submitted_for_parties(
             art7,
             period,
-            main_parties,
+            parties,
         )
 
         table = util.TableBuilder(table_styles, column_widths)
@@ -45,7 +43,7 @@ def export_labuse_report(periods):
             "Imports",
         ])
 
-        for party in main_parties:
+        for party in parties:
             submission = latest_submissions.get(party)
             if submission is None:
                 continue
@@ -88,11 +86,14 @@ class LabUseReport(util.Report):
 
     name = 'labuse'
     has_period_param = True
+    has_party_param = True
     display_name = "Laboratory and analytical uses"
-    description = _("Select one or more parties")
+    description = _(
+        "Select one or more parties and one or more reporting periods"
+    )
 
     def get_flowables(self):
         return (
-            list(export_labuse_report(self.periods)) or
+            list(export_labuse_report(self.periods, self.parties)) or
             [Paragraph('No data', util.left_paragraph_style)]
         )

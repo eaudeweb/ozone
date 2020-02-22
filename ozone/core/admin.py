@@ -3,7 +3,9 @@ import tempfile
 
 import adminactions.actions as actions
 
-from django_admin_listfilter_dropdown.filters import DropdownFilter, RelatedDropdownFilter
+from django_admin_listfilter_dropdown.filters import (
+    DropdownFilter, RelatedDropdownFilter, RelatedOnlyDropdownFilter
+)
 from django.contrib import admin, messages
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth import logout as auth_logout
@@ -12,9 +14,10 @@ from django.contrib.admin.models import LogEntry, DELETION
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
-from django.db.models import F, Subquery, CharField, TextField
+from django.db.models import F, Q, Subquery, CharField, TextField
 from django.forms import TextInput, Textarea
 from django.shortcuts import redirect
+from django.template.response import TemplateResponse
 from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
@@ -61,12 +64,11 @@ from .models import (
     Email,
     EmailTemplate,
     EmailTemplateAttachment,
+    ProcessAgentDecision,
     ProcessAgentApplication,
     ProcessAgentContainTechnology,
     ProcessAgentEmissionLimit,
     ProcessAgentUsesReported,
-    ProcessAgentApplicationValidity,
-    ProcessAgentEmissionLimitValidity,
     Decision,
     DeviationType,
     DeviationSource,
@@ -728,30 +730,72 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     ]
 
 
+@admin.register(ProcessAgentDecision)
+class ProcessAgentDecisionAdmin(admin.ModelAdmin):
+    list_display = (
+        'decision',
+        'application_validity_start_date',
+        'application_validity_end_date',
+        'emit_limits_validity_start_date',
+        'emit_limits_validity_end_date',
+    )
+
+
+class ProcessAgentDecisionFilter(DropdownFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = 'Decision'
+        self.lookup_choices = ProcessAgentDecision.objects.values_list(
+            'decision__decision_id', flat=True
+        )
+
+
 @admin.register(ProcessAgentApplication)
 class ProcessAgentApplicationAdmin(admin.ModelAdmin):
-    list_display = ('validity', 'counter', 'substance', 'application', 'remark')
+    list_display = (
+        'counter', 'start_date', 'end_date', 'substance',
+        'application', 'decision', 'remark'
+    )
     list_filter = (
         ('substance__name', custom_title_dropdown_filter('substance')),
         (
-            'validity__decision__decision_id',
-            custom_title_dropdown_filter('decision')
+            'decision__decision__decision_id',
+            ProcessAgentDecisionFilter
         ),
         ('counter', custom_title_dropdown_filter('counter'))
     )
-    search_fields = ('validity__decision__decision_id', 'substance__name', 'application', 'remark')
+    search_fields = (
+        'decision__decision__decision_id', 'substance__name', 'application', 'remark'
+    )
+    formfield_overrides = {
+        CharField: {'widget': TextInput(attrs={'size': '120'})},
+        TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 120})},
+    }
 
 
 @admin.register(ProcessAgentEmissionLimit)
 class ProcessAgentEmissionLimitAdmin(admin.ModelAdmin):
-    list_display = ('party', 'validity', 'makeup_consumption', 'max_emissions')
-    list_filter = (
-        ('party', MainPartyFilter),
+    list_display = (
+        'party', 'start_date', 'end_date',
+        'decision', 'makeup_consumption', 'max_emissions'
     )
-    search_fields = ('party__name', 'validity')
+    list_filter = (
+        ('party', RelatedOnlyDropdownFilter),
+        (
+            'decision__decision__decision_id',
+            ProcessAgentDecisionFilter
+        )
+    )
+    search_fields = ('party__name', 'decision__decision__decision_id')
 
 
 class ProcessAgentBaseAdmin:
+    class Media:
+        # bigger width for select2 widgets
+        css = {
+            'all': ('css/admin.css',),
+        }
+
     def get_reporting_period(self, obj):
         return obj.submission.reporting_period
     get_reporting_period.short_description = 'Reporting period'
@@ -786,7 +830,7 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
     get_substance.short_description = 'Substance'
 
     def get_decision(self, obj):
-        return obj.decision.decision_id if obj.decision else ''
+        return obj.decision.decision.decision_id if obj.decision else ''
     get_decision.short_description = 'Decision'
 
     def get_containment(self, obj):
@@ -796,6 +840,7 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
     get_containment.short_description = 'Containment technologies'
 
     list_display = (
+        'id',
         'get_reporting_period', 'get_party',
         'makeup_quantity', 'emissions', 'units',
         'get_application', 'get_decision', 'get_substance',
@@ -813,18 +858,93 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
         'submission__party__name',
         'contain_technologies__description',
     )
+    # When using autocomplete_fields, you must define search_fields on the
+    # related object’s ModelAdmin because the autocomplete search uses it.
+    autocomplete_fields = ['application', 'contain_technologies']
+    change_form_template = 'admin/finalize_proc_agent.html'
+    formfield_overrides = {
+        CharField: {'widget': TextInput(attrs={'size': '120'})},
+        TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 120})},
+    }
 
+    @never_cache
+    def render_change_form(
+        self, request, context, *args, **kwargs
+    ):
+        step = None
+        party = None
+        period = None
+        submission = None
+        if request.POST:
+            step = request.POST.get('step', None)
+            party = request.POST.get('party')
+            period = request.POST.get('period')
+            submission = request.POST.get('submission')
+        obj = kwargs.get('obj')
 
-@admin.register(ProcessAgentApplicationValidity)
-class ProcessAgentApplicationValidityAdmin(admin.ModelAdmin):
-    list_display = ('decision', 'start_date', 'end_date')
-    search_fields = ('decision', )
+        if step is None and obj is None and submission is None:
+            # This is the first step; inject parties and periods into context
+            # so that they can be used by the template.
+            context['periods'] = ReportingPeriod.objects.all().order_by('name')
+            context['default_period'] = ReportingPeriod.get_current_period()
+            context['parties'] = Party.objects.filter(
+                parent_party__id=F('id')
+            ).order_by('name')
+            return TemplateResponse(
+                request, 'admin/add_proc_agent.html', context
+            )
 
+        if obj:
+            party = obj.submission.party.id
+            period = obj.submission.reporting_period.id
 
-@admin.register(ProcessAgentEmissionLimitValidity)
-class ProcessAgentEmissionLimitValidityAdmin(admin.ModelAdmin):
-    list_display = ('decision', 'start_date', 'end_date')
-    search_fields = ('decision', )
+        if party and period:
+            submissions_qs = Submission.objects.filter(
+                obligation___obligation_type=ObligationTypes.PROCAGENT.value,
+                party_id=party,
+                reporting_period_id=period
+            ).order_by('reporting_period__name')
+            context['adminform'].form.fields['submission'].queryset = submissions_qs
+
+        if period:
+            rp = ReportingPeriod.objects.get(id=period)
+            decision_qs = ProcessAgentDecision.objects.filter(
+                (
+                    (
+                        Q(application_validity_start_date__lte=rp.end_date)
+                        | Q(application_validity_start_date__isnull=True)
+                    )
+                    & (
+                        Q(application_validity_end_date__gte=rp.start_date)
+                        | Q(application_validity_end_date__isnull=True)
+                    )
+                )
+                & (
+                    (
+                        Q(emit_limits_validity_start_date__lte=rp.end_date)
+                        | Q(emit_limits_validity_start_date__isnull=True)
+                    )
+                    & (
+                        Q(emit_limits_validity_end_date__gte=rp.start_date)
+                        | Q(emit_limits_validity_end_date__isnull=True)
+                    )
+                )
+            )
+            context['adminform'].form.fields['decision'].queryset = decision_qs
+
+            applications_qs = ProcessAgentApplication.objects.filter(
+                (
+                    Q(decision__application_validity_start_date__lte=rp.end_date)
+                    | Q(decision__application_validity_start_date__isnull=True)
+                )
+                & (
+                    Q(decision__application_validity_end_date__gte=rp.start_date)
+                    | Q(decision__application_validity_end_date__isnull=True)
+                )
+            )
+            context['adminform'].form.fields['application'].queryset = applications_qs
+
+        return super().render_change_form(request, context, *args, **kwargs)
 
 
 @admin.register(Decision)
