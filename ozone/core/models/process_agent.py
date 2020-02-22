@@ -1,5 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils.functional import cached_property
 
 from .party import Party
 from .reporting import Submission
@@ -8,13 +9,61 @@ from .meeting import Decision
 from .utils import DECIMAL_FIELD_DECIMALS, DECIMAL_FIELD_DIGITS
 
 __all__ = [
+    'ProcessAgentDecision',
     'ProcessAgentContainTechnology',
     'ProcessAgentApplication',
     'ProcessAgentUsesReported',
     'ProcessAgentEmissionLimit',
-    'ProcessAgentApplicationValidity',
-    'ProcessAgentEmissionLimitValidity',
 ]
+
+
+class ProcessAgentDecisionManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'decision',
+        )
+
+
+class ProcessAgentDecision(models.Model):
+    """
+    Process Agents related decisions
+    """
+    objects = ProcessAgentDecisionManager()
+
+    decision = models.ForeignKey(
+        Decision,
+        related_name='pa_decisions',
+        on_delete=models.PROTECT
+    )
+
+    application_validity_start_date = models.DateField(null=True)
+    application_validity_end_date = models.DateField(null=True)
+
+    emit_limits_validity_start_date = models.DateField(null=True)
+    emit_limits_validity_end_date = models.DateField(null=True)
+
+    @cached_property
+    def refers_to_applications(self):
+        return (
+            self.application_validity_start_date is not None
+            or self.application_validity_end_date is not None
+        )
+
+    @cached_property
+    def refers_to_emit_limits(self):
+        return(
+            self.emit_limits_validity_start_date is not None
+            or self.emit_limits_validity_end_date is not None
+        )
+
+    def __str__(self):
+        return f'Decision {self.decision.decision_id} ('\
+            f'{self.application_validity_start_date}'\
+            f' - {self.application_validity_end_date})'
+
+    class Meta:
+        verbose_name_plural = 'process agent decisions'
+        db_table = 'pa_decision'
 
 
 class ProcessAgentContainTechnology(models.Model):
@@ -32,39 +81,10 @@ class ProcessAgentContainTechnology(models.Model):
         db_table = 'pa_contain_technology'
 
 
-class ProcessAgentApplicationValidityManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().select_related(
-            'decision',
-        )
-
-
-class ProcessAgentApplicationValidity(models.Model):
-
-    objects = ProcessAgentApplicationValidityManager()
-
-    start_date = models.DateField(null=True)
-    end_date = models.DateField(null=True)
-    decision = models.OneToOneField(
-        Decision,
-        related_name='applications_validity',
-        on_delete=models.PROTECT
-    )
-
-    def __str__(self):
-        start_year = self.start_date.year if self.start_date else "N/A"
-        end_year = self.end_date.year if self.end_date else "N/A"
-        return f"{self.decision.decision_id} ({start_year}-{end_year})"
-
-    class Meta:
-        verbose_name_plural = 'process agent applications validity'
-        db_table = 'pa_applications_validity'
-
-
 class ProcessAgentApplicationManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related(
-            'substance', 'validity', 'validity__decision',
+            'substance', 'decision', 'decision__decision',
         )
 
 
@@ -77,8 +97,10 @@ class ProcessAgentApplication(models.Model):
 
     objects = ProcessAgentApplicationManager()
 
-    validity = models.ForeignKey(
-        ProcessAgentApplicationValidity,
+    decision = models.ForeignKey(
+        ProcessAgentDecision,
+        null=True,
+        blank=True,
         related_name='pa_applications',
         on_delete=models.PROTECT
     )
@@ -91,8 +113,16 @@ class ProcessAgentApplication(models.Model):
 
     remark = models.CharField(max_length=9999, blank=True)
 
+    @property
+    def start_date(self):
+        return self.decision.application_validity_start_date
+
+    @property
+    def end_date(self):
+        return self.decision.application_validity_end_date
+
     def __str__(self):
-        return f'{self.substance} - {self.application}'
+        return f'{self.substance} - {self.application} ({self.decision})'
 
     class Meta:
         db_table = 'pa_application'
@@ -102,7 +132,10 @@ class ProcessAgentUsesReportedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related(
             'submission', 'submission__party', 'submission__reporting_period',
-            'decision', 'application', 'application__substance',
+            'decision', 'decision__decision',
+            'application', 'application__substance',
+        ).prefetch_related(
+            'contain_technologies',
         )
 
 
@@ -124,7 +157,7 @@ class ProcessAgentUsesReported(models.Model):
     )
 
     decision = models.ForeignKey(
-        Decision,
+        ProcessAgentDecision,
         related_name='pa_uses_reported',
         null=True,
         blank=True,
@@ -184,39 +217,30 @@ class ProcessAgentUsesReported(models.Model):
         db_table = 'pa_uses_reported'
 
 
-class ProcessAgentEmissionLimitValidity(models.Model):
-    start_date = models.DateField(null=True)
-    end_date = models.DateField(null=True)
-    decision = models.OneToOneField(
-        Decision,
-        related_name='limits_validity',
-        on_delete=models.PROTECT
-    )
-
-    def __str__(self):
-        start_year = self.start_date.year if self.start_date else "N/A"
-        end_year = self.end_date.year if self.end_date else "N/a"
-        return f"{self.decision.decision_id} {start_year}-{end_year}"
-
-    class Meta:
-        verbose_name_plural = 'process agent emission limits validity'
-        db_table = 'pa_emission_limit_validity'
+class ProcessAgentEmissionManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'decision', 'decision__decision', 'party'
+        )
 
 
 class ProcessAgentEmissionLimit(models.Model):
     """
     Emission limits for process agent uses, for non-Article 5 parties.
     """
+    objects = ProcessAgentEmissionManager()
+
+    decision = models.ForeignKey(
+        ProcessAgentDecision,
+        null=True,
+        blank=True,
+        related_name='pa_emission_limits',
+        on_delete=models.PROTECT
+    )
 
     party = models.ForeignKey(
         Party,
         related_name='process_agent_emission_limits',
-        on_delete=models.PROTECT
-    )
-
-    validity = models.ForeignKey(
-        ProcessAgentEmissionLimitValidity,
-        related_name='pa_emission_limits',
         on_delete=models.PROTECT
     )
 
@@ -231,6 +255,14 @@ class ProcessAgentEmissionLimit(models.Model):
     )
 
     remark = models.CharField(max_length=9999, blank=True)
+
+    @property
+    def start_date(self):
+        return self.decision.emit_limits_validity_start_date
+
+    @property
+    def end_date(self):
+        return self.decision.emit_limits_validity_end_date
 
     class Meta:
         db_table = 'limit_pa_emission'
