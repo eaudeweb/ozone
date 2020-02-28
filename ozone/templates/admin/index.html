@@ -7,16 +7,21 @@
       <span class="section">Ozone Tools</span>
     </caption>
     <tbody>
+      {% if perms.core.can_run_baselines_tool %}
       <tr>
         <th scope="row">
           <a href="/admin/ozone_tools/generate_baselines/">Generate baselines</a>
         </th>
       </tr>
+      {% endif %}
+
+      {% if perms.core.can_run_limits_tool %}
       <tr>
         <th scope="row">
           <a href="/admin/ozone_tools/generate_limits/">Generate limits</a>
         </th>
       </tr>
+      {% endif %}
     </tbody>
   </table>
 </div>
