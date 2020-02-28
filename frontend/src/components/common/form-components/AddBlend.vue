@@ -167,6 +167,7 @@ export default {
     substances() {
       return JSON.parse(JSON.stringify(this.$store.state.initialData.substances))
     },
+
     blends() {
       return this.$store.state.initialData.blends
     },
@@ -286,10 +287,12 @@ export default {
     prepareBlends() {
       this.selected_blends.filters = []
       this.selected_blends.options = []
-      this.blends.forEach(blend => {
-        this.selected_blends.options.push({ text: blend.blend_id, value: blend.id, type: blend.type, sort_order: blend.sort_order })
-        this.pushUnique(this.selected_blends.filters, blend.type)
-      })
+      if (Array.isArray(this.blends) && this.blends.length > 0) {
+        this.blends.forEach(blend => {
+          this.selected_blends.options.push({ text: blend.blend_id, value: blend.id, type: blend.type, sort_order: blend.sort_order })
+          this.pushUnique(this.selected_blends.filters, blend.type)
+        })
+      }
       this.selected_blends.filters = this.selected_blends.filters.map(b => ({ text: b, value: b }))
       this.selected_blends.options.sort((a, b) => a.sort_order - b.sort_order)
       this.prepareSubstances()
