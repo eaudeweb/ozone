@@ -763,6 +763,7 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
     model_class = ProdCons
     group_field = 'group'
     mt = False
+    allowed_aggregates = ('party', 'group',)
 
     def get_queryset(self):
         return ProdCons.objects.filter(
@@ -782,7 +783,7 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
         return Response({'last_updated': updated})
 
     def list_aggregated_data(
-        self, queryset, aggregates, groupings, substance_to_group=False
+        self, queryset, aggregates, groupings
     ):
         # Maps grouping param value to field names to be retrieved
         # Keys are possible values for the 'group_by' parameter.
@@ -897,7 +898,7 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
                                 exclude_eu_and_members
                             )
                             values.append(aggregation)
-                elif substance_to_group is True:
+                elif 'substance_to_group' in aggregates:
                     # This is used to aggregate MT values (in which entries are
                     # per substance) into entries that contain total values for
                     # each group (as this is what the endpoint should actually
@@ -942,13 +943,14 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
 
         # Handle aggregation & grouping
         aggregates = request.query_params.get('aggregation', None)
-        aggregates = aggregates.split(',') if aggregates else None
+        aggregates = aggregates.split(',') if aggregates else []
+        aggregates = [
+            agg for agg in aggregates if agg in self.allowed_aggregates
+        ]
         groupings = request.query_params.get('group_by', None)
         groupings = groupings.split(',') if groupings else []
         if aggregates:
-            return self.list_aggregated_data(
-                queryset, aggregates, groupings, substance_to_group=False
-            )
+            return self.list_aggregated_data(queryset, aggregates, groupings)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -986,6 +988,7 @@ class AggregationMTViewSet(AggregationViewSet):
     model_class = ProdConsMT
     group_field = 'substance__group'
     mt = True
+    allowed_aggregates = ('party', 'group', 'substance_to_group',)
 
     def get_queryset(self):
         return ProdConsMT.objects.filter(
@@ -995,31 +998,6 @@ class AggregationMTViewSet(AggregationViewSet):
         ).exclude(
             substance__group=None
         )
-
-    def list(self, request, *args, **kwargs):
-        """
-        Need to override, since these are actually serialized as "normal"
-        ProdCons objects (instead of ProdConsMT).
-        """
-        queryset = self.filter_queryset(self.get_queryset())
-
-        # Handle aggregation & grouping
-        aggregates = request.query_params.get('aggregation', None)
-        aggregates = aggregates.split(',') if aggregates else []
-        groupings = request.query_params.get('group_by', None)
-        groupings = groupings.split(',') if groupings else []
-        if aggregates:
-            return self.list_aggregated_data(
-                queryset, aggregates, groupings, substance_to_group=True
-            )
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
 
 class AggregationDestructionViewFilterSet(BaseAggregationViewFilterSet):
