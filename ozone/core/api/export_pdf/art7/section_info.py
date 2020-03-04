@@ -62,11 +62,9 @@ def get_date_of_reporting(submission):
 
     if date_revised:
         return (
-            Paragraph('%s: %s' % (
+            Paragraph('%s: %s, %s: %s %s' % (
                 _('Date received'),
                 format_date(date_received),
-            ), style=no_spacing_style),
-            Paragraph('%s: %s %s' % (
                 _('Date revised'),
                 format_date(date_revised),
                 extra_text,
@@ -99,17 +97,25 @@ def _kv(obj, label, prop):
 
 
 def get_submission_info(info):
+    reporter = _kv(info, 'Name of reporting officer', 'reporting_officer')
+    if reporter and info.email:
+        reporter = Paragraph(
+            '%s (%s)' % (reporter.text, info.email),
+            style=no_spacing_style
+        )
+    else:
+        reporter = _kv(info, 'E-mail', 'email')
+
     return (
-        _kv(info, 'Name of reporting officer', 'reporting_officer'),
+        reporter,
         _kv(info, 'Designation', 'designation'),
         _kv(info, 'Organization', 'organization'),
         _kv(info, 'Postal address', 'postal_address'),
         Paragraph(
             '%s: %s' % (_('Address country'), info.country.name),
             style=no_spacing_style
-        ) if info.country else None,
+        ) if info.country and info.country.name != info.submission.party.name else None,
         _kv(info, 'Phone', 'phone'),
-        _kv(info, 'E-mail', 'email'),
         p_l(''),
     )
 

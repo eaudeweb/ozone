@@ -26,7 +26,7 @@ def export_labuse_report(periods, parties):
     art7 = Obligation.objects.get(_obligation_type=ObligationTypes.ART7.value)
 
     for period in periods:
-        title = f"Laboratory and Analytical Uses of ODSs in {period.name} (Tonnes)"
+        title = f"Laboratory and Analytical Uses under the global exemption in {period.name}<br/>(metric tonnes)"
         yield util.Paragraph(title, util.h1_style)
 
         latest_submissions = Submission.latest_submitted_for_parties(
