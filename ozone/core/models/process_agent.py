@@ -1,7 +1,14 @@
+from urllib.parse import quote
+
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.functional import cached_property
+from django.urls.base import reverse
+from django.contrib.sites.models import Site
+from django.utils.translation import gettext_lazy as _
 
+from .legal import ReportingPeriod
 from .party import Party
 from .reporting import Submission
 from .substance import Substance
@@ -10,7 +17,6 @@ from .utils import DECIMAL_FIELD_DECIMALS, DECIMAL_FIELD_DIGITS
 
 __all__ = [
     'ProcessAgentDecision',
-    'ProcessAgentContainTechnology',
     'ProcessAgentApplication',
     'ProcessAgentUsesReported',
     'ProcessAgentEmissionLimit',
@@ -66,21 +72,6 @@ class ProcessAgentDecision(models.Model):
         db_table = 'pa_decision'
 
 
-class ProcessAgentContainTechnology(models.Model):
-    """
-    Reported containment technologies
-    """
-
-    description = models.CharField(max_length=9999)
-
-    def __str__(self):
-        return self.description
-
-    class Meta:
-        verbose_name_plural = 'process agent contain technologies'
-        db_table = 'pa_contain_technology'
-
-
 class ProcessAgentApplicationManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related(
@@ -122,7 +113,8 @@ class ProcessAgentApplication(models.Model):
         return self.decision.application_validity_end_date
 
     def __str__(self):
-        return f'{self.substance} - {self.application} ({self.decision})'
+        return f'{self.counter} - {self.substance} - ' \
+               f'{self.application} | {self.decision}'
 
     class Meta:
         db_table = 'pa_application'
@@ -131,11 +123,9 @@ class ProcessAgentApplication(models.Model):
 class ProcessAgentUsesReportedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related(
-            'submission', 'submission__party', 'submission__reporting_period',
+            'submission', 'party', 'reporting_period',
             'decision', 'decision__decision',
             'application', 'application__substance',
-        ).prefetch_related(
-            'contain_technologies',
         )
 
 
@@ -152,6 +142,24 @@ class ProcessAgentUsesReported(models.Model):
 
     submission = models.ForeignKey(
         Submission,
+        null=True,
+        blank=True,
+        related_name='pa_uses_reported',
+        on_delete=models.PROTECT
+    )
+
+    party = models.ForeignKey(
+        Party,
+        null=True,
+        blank=True,
+        related_name='pa_uses_reported',
+        on_delete=models.PROTECT
+    )
+
+    reporting_period = models.ForeignKey(
+        ReportingPeriod,
+        null=True,
+        blank=True,
         related_name='pa_uses_reported',
         on_delete=models.PROTECT
     )
@@ -172,10 +180,7 @@ class ProcessAgentUsesReported(models.Model):
         on_delete=models.PROTECT
     )
 
-    contain_technologies = models.ManyToManyField(
-        ProcessAgentContainTechnology,
-        blank=True,
-    )
+    contain_technologies = models.TextField(blank=True)
 
     makeup_quantity = models.DecimalField(
         max_digits=DECIMAL_FIELD_DIGITS, decimal_places=DECIMAL_FIELD_DECIMALS,
@@ -200,17 +205,79 @@ class ProcessAgentUsesReported(models.Model):
 
     remark = models.CharField(max_length=9999, blank=True)
 
+    @property
+    def api_submission_uri(self):
+        if not self.submission:
+            return ''
+
+        domain = Site.objects.get_current().domain
+        absolute_url = reverse(
+            'core:submission-detail', kwargs={'pk': self.submission.id}
+        )
+        return f'https://{domain}{absolute_url}'
+
+    @property
+    def submission_uri(self):
+        if not self.submission:
+            return ''
+
+        domain = Site.objects.get_current().domain
+
+        # This hardcodes a URL in the frontend but there's no other option
+        return (
+            f'https://{domain}'
+            f'/reporting/submission/procagent?submission='
+            f'{quote(self.api_submission_uri, safe="")}'
+        )
+
+    def clean(self):
+        # If all three fields are populated, they must be consistent
+        if self.party and self.reporting_period and self.submission:
+            if self.submission.party != self.party:
+                raise ValidationError(
+                    {
+                        'party': [_(
+                            "Party does not correspond to submission's party"
+                        )]
+                    }
+                )
+            if self.submission.reporting_period != self.reporting_period:
+                raise ValidationError(
+                    {
+                        'reporting_period': [_(
+                            "Reporting period does not correspond to "
+                            "submission's reporting period"
+                        )]
+                    }
+                )
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        """
+        Overriding to ensure consistency between submission and party/period
+        """
+        self.full_clean()
+
+        if self.party is None and self.submission is not None:
+            self.party = self.submission.party
+        if self.reporting_period is None and self.submission is not None:
+            self.reporting_period = self.submission.reporting_period
+
+        return super().save(*args, **kwargs)
+
     def __str__(self):
+        party = self.party if self.party else \
+            self.submission.party if self.submission else 'Unknown'
+        period = self.reporting_period if self.reporting_period else \
+            self.submission.reporting_period.name if self.submission else \
+            'Unknown'
+
         if self.application:
             return (
-                f'{self.submission.party} - Process agent reported use of '
-                f'{self.application.substance} for '
-                f'{self.submission.reporting_period.name}'
+                f'{party} - Process agent reported use of '
+                f'{self.application.substance} for {period}'
             )
-        return (
-            f'{self.submission.party} - Process agent reported use for '
-            f'{self.submission.reporting_period.name}'
-        )
+        return f'{party} - Process agent reported use for {period}'
 
     class Meta:
         verbose_name_plural = 'process agent uses reported'

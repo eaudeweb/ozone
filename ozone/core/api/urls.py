@@ -63,10 +63,6 @@ router.register(r"limits", views.LimitViewSet)
 
 router.register(r"critical-use-categories", views.CriticalUseCategoryViewSet)
 
-router.register(
-    r"pa-contain-technologies", views.ProcessAgentContainTechnologyViewSet
-)
-
 router.register(r"deviation-types", views.DeviationTypeViewSet)
 router.register(r"deviation-sources", views.DeviationSourceViewSet)
 

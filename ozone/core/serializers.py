@@ -38,7 +38,6 @@ from .models import (
     HighAmbientTemperatureProduction,
     Transfer,
     ProcessAgentUsesReported,
-    ProcessAgentContainTechnology,
     DataOther,
     SubmissionFile,
     UploadToken,
@@ -1014,12 +1013,6 @@ class TransferSerializer(serializers.ModelSerializer):
         exclude = ('source_party_submission', 'destination_party_submission')
 
 
-class ProcessAgentContainTechnologySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProcessAgentContainTechnology
-        fields = '__all__'
-
-
 class ProcessAgentUsesReportedSerializer(serializers.ModelSerializer):
     application_substance = serializers.CharField(
         source='application.substance', default=''
@@ -1028,9 +1021,7 @@ class ProcessAgentUsesReportedSerializer(serializers.ModelSerializer):
         source='application.application', default=''
     )
     decision = serializers.CharField(default='')
-    contain_technologies = serializers.StringRelatedField(
-        many=True, read_only=True
-    )
+    contain_technologies = serializers.CharField(default='')
 
     class Meta:
         model = ProcessAgentUsesReported

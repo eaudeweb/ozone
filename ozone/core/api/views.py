@@ -57,7 +57,6 @@ from ..models import (
     HighAmbientTemperatureProduction,
     HighAmbientTemperatureImport,
     Transfer,
-    ProcessAgentContainTechnology,
     ProcessAgentUsesReported,
     DataOther,
     Group,
@@ -135,7 +134,6 @@ from ..serializers import (
     HighAmbientTemperatureImportSerializer,
     TransferSerializer,
     ProcessAgentUsesReportedSerializer,
-    ProcessAgentContainTechnologySerializer,
     DataOtherSerializer,
     GroupSerializer,
     GroupSubstanceSerializer,
@@ -2078,16 +2076,6 @@ class TransferViewSet(viewsets.ReadOnlyModelViewSet):
             Q(source_party_submission=self.kwargs['submission_pk']) |
             Q(destination_party_submission=self.kwargs['submission_pk'])
         )
-
-
-class ProcessAgentContainTechnologyViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = ProcessAgentContainTechnologySerializer
-    # We are only allowing Secretariat users to view contain technologies.
-    permission_classes = (
-        IsAuthenticated,
-        IsSecretariat,
-    )
-    queryset = ProcessAgentContainTechnology.objects.all()
 
 
 class ProcessAgentUsesReportedViewSet(viewsets.ReadOnlyModelViewSet):
