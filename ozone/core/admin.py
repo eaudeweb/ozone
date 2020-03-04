@@ -1344,6 +1344,7 @@ class ImpComRecommendationAdmin(admin.ModelAdmin):
         'reporting_period', 'recommendation_number', 'get_bodies', 'get_topics'
     )
     search_fields = ('recommendation_number', 'excerpt', 'table_data', 'resulting_decisions')
+    autocomplete_fields = ('bodies', 'topics')
     list_filter = (
         ('reporting_period__name', custom_title_dropdown_filter('period')),
         ('topics', RelatedDropdownFilter),
