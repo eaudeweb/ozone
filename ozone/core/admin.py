@@ -805,10 +805,45 @@ class ProcessAgentBaseAdmin:
         return form
 
 
+class PADecisionFilter(RelatedDropdownFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lookup_choices = ProcessAgentDecision.objects.order_by(
+            'application_validity_start_date'
+        ).values_list('id', 'decision__decision_id')
+
+
+class PASubstanceFilter(RelatedDropdownFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lookup_choices = ProcessAgentApplication.objects.order_by(
+            'substance__sort_order'
+        ).distinct().values_list('substance_id', 'substance__name')
+
+
+class PAPartyFilter(RelatedDropdownFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lookup_choices = ProcessAgentUsesReported.objects.order_by(
+            'party__name'
+        ).distinct().values_list('party_id', 'party__name')
+
+
+class PAPeriodFilter(RelatedDropdownFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lookup_choices = ProcessAgentUsesReported.objects.order_by(
+            '-reporting_period__start_date'
+        ).distinct().values_list('reporting_period_id', 'reporting_period__name')
+
+
 @admin.register(ProcessAgentUsesReported)
 class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
     def get_application(self, obj):
-        return obj.application.application if obj.application else ''
+        return (
+            f'{obj.application.counter}. {obj.application.application}'
+            if obj.application else ''
+        )
     get_application.short_description = 'Application'
 
     def get_substance(self, obj):
@@ -1012,16 +1047,18 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
         'get_containment',
     )
     list_filter = (
-        (
-            'submission__reporting_period__name',
-            custom_title_dropdown_filter('period')
-        ),
-        ('submission__party', MainPartyFilter)
+        ('reporting_period', PAPeriodFilter),
+        ('party', PAPartyFilter),
+        ('decision', PADecisionFilter),
+        ('application__substance', PASubstanceFilter),
     )
     search_fields = (
-        'submission__reporting_period__name',
-        'submission__party__name',
+        'reporting_period__name',
+        'party__name',
         'contain_technologies',
+        'application__application',
+        'application__substance__name',
+        'decision__decision__decision_id',
     )
     # When using autocomplete_fields, you must define search_fields on the
     # related object’s ModelAdmin because the autocomplete search uses it.
