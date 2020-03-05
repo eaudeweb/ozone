@@ -110,12 +110,12 @@ def get_submission_info(info):
         reporter,
         _kv(info, 'Designation', 'designation'),
         _kv(info, 'Organization', 'organization'),
-        _kv(info, 'Postal address', 'postal_address'),
+        # _kv(info, 'Postal address', 'postal_address'),
         Paragraph(
             '%s: %s' % (_('Address country'), info.country.name),
             style=no_spacing_style
         ) if info.country and info.country.name != info.submission.party.name else None,
-        _kv(info, 'Phone', 'phone'),
+        # _kv(info, 'Phone', 'phone'),
         p_l(''),
     )
 
