@@ -25,6 +25,7 @@ from django.views.decorators.cache import never_cache
 from rest_framework.authtoken.models import Token
 from django.utils.translation import gettext_lazy as _
 from django.http import FileResponse
+from django.http import HttpResponseRedirect
 
 from ozone.core.export.submissions import export_submissions, ExportError
 from ozone.core.calculated import baselines
@@ -66,7 +67,6 @@ from .models import (
     EmailTemplateAttachment,
     ProcessAgentDecision,
     ProcessAgentApplication,
-    ProcessAgentContainTechnology,
     ProcessAgentEmissionLimit,
     ProcessAgentUsesReported,
     Decision,
@@ -796,14 +796,6 @@ class ProcessAgentBaseAdmin:
             'all': ('css/admin.css',),
         }
 
-    def get_reporting_period(self, obj):
-        return obj.submission.reporting_period
-    get_reporting_period.short_description = 'Reporting period'
-
-    def get_party(self, obj):
-        return obj.submission.party
-    get_party.short_description = 'Party'
-
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         submission_queryset = Submission.objects.filter(
@@ -811,12 +803,6 @@ class ProcessAgentBaseAdmin:
         ).order_by('reporting_period__name')
         form.base_fields['submission'].queryset = submission_queryset
         return form
-
-
-@admin.register(ProcessAgentContainTechnology)
-class ProcessAgentContainTechnologyAdmin(admin.ModelAdmin):
-    list_display = ('description',)
-    search_fields = ('description',)
 
 
 @admin.register(ProcessAgentUsesReported)
@@ -834,69 +820,82 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
     get_decision.short_description = 'Decision'
 
     def get_containment(self, obj):
-        return ', '.join(
-            [x.description for x in obj.contain_technologies.all()]
-        ) if obj.contain_technologies else ''
+        return obj.contain_technologies if obj.contain_technologies else ''
     get_containment.short_description = 'Containment technologies'
 
-    list_display = (
-        'id',
-        'get_reporting_period', 'get_party',
-        'makeup_quantity', 'emissions', 'units',
-        'get_application', 'get_decision', 'get_substance',
-        'get_containment',
-    )
-    list_filter = (
-        (
-            'submission__reporting_period__name',
-            custom_title_dropdown_filter('period')
-        ),
-        ('submission__party', MainPartyFilter)
-    )
-    search_fields = (
-        'submission__reporting_period__name',
-        'submission__party__name',
-        'contain_technologies__description',
-    )
-    # When using autocomplete_fields, you must define search_fields on the
-    # related object’s ModelAdmin because the autocomplete search uses it.
-    autocomplete_fields = ['application', 'contain_technologies']
-    change_form_template = 'admin/finalize_proc_agent.html'
-    formfield_overrides = {
-        CharField: {'widget': TextInput(attrs={'size': '120'})},
-        TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 120})},
-    }
+    def get_view_on_site_url(self, obj=None):
+        if obj is None or obj.submission is None:
+            return None
+        return obj.submission_uri
 
-    @never_cache
-    def render_change_form(
-        self, request, context, *args, **kwargs
-    ):
-        step = None
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ["party", "reporting_period"]
+        else:
+            return []
+
+    def get_form(self, request, obj=None, **kwargs):
+        """
+        Overriding get_form to:
+        - add support for clone-type requests
+        - restrict possible values in the second step based on data entered
+          in the first step.
+        """
+        form = super().get_form(request, obj, **kwargs)
+
+        if request.GET:
+            clone_id = request.GET.get('clone_id')
+            submission_id = request.GET.get('submission_id')
+
+            if clone_id:
+                # If this is a clone request for a valid object, set initial
+                # values in form to the cloned object's field values
+                obj = ProcessAgentUsesReported.objects.filter(
+                    id=clone_id
+                ).first()
+                if obj:
+                    for field in form.base_fields.keys():
+                        form.base_fields[field].initial = getattr(
+                            obj, field, None
+                        )
+                    # Now just return "cloned" form
+                    return form
+            if submission_id:
+                # If this is a prefill request for a valid submission, set
+                # initial values in form to the submission's attributes
+                submission = Submission.objects.filter(id=submission_id).first()
+                if submission:
+                    form.base_fields['submission'].initial = submission
+                    for field in ['party', 'reporting_period']:
+                        form.base_fields[field].initial = getattr(
+                            submission, field, None
+                        )
+                    # Now just return pre-filled form
+                    return form
+
         party = None
         period = None
-        submission = None
-        if request.POST:
-            step = request.POST.get('step', None)
-            party = request.POST.get('party')
-            period = request.POST.get('period')
-            submission = request.POST.get('submission')
-        obj = kwargs.get('obj')
+        step = request.POST.get('step')
 
-        if step is None and obj is None and submission is None:
-            # This is the first step; inject parties and periods into context
-            # so that they can be used by the template.
-            context['periods'] = ReportingPeriod.objects.all().order_by('name')
-            context['default_period'] = ReportingPeriod.get_current_period()
-            context['parties'] = Party.objects.filter(
-                parent_party__id=F('id')
-            ).order_by('name')
-            return TemplateResponse(
-                request, 'admin/add_proc_agent.html', context
-            )
+        if obj is None and step == 'continue':
+            # If party/period are in the request, take them into account
+            party = request.POST.get('party') if request.POST else None
+            period = request.POST.get('period') if request.POST else None
 
-        if obj:
-            party = obj.submission.party.id
-            period = obj.submission.reporting_period.id
+            if party:
+                form.base_fields['party'].initial = Party.objects.get(id=party)
+                form.base_fields['party'].queryset = \
+                    Party.objects.filter(id=party)
+            if period:
+                form.base_fields['reporting_period'].initial = \
+                    ReportingPeriod.objects.get(id=period)
+                form.base_fields['reporting_period'].queryset = \
+                    ReportingPeriod.objects.filter(id=period)
+
+        # If party and period are not set from the request, get them from the
+        # object, if present (get_form is used both for "add" and "change").
+        party = obj.party.id if (obj and party is None) else party
+        period = obj.reporting_period.id if (obj and period is None) else period
 
         if party and period:
             submissions_qs = Submission.objects.filter(
@@ -904,9 +903,10 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
                 party_id=party,
                 reporting_period_id=period
             ).order_by('reporting_period__name')
-            context['adminform'].form.fields['submission'].queryset = submissions_qs
+            form.base_fields['submission'].queryset = submissions_qs
 
         if period:
+            # Restrict choices of decision based on chosen reporting period
             rp = ReportingPeriod.objects.get(id=period)
             decision_qs = ProcessAgentDecision.objects.filter(
                 (
@@ -930,8 +930,9 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
                     )
                 )
             )
-            context['adminform'].form.fields['decision'].queryset = decision_qs
+            form.base_fields['decision'].queryset = decision_qs
 
+            # Restrict choices of application based on chosen reporting period
             applications_qs = ProcessAgentApplication.objects.filter(
                 (
                     Q(decision__application_validity_start_date__lte=rp.end_date)
@@ -941,10 +942,95 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
                     Q(decision__application_validity_end_date__gte=rp.start_date)
                     | Q(decision__application_validity_end_date__isnull=True)
                 )
-            )
-            context['adminform'].form.fields['application'].queryset = applications_qs
+            ).order_by('counter')
+            form.base_fields['application'].queryset = applications_qs
 
-        return super().render_change_form(request, context, *args, **kwargs)
+        return form
+
+    def add_view(self, request, form_url='', extra_context=None):
+        """
+        Overriding add_view to implement two-step creation of new UsesReported
+        instances.
+        """
+        step = None
+        party = None
+        period = None
+        submission = None
+        clone_id = None
+        submission_id = None
+        if request.POST:
+            step = request.POST.get('step', None)
+            party = request.POST.get('party')
+            period = request.POST.get('period')
+            submission = request.POST.get('submission')
+        if request.GET:
+            clone_id = request.GET.get('clone_id')
+            submission_id = request.GET.get('submission_id')
+
+        context = {}
+        if (
+            request.method == 'GET'
+            and clone_id is None and submission_id is None
+            and step is None and submission is None
+            and party is None and period is None
+        ):
+            # This is the first step; inject parties and periods into context
+            # so that they can be used by the template.
+            context['periods'] = ReportingPeriod.objects.all().order_by('name')
+            context['default_period'] = ReportingPeriod.get_current_period()
+            context['parties'] = Party.objects.filter(
+                parent_party__id=F('id')
+            ).order_by('name')
+            return TemplateResponse(
+                request, 'admin/add_proc_agent.html', context
+            )
+
+        if step == 'continue':
+            # Manipulate request to simulate GET, as we need to display the
+            # add page as if it was freshly requested.
+            request.method = 'GET'
+        return super().add_view(request, form_url, extra_context)
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """
+        Overriding change_view to implement custom "Clone" functionality.
+        There is no need to check for the same conditions in the add_view,
+        because only saved instances will be clone-able.
+        """
+        if request.POST and '_clone' in request.POST:
+            clone_id = request.POST.get("to_clone")
+            url = f"{reverse('admin:core_processagentusesreported_add')}" \
+                  f"?clone_id={clone_id}"
+            return HttpResponseRedirect(url)
+
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    list_display = (
+        'id', 'reporting_period', 'party',
+        'makeup_quantity', 'emissions', 'units',
+        'get_application', 'get_decision', 'get_substance',
+        'get_containment',
+    )
+    list_filter = (
+        (
+            'submission__reporting_period__name',
+            custom_title_dropdown_filter('period')
+        ),
+        ('submission__party', MainPartyFilter)
+    )
+    search_fields = (
+        'submission__reporting_period__name',
+        'submission__party__name',
+        'contain_technologies',
+    )
+    # When using autocomplete_fields, you must define search_fields on the
+    # related object’s ModelAdmin because the autocomplete search uses it.
+    # autocomplete_fields = ['application',]
+    change_form_template = 'admin/finalize_proc_agent.html'
+    formfield_overrides = {
+        CharField: {'widget': TextInput(attrs={'size': '120'})},
+        TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 120})},
+    }
 
 
 @admin.register(Decision)
@@ -1258,6 +1344,7 @@ class ImpComRecommendationAdmin(admin.ModelAdmin):
         'reporting_period', 'recommendation_number', 'get_bodies', 'get_topics'
     )
     search_fields = ('recommendation_number', 'excerpt', 'table_data', 'resulting_decisions')
+    autocomplete_fields = ('bodies', 'topics')
     list_filter = (
         ('reporting_period__name', custom_title_dropdown_filter('period')),
         ('topics', RelatedDropdownFilter),

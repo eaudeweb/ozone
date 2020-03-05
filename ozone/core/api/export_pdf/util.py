@@ -710,6 +710,6 @@ class ReportForSubmission(Report):
 
     def get_basename(self):
         if self.submission:
-            return f'{self.name}_{self.submission.pk}'
+            return f'{self.name}_{self.submission.party.abbr}_{self.submission.reporting_period.name}'
         else:
             return super().get_basename()

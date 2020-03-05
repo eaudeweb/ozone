@@ -6,6 +6,7 @@ import logging
 from django.db import transaction
 from django.template.response import TemplateResponse
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.utils.translation import gettext_lazy as _
 
 from ozone.core.models import Baseline
@@ -831,7 +832,7 @@ def admin_apply(request, context):
             _("Removed %d baselines") % removed,
         )
 
-
+@permission_required('core.can_run_baselines_tool')
 def admin_view(request, context):
     if request.POST:
         step = request.POST['step']

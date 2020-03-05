@@ -10,12 +10,29 @@ from .utils import DECIMAL_FIELD_DECIMALS, DECIMAL_FIELD_DIGITS
 
 
 __all__ = [
+    'BaselineLimitPermissions',
     'BaselineType',
     'LimitTypes',
     'ControlMeasure',
     'Baseline',
     'Limit',
 ]
+
+
+class BaselineLimitPermissions(models.Model):
+
+    class Meta:
+
+        # No database table creation or deletion operations will be performed
+        # for this model. It is just used for creating custom permissions,
+        # unattached to a specific model, for the baselines and limits tools.
+        managed = False
+
+        default_permissions = []
+        permissions = (
+            ('can_run_baselines_tool', 'Can run baselines tool'),
+            ('can_run_limits_tool', 'Can run limits tool'),
+        )
 
 
 class BaselineType(models.Model):

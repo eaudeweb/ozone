@@ -312,7 +312,7 @@ const mutations = {
   },
 
   updateBlends(state, data) {
-    state.initialData.blends = data
+    state.initialData.blends = data || []
   },
 
   updateBlendsDisplay(state, data) {

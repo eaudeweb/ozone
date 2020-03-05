@@ -78,8 +78,10 @@ def export_labuses(imports, production):
         return tuple()
 
     subtitle = Paragraph(
-        "%s (%s)" % (_('Laboratory and analytical uses'), _('metric tonnes')),
-        h2_style
+        "%s (%s)" % (
+            _('Laboratory and analytical uses under the global exemption'),
+            _('metric tonnes')
+        ), h2_style
     )
 
     table_header = ((
