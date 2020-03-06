@@ -891,7 +891,7 @@ class ProcessAgentApplicationAdmin(admin.ModelAdmin):
         'application', 'decision', 'remark'
     )
     list_filter = (
-        ('substance__name', custom_title_dropdown_filter('substance')),
+        ('substance', substance_dropdown_filter(ProcessAgentApplication)),
         (
             'decision__decision__decision_id',
             ProcessAgentDecisionFilter
@@ -945,22 +945,6 @@ class PADecisionFilter(RelatedDropdownFilter):
         self.lookup_choices = ProcessAgentDecision.objects.order_by(
             'application_validity_start_date'
         ).values_list('id', 'decision__decision_id')
-
-
-class PASubstanceFilter(RelatedDropdownFilter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.lookup_choices = ProcessAgentApplication.objects.order_by(
-            'substance__sort_order'
-        ).distinct().values_list('substance_id', 'substance__name')
-
-
-class PAPartyFilter(RelatedDropdownFilter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.lookup_choices = ProcessAgentUsesReported.objects.order_by(
-            'party__name'
-        ).distinct().values_list('party_id', 'party__name')
 
 
 @admin.register(ProcessAgentUsesReported)
@@ -1177,9 +1161,12 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
             'reporting_period',
             reporting_period_dropdown_filter(ProcessAgentUsesReported)
         ),
-        ('party', PAPartyFilter),
+        ('party', party_dropdown_filter(ProcessAgentUsesReported)),
         ('decision', PADecisionFilter),
-        ('application__substance', PASubstanceFilter),
+        ('application__substance', substance_dropdown_filter(
+            model_class=ProcessAgentUsesReported,
+            related_field='application__substance',
+        )),
     )
     search_fields = (
         'reporting_period__name',
