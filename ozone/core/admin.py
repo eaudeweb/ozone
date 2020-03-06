@@ -797,8 +797,20 @@ class ApprovedCriticalUseAdmin(admin.ModelAdmin):
         'quantity',
     )
     list_filter = (
-        ('exemption__submission__reporting_period__name', custom_title_dropdown_filter('period')),
-        ('exemption__submission__party', MainPartyFilter),
+        (
+            'exemption__submission__reporting_period',
+            reporting_period_dropdown_filter(
+                model_class=ApprovedCriticalUse,
+                related_field='exemption__submission__reporting_period',
+            )
+        ),
+        (
+            'exemption__submission__party',
+            party_dropdown_filter(
+                model_class=ApprovedCriticalUse,
+                related_field='exemption__submission__party',
+            )
+        ),
         ('exemption__decision_approved', custom_title_dropdown_filter('decision')),
         ('critical_use_category__name', custom_title_dropdown_filter('category')),
     )
