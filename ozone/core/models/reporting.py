@@ -1920,10 +1920,22 @@ class SubmissionFormat(models.Model):
         return self.name
 
 
+class SubmissionInfoManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'submission',
+            'submission__reporting_period',
+            'submission__obligation',
+            'submission__party',
+            'country',
+        )
+
+
 class SubmissionInfo(ModifyPreventionMixin, models.Model):
     """
     Model for storing submission info.
     """
+    objects = SubmissionInfoManager()
 
     submission = models.OneToOneField(
         Submission,

@@ -71,13 +71,13 @@ class TEAPReport(models.Model):
     remark_report = models.CharField(max_length=512, blank=True)
 
     def __str__(self):
-        return f''
+        return f'{self.reporting_period.name}/{self.report_type}/{self.issue}/{self.report_to_be_produced}'
 
     class Meta:
         db_table = 'teap_report'
         verbose_name = 'TEAP report'
         verbose_name_plural = 'TEAP reports'
-        ordering = ('sort_order', )
+        ordering = ('reporting_period__name', 'report_type__sort_order', 'sort_order', )
 
 
 class TEAPIndicativeNumberOfReports(models.Model):

@@ -194,6 +194,37 @@ def custom_title_dropdown_filter(title):
     return Wrapper
 
 
+class ReportingPeriodFilter(admin.SimpleListFilter):
+    title = 'Period'
+    parameter_name = 'reporting_period_id'
+
+    def lookups(self, request, model_admin):
+        return model_admin.get_queryset(request).distinct().order_by(
+            '-reporting_period__start_date'
+        ).values_list(
+            'reporting_period_id', 'reporting_period__name'
+        )
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(reporting_period_id=self.value())
+        else:
+            return queryset
+
+
+def reporting_period_dropdown_filter(model_class, title='period', field_name='reporting_period'):
+    class Wrapper(RelatedDropdownFilter):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.lookup_choices = model_class.objects.distinct().order_by(
+                f'-{field_name}__start_date'
+            ).values_list(
+                f'{field_name}__id', f'{field_name}__name'
+            )
+            self.title = title
+    return Wrapper
+
+
 # Meeting-related models
 @admin.register(Meeting)
 class MeetingAdmin(admin.ModelAdmin):
@@ -439,7 +470,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     )
     list_filter = (
         'obligation',
-        ('reporting_period__name', custom_title_dropdown_filter('period')),
+        ('reporting_period', reporting_period_dropdown_filter(Submission)),
         ('party', MainPartyFilter),
         '_current_state',
         'flag_provisional', 'flag_valid', 'flag_superseded',
@@ -502,10 +533,16 @@ class SubmissionAdmin(admin.ModelAdmin):
 class SubmissionInfoAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'reporting_officer', 'country', 'date')
     list_filter = (
+        (
+            'submission__reporting_period',
+            reporting_period_dropdown_filter(
+                model_class=SubmissionInfo,
+                field_name='submission__reporting_period'
+            )
+        ),
+        ('submission__party', MainPartyFilter),
         'submission_format',
         'submission__obligation',
-        ('submission__reporting_period__name', custom_title_dropdown_filter('period')),
-        ('submission__party', MainPartyFilter)
     )
     search_fields = ('submission__party__name',)
     readonly_fields = ('submission', )
@@ -612,7 +649,13 @@ class NominationAdmin(ExemptionBaseAdmin, admin.ModelAdmin):
     )
     search_fields = ['submission__party__name']
     list_filter = (
-        ('submission__reporting_period__name', custom_title_dropdown_filter('period')),
+        (
+            'submission__reporting_period',
+            reporting_period_dropdown_filter(
+                model_class=Nomination,
+                field_name='submission__reporting_period'
+            )
+        ),
         ('submission__party', MainPartyFilter),
         ('substance__name', custom_title_dropdown_filter('substance')),
         'is_emergency'
@@ -642,7 +685,13 @@ class ExemptionApprovedAdmin(ExemptionBaseAdmin, admin.ModelAdmin):
     )
     search_fields = ['decision_approved', 'submission__party__name']
     list_filter = (
-        ('submission__reporting_period__name', custom_title_dropdown_filter('period')),
+        (
+            'submission__reporting_period',
+            reporting_period_dropdown_filter(
+                model_class=ExemptionApproved,
+                field_name='submission__reporting_period'
+            )
+        ),
         ('submission__party', MainPartyFilter),
         ('decision_approved', custom_title_dropdown_filter('decision')),
         ('substance__name', custom_title_dropdown_filter('substance')),
@@ -869,14 +918,6 @@ class PAPartyFilter(RelatedDropdownFilter):
         ).distinct().values_list('party_id', 'party__name')
 
 
-class PAPeriodFilter(RelatedDropdownFilter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.lookup_choices = ProcessAgentUsesReported.objects.order_by(
-            '-reporting_period__start_date'
-        ).distinct().values_list('reporting_period_id', 'reporting_period__name')
-
-
 @admin.register(ProcessAgentUsesReported)
 class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
     def get_application(self, obj):
@@ -1087,7 +1128,10 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
         'get_containment',
     )
     list_filter = (
-        ('reporting_period', PAPeriodFilter),
+        (
+            'reporting_period',
+            reporting_period_dropdown_filter(ProcessAgentUsesReported)
+        ),
         ('party', PAPartyFilter),
         ('decision', PADecisionFilter),
         ('application__substance', PASubstanceFilter),
@@ -1176,7 +1220,7 @@ class ProdConsAdmin(admin.ModelAdmin):
         'baseline_prod', 'baseline_cons', 'limit_prod', 'limit_cons'
     )
     list_filter = (
-        ('reporting_period__name', custom_title_dropdown_filter('Period')),
+        ('reporting_period', reporting_period_dropdown_filter(ProdCons)),
         ('party', MainPartyFilter),
         'group'
     )
@@ -1193,7 +1237,7 @@ class ProdConsMTAdmin(admin.ModelAdmin):
         'calculated_production', 'calculated_consumption'
     )
     list_filter = (
-        ('reporting_period__name', custom_title_dropdown_filter('Period')),
+        ('reporting_period', reporting_period_dropdown_filter(ProdConsMT)),
         ('party', MainPartyFilter),
         ('substance__name', custom_title_dropdown_filter('substance')),
         'substance__group'
@@ -1423,9 +1467,12 @@ class ImpComRecommendationAdmin(admin.ModelAdmin):
     search_fields = ('recommendation_number', 'excerpt', 'table_data', 'resulting_decisions')
     autocomplete_fields = ('bodies', 'topics')
     list_filter = (
-        ('reporting_period__name', custom_title_dropdown_filter('period')),
         ('topics', RelatedDropdownFilter),
         ('bodies', RelatedDropdownFilter),
+        (
+            'reporting_period',
+            reporting_period_dropdown_filter(ImpComRecommendation)
+        ),
     )
     ordering = ('-reporting_period__name', 'sort_order')
 
@@ -1459,8 +1506,8 @@ class TEAPReportAdmin(admin.ModelAdmin):
     )
     search_fields = ('reporting_period__name', 'decision__decision_id')
     list_filter = (
-        ('reporting_period__name', custom_title_dropdown_filter('period')),
         'report_type',
+        ReportingPeriodFilter,
     )
     ordering = ('sort_order',)
 
