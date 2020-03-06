@@ -1922,12 +1922,14 @@ class SubmissionFormat(models.Model):
 
 class SubmissionInfoManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().select_related(
+        return super().get_queryset().prefetch_related(
+            # Not using select_related because it triggers an error in clone()
+            # at statement SubmissionInfo.objects.update_or_create
+            'country',
             'submission',
             'submission__reporting_period',
             'submission__obligation',
             'submission__party',
-            'country',
         )
 
 
