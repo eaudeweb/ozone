@@ -212,17 +212,50 @@ class ReportingPeriodFilter(admin.SimpleListFilter):
             return queryset
 
 
-def reporting_period_dropdown_filter(model_class, title='period', field_name='reporting_period'):
+def related_dropdown_filter(
+    model_class, title, related_field, sort_field, sort_asc=True
+):
     class Wrapper(RelatedDropdownFilter):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
+            descending = '' if sort_asc else '-'
             self.lookup_choices = model_class.objects.distinct().order_by(
-                f'-{field_name}__start_date'
+                f'{descending}{related_field}__{sort_field}'
             ).values_list(
-                f'{field_name}__id', f'{field_name}__name'
+                f'{related_field}__id', f'{related_field}__name'
             )
             self.title = title
     return Wrapper
+
+
+def substance_dropdown_filter(model_class, related_field='substance'):
+    return related_dropdown_filter(
+        model_class=model_class,
+        title='substance',
+        related_field=related_field,
+        sort_field='sort_order',
+        sort_asc=True,
+    )
+
+
+def party_dropdown_filter(model_class, related_field='party'):
+    return related_dropdown_filter(
+        model_class=model_class,
+        title='party',
+        related_field=related_field,
+        sort_field='name',
+        sort_asc=True,
+    )
+
+
+def reporting_period_dropdown_filter(model_class, related_field='reporting_period'):
+    return related_dropdown_filter(
+        model_class=model_class,
+        title='period',
+        related_field=related_field,
+        sort_field='start_date',
+        sort_asc=False,
+    )
 
 
 # Meeting-related models
@@ -537,7 +570,7 @@ class SubmissionInfoAdmin(admin.ModelAdmin):
             'submission__reporting_period',
             reporting_period_dropdown_filter(
                 model_class=SubmissionInfo,
-                field_name='submission__reporting_period'
+                related_field='submission__reporting_period'
             )
         ),
         ('submission__party', MainPartyFilter),
@@ -653,11 +686,17 @@ class NominationAdmin(ExemptionBaseAdmin, admin.ModelAdmin):
             'submission__reporting_period',
             reporting_period_dropdown_filter(
                 model_class=Nomination,
-                field_name='submission__reporting_period'
+                related_field='submission__reporting_period'
             )
         ),
-        ('submission__party', MainPartyFilter),
-        ('substance__name', custom_title_dropdown_filter('substance')),
+        (
+            'submission__party',
+            party_dropdown_filter(
+                model_class=Nomination,
+                related_field='submission__party'
+            )
+        ),
+        ('substance', substance_dropdown_filter(Nomination)),
         'is_emergency'
     )
     ordering = ('-submission__reporting_period__name', 'submission__party__name')
@@ -689,12 +728,18 @@ class ExemptionApprovedAdmin(ExemptionBaseAdmin, admin.ModelAdmin):
             'submission__reporting_period',
             reporting_period_dropdown_filter(
                 model_class=ExemptionApproved,
-                field_name='submission__reporting_period'
+                related_field='submission__reporting_period'
             )
         ),
-        ('submission__party', MainPartyFilter),
+        (
+            'submission__party',
+            party_dropdown_filter(
+                model_class=ExemptionApproved,
+                related_field='submission__party'
+            )
+        ),
         ('decision_approved', custom_title_dropdown_filter('decision')),
-        ('substance__name', custom_title_dropdown_filter('substance')),
+        ('substance', substance_dropdown_filter(ExemptionApproved)),
         'is_emergency'
     )
     ordering = ('-submission__reporting_period__name', 'submission__party__name')
