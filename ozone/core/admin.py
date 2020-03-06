@@ -213,7 +213,7 @@ class ReportingPeriodFilter(admin.SimpleListFilter):
 
 
 def related_dropdown_filter(
-    model_class, title, related_field, sort_field, sort_asc=True
+    model_class, title, related_field, display_field, sort_field, sort_asc=True
 ):
     class Wrapper(RelatedDropdownFilter):
         def __init__(self, *args, **kwargs):
@@ -222,7 +222,7 @@ def related_dropdown_filter(
             self.lookup_choices = model_class.objects.distinct().order_by(
                 f'{descending}{related_field}__{sort_field}'
             ).values_list(
-                f'{related_field}__id', f'{related_field}__name'
+                f'{related_field}__id', f'{related_field}__{display_field}'
             )
             self.title = title
     return Wrapper
@@ -233,6 +233,7 @@ def substance_dropdown_filter(model_class, related_field='substance'):
         model_class=model_class,
         title='substance',
         related_field=related_field,
+        display_field='name',
         sort_field='sort_order',
         sort_asc=True,
     )
@@ -243,6 +244,7 @@ def party_dropdown_filter(model_class, related_field='party'):
         model_class=model_class,
         title='party',
         related_field=related_field,
+        display_field='name',
         sort_field='name',
         sort_asc=True,
     )
@@ -253,8 +255,20 @@ def reporting_period_dropdown_filter(model_class, related_field='reporting_perio
         model_class=model_class,
         title='period',
         related_field=related_field,
+        display_field='name',
         sort_field='start_date',
         sort_asc=False,
+    )
+
+
+def decision_dropdown_filter(model_class, related_field='decision'):
+    return related_dropdown_filter(
+        model_class=model_class,
+        title='decision',
+        related_field=related_field,
+        display_field='decision_id',
+        sort_field='decision_id',
+        sort_asc=True,
     )
 
 
@@ -783,8 +797,20 @@ class ApprovedCriticalUseAdmin(admin.ModelAdmin):
         'quantity',
     )
     list_filter = (
-        ('exemption__submission__reporting_period__name', custom_title_dropdown_filter('period')),
-        ('exemption__submission__party', MainPartyFilter),
+        (
+            'exemption__submission__reporting_period',
+            reporting_period_dropdown_filter(
+                model_class=ApprovedCriticalUse,
+                related_field='exemption__submission__reporting_period',
+            )
+        ),
+        (
+            'exemption__submission__party',
+            party_dropdown_filter(
+                model_class=ApprovedCriticalUse,
+                related_field='exemption__submission__party',
+            )
+        ),
         ('exemption__decision_approved', custom_title_dropdown_filter('decision')),
         ('critical_use_category__name', custom_title_dropdown_filter('category')),
     )
@@ -891,7 +917,7 @@ class ProcessAgentApplicationAdmin(admin.ModelAdmin):
         'application', 'decision', 'remark'
     )
     list_filter = (
-        ('substance__name', custom_title_dropdown_filter('substance')),
+        ('substance', substance_dropdown_filter(ProcessAgentApplication)),
         (
             'decision__decision__decision_id',
             ProcessAgentDecisionFilter
@@ -945,22 +971,6 @@ class PADecisionFilter(RelatedDropdownFilter):
         self.lookup_choices = ProcessAgentDecision.objects.order_by(
             'application_validity_start_date'
         ).values_list('id', 'decision__decision_id')
-
-
-class PASubstanceFilter(RelatedDropdownFilter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.lookup_choices = ProcessAgentApplication.objects.order_by(
-            'substance__sort_order'
-        ).distinct().values_list('substance_id', 'substance__name')
-
-
-class PAPartyFilter(RelatedDropdownFilter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.lookup_choices = ProcessAgentUsesReported.objects.order_by(
-            'party__name'
-        ).distinct().values_list('party_id', 'party__name')
 
 
 @admin.register(ProcessAgentUsesReported)
@@ -1177,9 +1187,12 @@ class ProcessAgentUsesReportedAdmin(ProcessAgentBaseAdmin, admin.ModelAdmin):
             'reporting_period',
             reporting_period_dropdown_filter(ProcessAgentUsesReported)
         ),
-        ('party', PAPartyFilter),
+        ('party', party_dropdown_filter(ProcessAgentUsesReported)),
         ('decision', PADecisionFilter),
-        ('application__substance', PASubstanceFilter),
+        ('application__substance', substance_dropdown_filter(
+            model_class=ProcessAgentUsesReported,
+            related_field='application__substance',
+        )),
     )
     search_fields = (
         'reporting_period__name',
@@ -1546,13 +1559,19 @@ class TEAPIndicativeNumberOfReportsAdmin(admin.ModelAdmin):
 @admin.register(TEAPReport)
 class TEAPReportAdmin(admin.ModelAdmin):
     list_display = (
-        'sort_order', 'reporting_period', 'report_type', 'decision',
-        'report_to_be_produced',
+        'sort_order', 'reporting_period', 'report_type',
+        'issue', 'decision', 'report_to_be_produced',
     )
-    search_fields = ('reporting_period__name', 'decision__decision_id')
+    search_fields = (
+        'reporting_period__name',
+        'decision__decision_id',
+        'issue',
+    )
     list_filter = (
         'report_type',
         ReportingPeriodFilter,
+        ('issue', DropdownFilter),
+        ('decision', decision_dropdown_filter(TEAPReport))
     )
     ordering = ('sort_order',)
 
