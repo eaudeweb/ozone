@@ -15,7 +15,7 @@ from django.contrib.admin.views.main import ChangeList
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import F, Q, Subquery, CharField, TextField
-from django.forms import TextInput, Textarea
+from django.forms import TextInput, Textarea, ModelForm
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path
@@ -57,6 +57,7 @@ from .models import (
     Limit,
     PartyRatification,
     PartyDeclaration,
+    Nomination,
     ExemptionApproved,
     CriticalUseCategory,
     ApprovedCriticalUse,
@@ -602,6 +603,35 @@ class ExemptionBaseAdmin:
         return form
 
 
+@admin.register(Nomination)
+class NominationAdmin(ExemptionBaseAdmin, admin.ModelAdmin):
+    list_display = (
+        'get_reporting_period', 'get_party',
+        'substance',
+        'quantity', 'is_emergency',
+    )
+    search_fields = ['submission__party__name']
+    list_filter = (
+        ('submission__reporting_period__name', custom_title_dropdown_filter('period')),
+        ('submission__party', MainPartyFilter),
+        ('substance__name', custom_title_dropdown_filter('substance')),
+        'is_emergency'
+    )
+    ordering = ('-submission__reporting_period__name', 'submission__party__name')
+
+
+class ApprovedCriticalUseInline(admin.TabularInline):
+    model = ApprovedCriticalUse
+    fields = ['critical_use_category', 'quantity']
+
+
+class ExemptionApprovedAdminForm(ModelForm):
+    class Meta:
+        widgets = {
+            'remarks_os': Textarea(attrs={'rows': 4, 'cols': 120})
+        }
+
+
 @admin.register(ExemptionApproved)
 class ExemptionApprovedAdmin(ExemptionBaseAdmin, admin.ModelAdmin):
     list_display = (
@@ -619,10 +649,18 @@ class ExemptionApprovedAdmin(ExemptionBaseAdmin, admin.ModelAdmin):
         'is_emergency'
     )
     ordering = ('-submission__reporting_period__name', 'submission__party__name')
+    form = ExemptionApprovedAdminForm
+    inlines = [ApprovedCriticalUseInline]
 
 
 @admin.register(ApprovedCriticalUse)
 class ApprovedCriticalUseAdmin(admin.ModelAdmin):
+
+    class Media:
+        # bigger width for select2 widgets
+        css = {
+            'all': ('css/admin.css',),
+        }
 
     def get_reporting_period(self, obj):
         return obj.exemption.submission.reporting_period
@@ -659,6 +697,7 @@ class ApprovedCriticalUseAdmin(admin.ModelAdmin):
     search_fields = (
         'critical_use_category__name', 'exemption__decision_approved',
     )
+    autocomplete_fields = ('critical_use_category',)
 
     ordering = ('-exemption__submission__reporting_period__name', 'exemption__submission__party__name')
 
@@ -666,6 +705,7 @@ class ApprovedCriticalUseAdmin(admin.ModelAdmin):
 @admin.register(CriticalUseCategory)
 class CriticalUseCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', )
+    exclude = ('code',)
     search_fields = ['name']
 
 

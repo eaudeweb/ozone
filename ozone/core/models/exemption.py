@@ -55,6 +55,7 @@ class Nomination(BaseExemption):
 
     class Meta:
         db_table = 'exemption_nomination'
+        verbose_name_plural = 'EUN/CUN Nominations'
 
 
 class ExemptionApprovedManager(models.Manager):
@@ -132,7 +133,7 @@ class ExemptionApproved(BaseExemption):
 
     class Meta:
         db_table = 'exemption_approved'
-        verbose_name_plural = 'Exemptions approved'
+        verbose_name_plural = 'EUN/CUN Approved exemptions'
 
 
 class CriticalUseCategory(models.Model):
@@ -140,7 +141,10 @@ class CriticalUseCategory(models.Model):
     Used when recording agreed and actual critical uses (exemptions) of MeBr
     """
 
-    code = models.CharField(max_length=256, unique=True)
+    code = models.CharField(
+        max_length=256,
+        unique=False, blank=True, null=True
+    )
     name = models.CharField(max_length=256, unique=True)
 
     def __str__(self):
@@ -154,7 +158,7 @@ class CriticalUseCategory(models.Model):
     class Meta:
         ordering = ('name',)
         db_table = 'critical_use_category'
-        verbose_name_plural = 'critical use categories'
+        verbose_name_plural = 'EUN/CUN Critical use categories'
 
 
 class ApprovedCriticalUse(models.Model):
@@ -181,4 +185,4 @@ class ApprovedCriticalUse(models.Model):
 
     class Meta:
         db_table = 'exemption_approved_critical_use'
-        verbose_name_plural = 'Exemptions approved critical uses'
+        verbose_name_plural = 'EUN/CUN Approved critical use categories'
