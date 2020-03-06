@@ -2091,7 +2091,7 @@ class TEAPIndicativeNumberOfReportsSerializer(serializers.ModelSerializer):
 class TEAPReportSerializer(serializers.ModelSerializer):
     report_type = serializers.StringRelatedField(read_only=True)
     reporting_period = serializers.StringRelatedField(read_only=True)
-    decision =  serializers.StringRelatedField(read_only=True)
+    decision = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = TEAPReport
