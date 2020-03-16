@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from reportlab.platypus import PageBreak
+from reportlab.platypus import Paragraph
 
 from ozone.core.models import Blend
 from ozone.core.models import Group
@@ -25,6 +26,7 @@ from ..util import filter_lab_uses
 from ..util import Report
 from ..util import ReportForSubmission
 from ..util import get_submissions
+from ..util import left_paragraph_style
 
 __all__ = [
     'export_labuse_report',
@@ -88,12 +90,14 @@ class Art7RawdataReport(ReportForSubmission):
     def get_flowables(self):
         if self.submission:
             submissions = [self.submission]
-
         else:
             art7 = Obligation.objects.get(_obligation_type=ObligationTypes.ART7.value)
             submissions = get_submissions(art7, self.periods, self.parties)
 
-        yield from export_submissions(submissions)
+        if not submissions:
+            yield Paragraph('No data', left_paragraph_style)
+        else:
+            yield from export_submissions(submissions)
 
 
 class SubstanceFilter:

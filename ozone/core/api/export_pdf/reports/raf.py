@@ -10,10 +10,19 @@ from ozone.core.models import ObligationTypes
 from ozone.core.models.utils import sum_decimals, subtract_decimals
 
 from ..util import (
-    h1_style, h2_style, sm_no_spacing_style,
-    sm_l, sm_r, sm_c, smb_c,
-    TABLE_STYLES, grid_color,
-    col_widths, format_decimal, get_remarks,
+    h1_style,
+    h2_style,
+    left_paragraph_style,
+    sm_no_spacing_style,
+    sm_l,
+    sm_r,
+    sm_c,
+    smb_c,
+    TABLE_STYLES,
+    grid_color,
+    col_widths,
+    format_decimal,
+    get_remarks,
 )
 from ..util import ReportForSubmission
 from ..util import get_submissions
@@ -382,6 +391,9 @@ def export_submissions(submissions):
 
     for party in sorted(data.keys()):
         flowables += get_flowables(party, data[party])
+    if not flowables:
+        flowables = [Paragraph('No data', left_paragraph_style)]
+
     return flowables
 
 

@@ -378,6 +378,8 @@ class ProdConsSummary:
         self.format = ValueFormatter()
 
     def is_phased_out(self, group):
+        if group.phase_out_year_article_5 is None:
+            return False
         return self.period.start_date >= group.phase_out_year_article_5
 
     def render_groups(self, table_builder, prodcons_groups, population,

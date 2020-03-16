@@ -19,6 +19,7 @@ from ozone.core.models import Substance
 
 from ozone.core.models.utils import round_decimal_half_up
 from ..util import h1_style
+from ..util import left_paragraph_style
 from ..util import centered_paragraph_style
 from ..util import sm_r
 from ..util import smb_r
@@ -207,6 +208,10 @@ class ImportExportRecoveredSubstancesReport(Report):
             yield table.render()
             yield PageBreak()
 
+        if not self.periods:
+            # This can happen if a future reporting period is selected
+            yield Paragraph('No data', left_paragraph_style)
+
 
 class NewRecoveredImportExportAggregateTable:
 
@@ -312,3 +317,7 @@ class ImportExportNewRecoveredAggregateReport(Report):
             table = NewRecoveredImportExportAggregateTable(period)
             yield table.render()
             yield PageBreak()
+
+        if not self.periods:
+            # This can happen if a future reporting period is selected
+            yield Paragraph('No data', left_paragraph_style)

@@ -5,6 +5,7 @@ from collections import OrderedDict
 from decimal import Decimal
 from functools import partial
 from datetime import datetime
+from xml.sax.saxutils import escape
 
 from django.utils.translation import gettext_lazy as _
 from django.http import HttpResponse
@@ -360,17 +361,23 @@ def filter_lab_uses(data):
 
 def get_remarks(item):
     if not item.remarks_party:
-        return item.remarks_os or ''
+        return escape(item.remarks_os) or ''
     else:
         if not item.remarks_os:
-            return item.remarks_party
+            return escape(item.remarks_party)
         else:
-            return '%s<br/>%s' % (item.remarks_party, item.remarks_os)
+            return '%s<br/>%s' % (
+                escape(item.remarks_party), escape(item.remarks_os)
+            )
 
 
 def get_comments_section(submission, type):
-    r_party = getattr(submission, type + '_remarks_party')
-    r_secretariat = getattr(submission, type + '_remarks_secretariat')
+    r_party = escape(
+        getattr(submission, type + '_remarks_party', '')
+    )
+    r_secretariat = escape(
+        getattr(submission, type + '_remarks_secretariat', '')
+    )
 
     remarks_party = p_l('%s (%s): %s' % (
         _('Comments'), _('party'), r_party

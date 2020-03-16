@@ -12,10 +12,20 @@ from ozone.core.models import (
 from ozone.core.models.utils import round_decimal_half_up
 
 from ..util import (
-    TABLE_STYLES_NOBORDER, col_widths,
+    TABLE_STYLES_NOBORDER,
+    col_widths,
     format_decimal,
-    h1_style, sm_no_spacing_style,
-    b_c, b_r, b_l, smb_c, smb_r, smb_l, smi_l, sm_r,
+    h1_style,
+    sm_no_spacing_style,
+    left_paragraph_style,
+    b_c,
+    b_r,
+    b_l,
+    smb_c,
+    smb_r,
+    smb_l,
+    smi_l,
+    sm_r,
     Report,
 )
 
@@ -34,9 +44,6 @@ TABLE_CUSTOM_KEEPTOGETHER_STYLES = (
     ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
     ('KEEPTOGETHER', (0, 0), (-1, -1)),
 )
-
-
-__all__ = ['get_flowables']
 
 
 class ImpExpNewRecReport(Report):
@@ -58,6 +65,8 @@ class ImpExpNewRecReport(Report):
             flowables.append(*get_footer())
             flowables.append(Paragraph('', style=h1_style))
             flowables += [PageBreak()]
+        if not data:
+            flowables += [Paragraph('No data', left_paragraph_style)]
         return flowables
 
 
