@@ -506,7 +506,12 @@ def _build_getter(prefix, name):
 class SubmissionAdmin(admin.ModelAdmin):
 
     def __getattr__(self, name):
-        return _build_getter('flag_has_reported_', name)
+        if name in ('a1', 'a2', 'b1', 'b2', 'b3', 'c1', 'c2', 'c3', 'e', 'f',):
+            return _build_getter('flag_has_reported_', name)
+        elif name in self.__dict__:
+            return self.__dict__.get(name)
+        else:
+            raise AttributeError
 
     list_display = (
         '__str__', 'party', 'reporting_period', 'obligation', '_current_state',
