@@ -1,5 +1,7 @@
+import os
 import uuid
 import tempfile
+from pathlib import Path
 
 import adminactions.actions as actions
 
@@ -26,6 +28,8 @@ from rest_framework.authtoken.models import Token
 from django.utils.translation import gettext_lazy as _
 from django.http import FileResponse
 from django.http import HttpResponseRedirect
+from django.core.files.base import ContentFile
+from django.conf import settings
 
 from ozone.core.export.submissions import export_submissions, ExportError
 from ozone.core.calculated import baselines
@@ -93,6 +97,7 @@ from .models import (
     ImpComBody,
     ImpComTopic,
     ImpComRecommendation,
+    get_other_country_profile_upload_to,
 )
 
 
@@ -851,6 +856,33 @@ class TransferAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
+
+        if request.GET:
+            submission_id = request.GET.get('submission_id')
+            # If this is a prefill request for a valid submission, set
+            # initial values in form to the submission's attributes
+            submission = Submission.objects.filter(id=submission_id).first()
+            if submission:
+                # This assumes that transfers will be recorded from the
+                # originating party.
+                form.base_fields['source_party_submission'].initial = submission
+                form.base_fields['destination_party_submission'].initial = submission
+                # This also assumes that transfers will be recorded from the
+                # originating party.
+                fields_mapping = {
+                    'source_party': 'party',
+                    'destination_party': 'party',
+                    'reporting_period': 'reporting_period',
+                }
+                # Pre-fill form with corresponding data from the submission
+                for field in fields_mapping.keys():
+                    submission_field = fields_mapping[field]
+                    form.base_fields[field].initial = getattr(
+                        submission, submission_field, None
+                    )
+                # Now just return pre-filled form
+                return form
+
         main_parties_queryset = Party.objects.filter(
             is_active=True,
             parent_party__id=F('id'),
@@ -1414,6 +1446,26 @@ class OtherCountryProfileDataAdmin(BaseCountryPofileAdmin, admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
+
+        if request.GET:
+            submission_id = request.GET.get('submission_id')
+            # If this is a prefill request for a valid submission, set
+            # initial values in form to the submission's attributes
+            submission = Submission.objects.filter(id=submission_id).first()
+            if submission:
+                form.base_fields['submission'].initial = submission
+                for field in ['party', 'reporting_period', 'obligation']:
+                    form.base_fields[field].initial = getattr(
+                        submission, field, None
+                    )
+                # Theoretically the submission allows several file uploads; we
+                # copy the first one and allow the OS user to make changes if
+                # needed.
+                form.base_fields['file'].initial = submission.files.all().first().file
+
+                # Now just return pre-filled form
+                return form
+
         submission_queryset = Submission.objects.filter(
             obligation___obligation_type__in=[
                 ObligationTypes.ART9.value,
@@ -1433,6 +1485,32 @@ class OtherCountryProfileDataAdmin(BaseCountryPofileAdmin, admin.ModelAdmin):
         form.base_fields['submission'].queryset = submission_queryset
         form.base_fields['obligation'].queryset = obligation_queryset
         return form
+
+    def save_model(self, request, obj, form, change):
+        """
+        Overridden to allow copying submission files to the public directory.
+        """
+        if obj.file and obj.pk is None and form.base_fields['file'].initial is not None:
+            # This can only happen if we're saving after a 'submission_id'
+            # request, since these are the only ones that set an initial value
+            # for the file field.
+            name = os.path.basename(obj.file.name)
+            file_path = (
+                Path(settings.MEDIA_ROOT) / Path(obj.file.name)
+            ).resolve()
+
+            # Reset anything that has been set on the `file` field, as it seems
+            # to influence results.
+            obj.file = None
+
+            # Now copy the submission file's contents into the proper directory
+            name = get_other_country_profile_upload_to(obj, name)
+            obj.file.name = name
+            obj.file.save(
+                name, ContentFile(file_path.open(mode='rb').read())
+            )
+
+        return super().save_model(request, obj, form, change)
 
     list_display = (
         'party', 'reporting_period', 'obligation', 'url', 'file', 'description',

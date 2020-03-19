@@ -147,6 +147,12 @@ class SubmissionFile(File):
             }
         )
 
+    def get_absolute_url(self):
+        """
+        Overridden to return the actual through-the-API download URL
+        """
+        return self.get_download_url()
+
     @staticmethod
     def has_valid_extension(filename):
         return filename.split('.')[-1].lower() in settings.ALLOWED_FILE_EXTENSIONS

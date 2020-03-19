@@ -253,6 +253,33 @@ class Transfer(models.Model):
                     }
                 )
 
+            if (
+                self.source_party and self.destination_party
+                and self.source_party == self.destination_party
+            ):
+                raise ValidationError(
+                    {
+                        'source_party': [_(
+                            "Source party should be different from destination "
+                            "party."
+                        )],
+                    }
+                )
+
+            if (
+                self.source_party_submission
+                and self.destination_party_submission
+                and self.source_party_submission == self.destination_party_submission
+            ):
+                raise ValidationError(
+                    {
+                        'source_party': [_(
+                            "Source party submission should be different from "
+                            "destination party submission."
+                        )],
+                    }
+                )
+
         super().clean()
 
     def delete(self, *args, **kwargs):
