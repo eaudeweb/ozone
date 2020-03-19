@@ -2,16 +2,27 @@
 Ozone Secretariat - Online Reporting System
 ###########################################
 
-Contents:
+Table of contents
+=================
 
 .. toctree::
    :maxdepth: 2
 
-   user/index
+   en/user/index
 
-
-Indices and tables
-==================
+Index
+======
 
 * :ref:`genindex`
-* :ref:`search`
+
+Translations
+============
+
+* `Manual de usuario (Español) <es/index.html>`_ - no disponible aún -
+* `Manuel de l'Utilisateur (Français) <fr/index.html>`_ - pas encore disponible -
+
+
+PDF Version
+============
+
+`ORS user manual (English) <ORS%20user%20manual.pdf>`_
