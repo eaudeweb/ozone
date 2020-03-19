@@ -225,6 +225,8 @@ const getNonParties = (reporting_period) => fetch(`get-non-parties/?reporting_pe
 
 const getSubmissionDefaultValues = () => fetch('default-values/')
 
+const getSubmissionStates = () => fetch('get-submission-states/')
+
 const uploadFile = (file, submissionId, onProgressCallback) => new Promise(async (resolve, reject) => {
   const responseToken = await post(`submissions/${submissionId}/token/`)
   console.log(filesURL)
@@ -308,6 +310,7 @@ export {
   getCurrentUser,
   updateCurrentUser,
   fetchFromPublicDirectory,
+  getSubmissionStates,
   getSubmissionDefaultValues,
   uploadFile,
   getTransitions,

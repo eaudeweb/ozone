@@ -146,6 +146,12 @@ export default {
         file,
         description
       })
+      if (this.$store.state.form.tabs.files !== 'edited') {
+        this.$store.commit('setTabStatus', {
+          tab: this.$store.state.form.tabs.files.name,
+          value: 'edited'
+        })
+      }
     },
     async onSelectedFilesChanged() {
       if (!this.selectedFiles || !this.selectedFiles.length) {

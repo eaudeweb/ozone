@@ -50,6 +50,7 @@
           :name="`${field.name}_${option.value}_${index}`"
           :value="option.value"
           :unchecked-value="null"
+          :disabled="disabled"
           @change="updateFormFieldQuestionnaire($event, field.selected)"
           :checked="field.selected"
           inline

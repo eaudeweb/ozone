@@ -30,9 +30,7 @@
         <b-tabs no-key-nav v-model="tabIndex" card>
           <b-tab :title="$gettext('Submission Information')" active>
             <template slot="title">
-              <div class="tab-title">
-                <span v-translate>Submission Information</span>
-              </div>
+              <tab-title-with-loader :tab="$store.state.form.tabs.sub_info"/>
             </template>
             <SubmissionInfo ref="sub_info" :info="$store.state.form.tabs.sub_info" :tabId="0"/>
           </b-tab>
@@ -41,7 +39,7 @@
             <template slot="title">
               <tab-title-with-loader :tab="$store.state.form.tabs.files"/>
             </template>
-            <Files/>
+            <Files :tabId="1" :tabIndex="tabIndex" />
           </b-tab>
         </b-tabs>
       </b-card>

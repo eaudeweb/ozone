@@ -224,7 +224,7 @@ const getFormRaf = ($gettext) => {
         },
         default_properties: {
           flag_provisional: false,
-          flag_valid: false
+          flag_valid: null
         }
       }
     }

@@ -152,7 +152,7 @@ export default {
           resolve()
           return
         }
-        if (tab.status !== null) {
+        if (tab.status === 'edited') {
           this.$store.commit('setTabStatus', { tab: tab.name, value: 'saving' })
         } else {
           resolve()
@@ -205,7 +205,6 @@ export default {
         try {
           if (this.newTabs.includes(tab.name) && tab.name !== 'files') {
             await post(url, current_tab_data)
-            // console.log('post done', tab.name)
             this.$store.commit('setTabStatus', { tab: tab.name, value: true })
 
             if (isObject(tab.form_fields)) {

@@ -1,6 +1,9 @@
 import enum
+import os
 
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from . import (
     Obligation,
@@ -124,6 +127,19 @@ class ReclamationFacility(models.Model):
         ordering = ('party__name', '-date_reported')
 
 
+def get_other_country_profile_upload_to(instance, filename):
+    """
+    This determines the location at which files for OtherCountryProfileData
+    will be saved.
+    """
+    return os.path.join(
+        'public/other-country-profile-data/',
+        instance.reporting_period.name,
+        instance.party.abbr,
+        os.path.basename(filename)
+    )
+
+
 class OtherCountryProfileDataManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related(
@@ -159,7 +175,7 @@ class OtherCountryProfileData(models.Model):
 
     description = models.CharField(max_length=9999, blank=True)
     file = models.FileField(
-        upload_to='public/other-country-profile-data/', blank=True, null=True
+        upload_to=get_other_country_profile_upload_to, blank=True, null=True
     )
     url = models.URLField(
         'URL', max_length=1024, null=True, blank=True
@@ -169,6 +185,31 @@ class OtherCountryProfileData(models.Model):
         null=True,
     )
     remarks_secretariat = models.CharField(max_length=9999, blank=True)
+
+    def clean(self):
+        if self.submission:
+            if self.submission.party != self.party:
+                raise ValidationError(
+                    {
+                        'party': [_(
+                            "Party does not correspond to submission's party"
+                        )]
+                    }
+                )
+            if self.submission.reporting_period != self.reporting_period:
+                raise ValidationError(
+                    {
+                        'reporting_period': [_(
+                            "Reporting period does not correspond to "
+                            "submission's reporting period"
+                        )]
+                    }
+                )
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     class Meta:
         db_table = "other_country_profile_data"
@@ -183,6 +224,17 @@ class WebsiteManager(models.Manager):
         )
 
 
+def get_website_upload_to(instance, filename):
+    """
+    This determines the location at which files for Website will be saved.
+    """
+    return os.path.join(
+        'public/website/',
+        instance.party.abbr,
+        os.path.basename(filename)
+    )
+
+
 class Website(models.Model):
     objects = WebsiteManager()
 
@@ -191,7 +243,7 @@ class Website(models.Model):
     )
 
     file = models.FileField(
-        upload_to='public/website/', blank=True, null=True
+        upload_to=get_website_upload_to, blank=True, null=True
     )
 
     url = models.URLField(
@@ -251,11 +303,32 @@ class LicensingSystem(models.Model):
         ordering = ("party__name", "-date_reported_hfc", "-date_reported_ods")
 
 
+def get_licensing_system_file_upload_to(instance, filename):
+    """
+    This determines the location at which files for LicensingSystemFile
+    will be saved.
+    """
+    return os.path.join(
+        'public/other-country-profile-data/',
+        instance.licensing_system.party.abbr,
+        os.path.basename(filename)
+    )
+
+
+class LicensingSystemFileManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'licensing_system', 'licensing_system__party'
+        )
+
+
 class LicensingSystemFile(models.Model):
+    objects = LicensingSystemFileManager()
+
     licensing_system = models.ForeignKey(
         LicensingSystem, related_name='files', on_delete=models.CASCADE
     )
-    file = models.FileField(upload_to='public/licensing-system/')
+    file = models.FileField(upload_to=get_licensing_system_file_upload_to)
     title = models.CharField(max_length=256)
 
     class Meta:

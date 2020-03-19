@@ -41,7 +41,6 @@ from ozone.core.models import (
     ImpComRecommendation,
 )
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
@@ -121,7 +120,7 @@ models_handlers_mapping = [
     (IllegalTrade, (clear_country_profile_cache, )),
     (
         LicensingSystem,
-        (clear_country_profile_cache, clear_licensing_system_cache)
+        (clear_country_profile_cache, clear_licensing_system_cache, )
     ),
     (MultilateralFund, (clear_country_profile_cache, )),
     (ORMReport, (clear_country_profile_cache, )),
@@ -141,8 +140,14 @@ models_handlers_mapping = [
     ),
     # ImpCom models/signal handlers
     (ImpComRecommendation, (clear_impcom_recommendations_cache, )),
-    (ImpComBody, (clear_impcom_bodies_cache, )),
-    (ImpComTopic, (clear_impcom_topics_cache, )),
+    (
+        ImpComBody,
+        (clear_impcom_bodies_cache, clear_impcom_recommendations_cache, )
+    ),
+    (
+        ImpComTopic,
+        (clear_impcom_topics_cache, clear_impcom_recommendations_cache, )
+    ),
 ]
 for model, signal_handlers in models_handlers_mapping:
     for handler in signal_handlers:

@@ -484,6 +484,11 @@ urlpatterns = (
             name='default_values'
         ),
         path(
+            'get-submission-states/',
+            views.GetSubmissionStatesViewSet.as_view(),
+            name='get_submission_states'
+        ),
+        path(
             'get-submission-formats/',
             views.GetSubmissionFormatsViewSet.as_view(),
             name='get_submission_formats'

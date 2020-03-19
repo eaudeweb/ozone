@@ -35,7 +35,31 @@ const getTabFlags = ($gettext) => {
   }
   return tabFlags
 }
+
+const getTabValidFlag = ($gettext) => {
+  const tabFlags = {
+    name: 'flags',
+    hasAssideMenu: false,
+    endpoint_url: 'submission_flags_url',
+    status: null,
+    title: $gettext('Flags'),
+    titleHtml: `<b>${$gettext('Flags')}</b>`,
+    tooltipHtml: '',
+    detailsHtml: $gettext('Flags'),
+    form_fields: {
+      flag_valid: flags['flag_valid']
+    },
+    get fields_order() {
+      return Object.keys(this.form_fields)
+    },
+    default_properties: {
+      flag_valid: null
+    }
+  }
+  return tabFlags
+}
 export {
-  getTabFlags
+  getTabFlags,
+  getTabValidFlag
 }
 

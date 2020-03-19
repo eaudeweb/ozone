@@ -1,9 +1,12 @@
 from django.utils.translation import gettext_lazy as _
 
+from reportlab.platypus import Paragraph
+
 from . import render
 from . import data
 from ...util import Report
 from ...util import ReportForSubmission
+from ...util import left_paragraph_style
 
 
 class ProdConsReport(ReportForSubmission):
@@ -78,6 +81,9 @@ class BaseProdConsPartiesReport(Report):
             yield from groups_description
             yield data.SummaryParties(period, self.is_article5).render_table()
             yield render.PageBreak()
+        if not self.periods:
+            # This can happen if a future reporting period is selected
+            yield Paragraph('No data', left_paragraph_style)
 
 
 class ProdConsArt5PartiesReport(BaseProdConsPartiesReport):

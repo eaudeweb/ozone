@@ -43,6 +43,7 @@ from ..models import (
     ReportingPeriod,
     ReportingChannel,
     Obligation,
+    ObligationTypes,
     Submission,
     SubmissionInfo,
     SubmissionFile,
@@ -1594,9 +1595,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submission = Submission.objects.get(pk=pk)
         obligation = submission.obligation._obligation_type
 
-        if obligation == 'art7':
+        if obligation == ObligationTypes.ART7.value:
             cls = reports.Art7RawdataReport
-        elif obligation == 'raf':
+        elif obligation == ObligationTypes.ESSENCRIT.value:
             cls = reports.RafReport
         else:
             raise RuntimeError(f"Unknown obligation {obligation!r}")
@@ -1684,6 +1685,23 @@ class SubmissionInfoViewSet(viewsets.ModelViewSet):
         return SubmissionInfo.objects.filter(
             submission=self.kwargs['submission_pk']
         ).select_related('submission__reporting_channel')
+
+
+class GetSubmissionStatesViewSet(ReadOnlyMixin, views.APIView):
+    """
+    retrieve:
+    Get the available options for the submission status.
+    """
+    permission_classes = (IsAuthenticated,)
+    renderer_classes = (JSONRenderer,)
+
+    def get(self, request):
+        return Response({
+            state.name: state.title
+            for wfclass in Submission.WORKFLOW_MAPPING.values()
+            if wfclass
+            for state in wfclass.state.workflow.states
+        })
 
 
 class GetSubmissionFormatsViewSet(ReadOnlyMixin, generics.ListAPIView):

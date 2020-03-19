@@ -182,8 +182,13 @@
           </template>
           <b-container fluid>
             <div class="mt-2 mb-2 dashboard-filters all-submissions">
-              <b-input-group :prepend="$gettext('Search')">
-                <b-form-input id="submission_search_filter" v-model="tableOptions.filters.search"/>
+              <b-input-group :prepend="$gettext('Party')">
+                <b-form-select
+                  id="submission_party_filter"
+                  :disabled="Boolean(currentUser.party)"
+                  v-model="tableOptions.filters.party"
+                  :options="sortOptionsParties"
+                ></b-form-select>
               </b-input-group>
               <b-input-group :prepend="$gettext('Obligation')">
                 <b-form-select
@@ -192,12 +197,11 @@
                   :options="sortOptionsObligation"
                 ></b-form-select>
               </b-input-group>
-              <b-input-group :prepend="$gettext('Party')">
+              <b-input-group :prepend="$gettext('Status')">
                 <b-form-select
-                  id="submission_party_filter"
-                  :disabled="Boolean(currentUser.party)"
-                  v-model="tableOptions.filters.party"
-                  :options="sortOptionsParties"
+                  id="submission_status_filter"
+                  v-model="tableOptions.filters.currentState"
+                  :options="sortOptionsStatus"
                 ></b-form-select>
               </b-input-group>
               <b-input-group class="w120" :prepend="$gettext('From')">
@@ -323,6 +327,7 @@ export default {
     document.querySelector('body').classList.remove('aside-menu-lg-show')
     this.$store.dispatch('getDashboardParties')
     this.$store.dispatch('getDashboardObligations')
+    this.$store.dispatch('fetchSubmissionStates')
 
     await this.$store.dispatch('getDashboardPeriods')
     const submissionDefaultValues = await this.$store.dispatch('getSubmissionDefaultValues')
@@ -515,18 +520,33 @@ export default {
       return this.obligations
     },
 
+    sortOptionsStatus() {
+      // return this.statuses
+      const data = [
+        { text: 'Any', value: null },
+        ...Object.keys(this.submissionStates).map(state => ({
+          // TODO: use backend names instead of getCommonLabels?
+          // text: this.submissionStates[state],
+          text: getCommonLabels(this.$gettext)[state],
+          value: state
+        }))
+      ]
+      return data
+    },
+
     sortOptionsParties() {
       return this.parties
     },
 
     dataReady() {
       if (this.submissions
-				&& this.periods
-				&& this.currentUser
-				&& this.obligations
-				&& this.parties
-				&& this.submissions.length
-				// && Object.values(this.submissionNew).some(value => value)
+        && this.periods
+        && this.currentUser
+        && this.obligations
+        && this.parties
+        && this.submissionStates
+        && this.submissions.length
+        // && Object.values(this.submissionNew).some(value => value)
       ) {
         return true
       }
@@ -547,6 +567,9 @@ export default {
     },
     parties() {
       return this.$store.state.dashboard.parties
+    },
+    submissionStates() {
+      return this.$store.state.submissionStates
     },
     obligations() {
       return this.$store.state.dashboard.obligations

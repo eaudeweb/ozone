@@ -20,6 +20,7 @@ import {
   updateCurrentUser,
   uploadFile,
   getSubmissionDefaultValues,
+  getSubmissionStates,
   getTransitions,
   getSubmissionFormat,
   getControlledGroups,
@@ -698,6 +699,11 @@ const actions = {
   async getSubmissionDefaultValues({ commit }) {
     const response = await getSubmissionDefaultValues()
     commit('setSubmissionDefaultValues', response.data)
+    return response.data || {}
+  },
+  async fetchSubmissionStates({ commit }) {
+    const response = await getSubmissionStates()
+    commit('setSubmissionStates', response.data)
     return response.data || {}
   }
 }

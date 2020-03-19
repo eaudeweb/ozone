@@ -39,7 +39,7 @@ export default {
         }
       })
       Object.values(this.form.tabs).filter(tab => !Object.keys(this.form.tabs.questionaire_questions.default_properties).includes(tab.name)).forEach(tab => {
-        if (tab.status !== null && !doNotSave.includes(tab.name)) {
+        if (tab.status === 'edited' && !doNotSave.includes(tab.name)) {
           justSave.push(tab.name)
         }
       })

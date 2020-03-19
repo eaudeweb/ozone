@@ -273,7 +273,7 @@ texinfo_documents = [
 # texinfo_show_urls = 'footnote'
 
 pdf_documents = [
-    ('index', u'ORS user manual', u'Ozone Reporting System', u'Ozone Secretariat', '2019-12-09'),
+    ('en/user/index', u'ORS user manual', u'Ozone Reporting System', u'Ozone Secretariat', '2019-12-09'),
 ]
 pdf_stylesheets = ['sphinx', 'kerning', 'a4']
 pdf_style_path = ['.', '_styles']

@@ -38,7 +38,7 @@
             <template slot="title">
               <tab-title-with-loader :tab="$store.state.form.tabs.files"/>
             </template>
-            <Files :tabId="3" :tabIndex="tabIndex"/>
+            <Files :tabId="1" :tabIndex="tabIndex" />
           </b-tab>
           <b-tab v-for="tabId in tabsIdsForSecretariat" :key="tabId">
             <template slot="title">

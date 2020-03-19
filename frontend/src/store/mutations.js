@@ -267,6 +267,10 @@ const mutations = {
   },
   // initial data
 
+  setSubmissionStates(state, data) {
+    state.submissionStates = data
+  },
+
   setCurrentUser(state, data) {
     [state.currentUser] = data
   },
