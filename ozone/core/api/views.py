@@ -1687,6 +1687,23 @@ class SubmissionInfoViewSet(viewsets.ModelViewSet):
         ).select_related('submission__reporting_channel')
 
 
+class GetSubmissionStatesViewSet(ReadOnlyMixin, views.APIView):
+    """
+    retrieve:
+    Get the available options for the submission status.
+    """
+    permission_classes = (IsAuthenticated,)
+    renderer_classes = (JSONRenderer,)
+
+    def get(self, request):
+        return Response({
+            state.name: state.title
+            for wfclass in Submission.WORKFLOW_MAPPING.values()
+            if wfclass
+            for state in wfclass.state.workflow.states
+        })
+
+
 class GetSubmissionFormatsViewSet(ReadOnlyMixin, generics.ListAPIView):
     """
     retrieve:

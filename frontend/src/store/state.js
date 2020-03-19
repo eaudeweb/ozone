@@ -23,6 +23,7 @@ const state = {
       },
       filters: {
         search: null,
+        currentState: null,
         period_start: null,
         is_superseded: null,
         period_end: null,
