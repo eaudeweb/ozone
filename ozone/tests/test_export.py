@@ -114,7 +114,7 @@ def assert_spreadsheets_are_same(s1, s2):
         t1 = s1.tables[name]
         t2 = s2.tables[name]
         assert t1.header == t2.header, f"Headers differ for sheet {name}"
-        assert sorted_rows(t1) == sorted_rows(t2), f"Rows differ for sheet {name}"
+        assert sorted_rows(t1) == sorted_rows(t2), f"Rows differ for sheet {name}\n{sorted_rows(t1)};\n{sorted_rows(t2)}"
         assert t1.rows == t2.rows, f"Row order differs for sheet {name}"
 
 

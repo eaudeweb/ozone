@@ -38,6 +38,8 @@ def export_overall(queryset):
 
         'UserCreate', 'UserUpdate', 'DateCreate', 'DateUpdate', 'Remark',
         'SubmissionType', 'TS', 'Emitted', 'HFCDateReported',
+
+        'ReportingOfficer', 'Email', 'CreatedByUserEmail',
     ]
 
     def remark(submission):
@@ -109,6 +111,10 @@ def export_overall(queryset):
                 'SubmissionType': submission_format,
                 'TS': None,
                 'HFCDateReported': submission.date_reported_f,
+
+                'ReportingOfficer':     submission.info.reporting_officer,
+                'Email':                submission.info.email,
+                'CreatedByUserEmail':   submission.created_by.email,
             }
 
     return OzoneTable(header, rows())
