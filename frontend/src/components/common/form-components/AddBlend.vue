@@ -244,7 +244,6 @@ export default {
     },
 
     alertIfBlendExists() {
-      console.log('here')
       if (this.$store.getters.checkIfBlendAlreadyEists(this.new_blend.text)) {
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,

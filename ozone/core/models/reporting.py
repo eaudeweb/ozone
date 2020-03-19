@@ -18,6 +18,7 @@ from .utils import model_to_dict
 from .workflows import (
     BaseWorkflow,
     DefaultArticle7Workflow,
+    SimplifiedWorkflow,
     AcceleratedArticle7Workflow,
     DefaultExemptionWorkflow,
     AcceleratedExemptionWorkflow,
@@ -287,6 +288,7 @@ class Submission(models.Model):
         'base': BaseWorkflow,
         'default': DefaultArticle7Workflow,
         'accelerated': AcceleratedArticle7Workflow,
+        'simplified': SimplifiedWorkflow,
         'default_exemption': DefaultExemptionWorkflow,
         'accelerated_exemption': AcceleratedExemptionWorkflow,
         'default_transfer': DefaultTransferWorkflow,
@@ -1765,14 +1767,22 @@ class Submission(models.Model):
                 self.version = current_submissions.latest('version').version + 1
 
             # On first save we need to instantiate the submission's workflow
-            if self.obligation.obligation_type == ObligationTypes.EXEMPTION.value:
+            if self.obligation.obligation_type in (
+                ObligationTypes.ART7.value,
+                ObligationTypes.ESSENCRIT.value,
+                ObligationTypes.HAT.value,
+            ):
+                self._workflow_class = 'default'
+            elif self.obligation.obligation_type == ObligationTypes.EXEMPTION.value:
                 self._workflow_class = 'default_exemption'
+            # TODO: merge simplified, transfer and process_agent workflows
+            # and migrate existing data (also HistoricalSubmissions)
             elif self.obligation.obligation_type == ObligationTypes.TRANSFER.value:
                 self._workflow_class = 'default_transfer'
             elif self.obligation.obligation_type == ObligationTypes.PROCAGENT.value:
                 self._workflow_class = 'default_process_agent'
             else:
-                self._workflow_class = 'default'
+                self._workflow_class = 'simplified'
             self._current_state = \
                 self.workflow().state.workflow.initial_state.name
 

@@ -68,9 +68,8 @@ export default {
   },
   methods: {
     doTransition() {
-      // console.log(this.transition)
-      if (this.transition === 'finalize') {
-        this.$store.commit('setTabStatus', { tab: 'flags', value: true })
+      if (this.transition === 'finalize' && this.$store.state.form.tabs.flags) {
+        this.$store.commit('setTabStatus', { tab: 'flags', value: 'edited' })
       }
       this.$store.dispatch('triggerSave', { action: 'doSubmissionTransition', data: { $gettext: this.$gettext, submission: this.submission, transition: this.transition, noModal: true, backToDashboard: !this.noForwardToDashboard.includes(this.transition) } })
       this.$refs.transition_modal.hide()
@@ -80,6 +79,21 @@ export default {
     transition: {
       handler(val) {
         if (val !== null) {
+          if (
+            this.transition === 'finalize'
+            && this.$store.state.form.tabs.flags
+            && this.$store.state.form.tabs.flags.form_fields.flag_valid
+            && this.$store.state.form.tabs.flags.form_fields.flag_valid.selected === null
+          ) {
+            this.$store.commit('updateFormField', {
+              value: true,
+              fieldInfo: {
+                index: 'flag_valid',
+                tabName: 'flags',
+                field: 'flag_valid'
+              }
+            })
+          }
           if (this.transitionToValidate.includes(val)) {
             this.$store.dispatch('triggerSave', { action: '', data: { submission: this.submission, transition: `before-${this.transition}`, nextTransition: this.transition } })
             if (this.$store.state.dataForAction === null) {
