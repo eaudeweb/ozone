@@ -1461,7 +1461,9 @@ class OtherCountryProfileDataAdmin(BaseCountryPofileAdmin, admin.ModelAdmin):
                 # Theoretically the submission allows several file uploads; we
                 # copy the first one and allow the OS user to make changes if
                 # needed.
-                form.base_fields['file'].initial = submission.files.all().first().file
+                fileobj = submission.files.all().first()
+                if fileobj:
+                    form.base_fields['file'].initial = fileobj.file
 
                 # Now just return pre-filled form
                 return form
