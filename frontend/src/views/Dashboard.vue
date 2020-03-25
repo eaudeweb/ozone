@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-page animated fadeIn">
     <b-row>
-      <b-col v-if="basicDataReady && !currentUser.is_read_only" sm="12" xl="6">
+      <b-col v-if="basicDataReady && !currentUser.is_read_only" sm="12" :xl="currentUser.is_secretariat ? '12' : '6'">
         <b-card>
           <div slot="header">
             <strong>
@@ -62,7 +62,7 @@
         </b-card>
       </b-col>
 
-      <b-col sm="12" xl="6">
+      <b-col sm="12" xl="6" v-if="!currentUser.is_secretariat">
         <b-card v-if="basicDataReady">
           <div slot="header">
             <strong>
@@ -70,45 +70,6 @@
                 v-translate="{totalRows: dataEntryTable.totalRows}"
               >Data entry in progress submissions (%{totalRows} records)</span>
             </strong>
-          </div>
-          <div v-if="currentUser.is_secretariat" class="mt-2 mb-2">
-            <div class="filter-group mb-2">
-              <b-input-group :prepend="$gettext('Search')">
-                <b-form-input v-model="dataEntryTable.search"/>
-              </b-input-group>
-              <b-input-group :prepend="$gettext('Obligation')">
-                <b-form-select
-                  v-model="dataEntryTable.filters.obligation"
-                  :options="sortOptionsObligation"
-                ></b-form-select>
-              </b-input-group>
-            </div>
-            <div class="filter-group">
-              <b-input-group :prepend="$gettext('Party')">
-                <b-form-select
-                  :disabled="Boolean(currentUser.party)"
-                  v-model="dataEntryTable.filters.party"
-                  :options="sortOptionsParties"
-                ></b-form-select>
-              </b-input-group>
-              <b-input-group class="w120" :prepend="$gettext('From')">
-                <b-form-select
-                  v-model="dataEntryTable.filters.period_start"
-                  :options="sortOptionsPeriodFromDataEntry"
-                ></b-form-select>
-              </b-input-group>
-              <b-input-group class="w120" :prepend="$gettext('To')">
-                <b-form-select
-                  v-model="dataEntryTable.filters.period_end"
-                  :options="sortOptionsPeriodToDataEntry"
-                ></b-form-select>
-              </b-input-group>
-              <b-btn
-                @click="Object.keys(dataEntryTable.filters).forEach(key => dataEntryTable.filters[key] = null)"
-              >
-                <span v-translate>Clear</span>
-              </b-btn>
-            </div>
           </div>
           <b-table
             id="data-entry-submissions-table"
@@ -140,24 +101,6 @@
               </router-link>
             </template>
           </b-table>
-          <b-row v-if="currentUser.is_secretariat">
-            <b-col md="9" class="my-1">
-              <b-pagination
-                :total-rows="dataEntryTable.totalRows"
-                :per-page="dataEntryTable.perPage"
-                v-model="dataEntryTable.currentPage"
-                class="my-0"
-              />
-            </b-col>
-            <b-col md="3">
-              <b-input-group horizontal :prepend="$gettext('Per page')" class="mb-0">
-                <b-form-select
-                  :options="dataEntryTable.pageOptions"
-                  v-model="dataEntryTable.perPage"
-                />
-              </b-input-group>
-            </b-col>
-          </b-row>
         </b-card>
       </b-col>
     </b-row>
@@ -255,7 +198,7 @@
             </b-table>
 
             <b-row>
-              <b-col md="10" class="my-1">
+              <b-col md="10" class="mt-1 mb-3">
                 <b-pagination
                   :total-rows="tableOptions.totalRows"
                   :per-page="tableOptions.perPage"
