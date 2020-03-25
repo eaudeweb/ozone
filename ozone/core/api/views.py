@@ -1546,7 +1546,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                     'core:submission-detail',
                     request=request,
                     kwargs={'pk': clone.id}
-                )
+                ),
+                "id": clone.id,
             }
         )
 

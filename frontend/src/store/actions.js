@@ -362,12 +362,12 @@ const actions = {
     commit('removeBulkFields', { tab, indexList })
   },
 
-  async removeSubmission({ dispatch }, { submissionUrl, $gettext }) {
+  async removeSubmission({ dispatch }, { submissionId, $gettext }) {
     const confirmed = await dispatch('openConfirmModal', { title: 'Please confirm', description: 'Are you sure you want to delete the submission? All data will be deleted irreversibly.', $gettext })
     if (!confirmed) {
       return confirmed
     }
-    deleteSubmission(submissionUrl).then(() => {
+    deleteSubmission(submissionId).then(() => {
       dispatch('getCurrentSubmissions')
       dispatch('setAlert', {
         $gettext,

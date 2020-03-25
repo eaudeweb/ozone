@@ -170,13 +170,13 @@ export default {
     updateBreadcrumbs() {
       this.$store.commit('updateBreadcrumbs', `${this.$store.state.current_submission.reporting_period_description} ${this.$store.state.current_submission.obligation} ${this.$gettext('data submission for')} ${this.$store.state.initialData.display.countries[this.$store.state.current_submission.party]}`)
     },
-    async clone(url) {
+    async clone(submissionId) {
       const confirmed = await this.$store.dispatch('openConfirmModal', { title: 'Please confirm', description: 'You are about to create a new version for data entry. The current version will be superseded once the new version is submitted.', $gettext: this.$gettext })
       if (!confirmed) {
         return
       }
-      cloneSubmission(url).then((response) => {
-        this.$router.push({ name: this.$route.name, query: { submission: response.data.url } })
+      cloneSubmission(submissionId).then((response) => {
+        this.$router.push({ name: this.$route.name, query: { submission: response.data.id }, params: { obligation_type: this.obligation_type } })
         this.$router.go(this.$router.currentRoute)
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,
@@ -216,7 +216,7 @@ export default {
     removeSubmission() {
       this.$store.dispatch('removeSubmission', {
         $gettext: this.$gettext,
-        submissionUrl: this.submission
+        submissionId: this.submission
       }).then((result) => {
         if (result) {
           this.$router.push({ name: 'Dashboard' })

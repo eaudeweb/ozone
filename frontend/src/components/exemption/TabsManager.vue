@@ -203,7 +203,7 @@ export default {
     removeSubmission() {
       this.$store.dispatch('removeSubmission', {
         $gettext: this.$gettext,
-        submissionUrl: this.submission
+        submissionId: this.submission
       }).then((result) => {
         if (result) {
           this.$router.push({ name: 'Dashboard' })
