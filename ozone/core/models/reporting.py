@@ -1481,7 +1481,7 @@ class Submission(models.Model):
         """
         if self.flag_has_reported_f is True and self.date_reported_f is None:
             self.date_reported_f = timezone.now().date()
-            self.save(update_fields=('flag_has_reported_f',))
+            self.save(update_fields=('date_reported_f',))
 
     def check_submitted_at_modified(self):
         if 'submitted_at' in self.tracker.changed().keys():

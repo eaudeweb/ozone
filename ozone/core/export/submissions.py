@@ -15,10 +15,15 @@ def fix_tz(value):
 
 
 def substance_or_blend_id(row):
+    base_custom_blend_id = 10000
     if row.substance:
         return row.substance.substance_id
     if row.blend:
-        return row.blend.legacy_blend_id
+        # Custom blends will have legacy_blend_id set to None, so return
+        # a unique value (based on base_custom_blend_id) instead if the legacy
+        # blend ID is None
+        legacy_id = row.blend.legacy_blend_id
+        return legacy_id or (base_custom_blend_id + row.blend.id)
     raise RuntimeError("Neither substance nor blend? What is this sorcery?")
 
 
