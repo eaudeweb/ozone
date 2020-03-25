@@ -78,7 +78,8 @@ const state = {
       criticalUseCategoryList: null
     }
   },
-  alertData: []
+  alertData: [],
+  recordDataObligations: ['art9', 'transfer']
 }
 
 export default state

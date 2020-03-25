@@ -52,6 +52,15 @@
         :submission="submission"
       ></Save>
       <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
+      <b-button-group v-if="$store.state.recordDataObligations.includes(obligation_type) != -1 && $store.state.currentUser.is_secretariat && $store.state.current_submission.submitted_at" class="pull-right actions ml-2 mt-2 mb-2">
+        <b-btn
+          :href="`${api}/admin/core/othercountryprofiledata/add/?submission_id=${$store.state.current_submission.id}`"
+          target="_blank"
+          variant="outline-primary"
+        >
+          <span v-translate>Record Data</span>
+        </b-btn>
+      </b-button-group>
       <b-button-group class="pull-right actions mt-2 mb-2">
         <b-btn
           v-if="$store.state.current_submission.available_transitions.includes('submit')"
@@ -110,7 +119,7 @@
 import { Footer } from '@coreui/vue'
 import SubmissionInfo from '@/components/common/SubmissionInfo.vue'
 import Files from '@/components/common/Files'
-import { getInstructions, cloneSubmission } from '@/components/common/services/api'
+import { api, getInstructions, cloneSubmission } from '@/components/common/services/api'
 import Save from '@/components/letter/Save'
 import SubmissionHistory from '@/components/common/SubmissionHistory.vue'
 import { getLabels } from '@/components/art7/dataDefinitions/labels'
@@ -130,10 +139,12 @@ export default {
   },
   props: {
     data: null,
-    submission: String
+    submission: String,
+    obligation_type: String
   },
   data() {
     return {
+      api,
       tabIndex: 0,
       modal_data: null,
       labels: getLabels(this.$gettext).common,
@@ -143,6 +154,7 @@ export default {
   },
   created() {
     this.updateBreadcrumbs()
+    this.api = api.defaults.apiBase
   },
   computed: {
     availableTransitions() {

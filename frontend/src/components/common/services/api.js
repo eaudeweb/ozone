@@ -23,6 +23,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const api = axios.create({
+  apiBase: apiBase,
   baseURL: apiURL,
   withCredentials: true
 })
