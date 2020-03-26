@@ -5,7 +5,7 @@
         <div class="col-7 mb-2">
           <b-form-file
             id="choose-files-button"
-            :disabled="!$store.getters.can_upload_files || loadingInitialFiles"
+            :disabled="!$store.getters.can_upload_files || loadingInitialFiles || !$store.getters.edit_mode"
             :multiple="true"
             ref="filesInput"
             v-model="selectedFiles"
@@ -22,11 +22,11 @@
       </div>
     </div>
     <b-table
-          show-empty
-          class="no-header"
-          :empty-text="$gettext('Click the Browse button to add files')"
-          :items="tableItemsToUpload"
-          :fields="tableFieldsUploaded.filter(field => field.key !== 'date')"
+      show-empty
+      class="no-header"
+      :empty-text="$gettext('Click the Browse button to add files')"
+      :items="tableItemsToUpload"
+      :fields="tableFieldsUploaded.filter(field => field.key !== 'date')"
     >
 
       <template v-slot:cell(description)="cell">
@@ -41,7 +41,7 @@
 
       <template v-slot:cell(actions)="cell">
         <div class="d-flex">
-          <b-button variant="outline-danger" v-if="$store.getters.can_upload_files" @click="deleteFile($event, cell.item.details)">
+          <b-button variant="outline-danger" v-if="$store.getters.can_upload_files && $store.getters.edit_mode" @click="deleteFile($event, cell.item.details)">
             <i class="fa fa-trash" aria-hidden="true"></i>
           </b-button>
           <div class="ml-2" style="min-width:300px" v-if="cell.item.details.percentage">
@@ -54,9 +54,15 @@
         </div>
       </template>
     </b-table>
-    <b-btn v-if="tableItemsToUpload.length" class="mb-4" variant="primary" @click="$store.dispatch('triggerSave')" v-translate>Start upload</b-btn>
-
-      <!-- TODO: there needs to be a method for just saving files. This is a dirty workaround -->
+    <b-btn
+      class="mb-4" variant="primary"
+      v-translate
+      v-if="tableItemsToUpload.length"
+      v-html="$store.getters.edit_mode ? 'Start upload': 'Enable edit mode to upload files'"
+      :disabled="!$store.getters.edit_mode"
+      @click="startUpload"
+    ></b-btn>
+    <!-- TODO: there needs to be a method for just saving files. This is a dirty workaround -->
     <br>
     <div v-if="tableItemsUploaded.length">
       <h5 class="mb-4 ml-1" v-translate>Uploaded files</h5>
@@ -73,7 +79,7 @@
             v-b-tooltip
             :title="downloadLabel"
           ><i class="fa fa-download"></i></b-btn>
-          <b-button class="ml-2 mr-2" variant="outline-danger" v-if="$store.getters.can_upload_files" @click="deleteFile($event, cell.item.details)">
+          <b-button class="ml-2 mr-2" variant="outline-danger" v-if="$store.getters.can_upload_files && $store.getters.edit_mode" @click="deleteFile($event, cell.item.details)">
             <i class="fa fa-trash" aria-hidden="true"></i>
           </b-button>
         </template>
@@ -83,11 +89,14 @@
 </template>
 
 <script>
+import { isObject } from '@/components/common/services/utilsService'
+import { update } from '@/components/common/services/api'
 import FilesMixin from '@/components/common/mixins/FilesMixin'
-import { dateFormatToDisplay } from '@/components/common/services/languageService.js'
+import SaveMixin from '@/components/common/mixins/SaveMixin'
+import { dateFormatToDisplay, dateFormatToYYYYMMDD } from '@/components/common/services/languageService.js'
 
 export default {
-  mixins: [FilesMixin],
+  mixins: [FilesMixin, SaveMixin],
 
   props: {
     tabId: Number,
@@ -95,6 +104,7 @@ export default {
   },
   data() {
     return {
+      tabsToSave: [],
       selectedFiles: [],
       loadingInitialFiles: true,
       placeholder: this.$gettext('Click to browse files'),
@@ -127,6 +137,15 @@ export default {
         description: file.description,
         details: file
       }))
+    },
+    form() {
+      return this.$store.state.form
+    },
+    newTabs() {
+      return this.$store.state.newTabs
+    },
+    is_secretariat() {
+      return this.$store.state.currentUser.is_secretariat
     }
   },
   methods: {
@@ -172,6 +191,78 @@ export default {
       this.$store.commit('addTabFiles', { files })
 
       this.$refs.filesInput.reset()
+    },
+    async startUpload() {
+      await this.uploadFile()
+      this.checkIfThereIsAnotherActionToDoBeforeReturning()
+    },
+    async uploadFile() {
+      await new Promise(async (resolve) => {
+        let current_tab_data = {}
+        const tab = this.$store.state.form.tabs.files
+        const url = this.$store.state.current_submission[tab.endpoint_url]
+        if (isObject(tab.form_fields)) {
+          const save_obj = JSON.parse(JSON.stringify(tab.default_properties))
+          Object.keys(save_obj).forEach(key => {
+            if (key === 'submitted_at' && !this.is_secretariat) {
+              resolve()
+              return
+            }
+            if (tab.name === 'flags') {
+              if (this.$store.state.current_submission.changeable_flags.includes(key)) {
+                current_tab_data[key] = tab.form_fields[key].selected
+              }
+            } else {
+              current_tab_data[key] = tab.form_fields[key].selected
+            }
+            if (tab.form_fields[key].type === 'date') {
+              current_tab_data[key] = dateFormatToYYYYMMDD(current_tab_data[key], this.$language.current)
+            }
+          })
+        }
+        try {
+          await this.uploadFiles()
+          current_tab_data = this.getFilesWithUpdatedDescription()
+            .map(file => ({
+              id: file.id,
+              name: file.name,
+              description: file.description
+            }))
+          await update(url, current_tab_data)
+          await this.getSubmissionFiles()
+          if (tab.status !== null) {
+            this.$store.commit('setTabStatus', { tab: tab.name, value: true })
+          }
+          if (Array.isArray(tab.form_fields)) {
+            if (!tab.form_fields.length) {
+              this.$store.commit('updateNewTabs', tab.name)
+            }
+          }
+        } catch (error) {
+          this.$store.commit('setTabStatus', { tab: tab.name, value: false })
+          this.resetActionToDispatch()
+          this.$store.dispatch('setAlert', {
+            $gettext: this.$gettext,
+            message: { __all__: [this.alerts.save_failed] },
+            variant: 'danger' })
+        }
+        resolve()
+      })
+    },
+    checkIfThereIsAnotherActionToDoBeforeReturning(tabName) {
+      this.tabsToSave = this.tabsToSave.filter(t => t !== tabName)
+      if (this.tabsToSave.length === 0) {
+        if (this.$store.state.actionToDispatch) {
+          this.$store.dispatch('clearEdited')
+          this.$store.dispatch('saveCallback', { actionToDispatch: this.$store.state.actionToDispatch, data: this.$store.state.dataForAction })
+          this.resetActionToDispatch()
+        }
+      }
+    },
+    resetActionToDispatch() {
+      this.$store.commit('setActionToDispatch', null)
+      this.$store.commit('setDataForAction', null)
+      this.$store.commit('updateEditMode', true)
     }
   },
   watch: {

@@ -75,9 +75,9 @@
           <template v-slot:[`cell(${getCountrySlot})`]="cell">
             <CloneField
               :key="`${cell.item.index}_${getCountrySlot}_${tabName}`"
-              :disabled="!$store.getters.can_edit_data"
+              :disabled="!$store.getters.edit_mode"
               v-on:removeThisField="remove_field(cell.item.index, cell.item.originalObj)"
-              v-if="!cell.item[getCountrySlot] && $store.getters.can_edit_data"
+              v-if="!cell.item[getCountrySlot] && $store.getters.edit_mode"
               :tabName="tabName"
               :current_field="cell.item.originalObj"
             />
@@ -88,14 +88,14 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.can_edit_data"
+              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.edit_mode"
               :field="cell.item.originalObj[inputField]"
             />
           </template>
 
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="$store.getters.can_edit_data"
+              v-show="$store.getters.edit_mode"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -104,10 +104,10 @@
           <template v-slot:cell(validation)="cell">
             <b-btn-group class="row-controls">
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
-               <i :class="{'fa-pencil-square-o': $store.getters.can_edit_data, 'fa-eye': !$store.getters.can_edit_data}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
+               <i :class="{'fa-pencil-square-o': $store.getters.edit_mode, 'fa-eye': !$store.getters.edit_mode}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
               </span>
               <span
-                v-if="$store.getters.can_edit_data"
+                v-if="$store.getters.edit_mode"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -162,7 +162,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -174,7 +174,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -202,7 +202,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_polyols'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.quantity_polyols"
                 />
               </b-input-group>
@@ -214,7 +214,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_polyols'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.decision_polyols"
                 />
               </b-input-group>
@@ -292,7 +292,7 @@
 
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="$store.getters.can_edit_data"
+              v-show="$store.getters.edit_mode"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -305,7 +305,7 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="!$store.getters.can_edit_data"
+              :disabled="!$store.getters.edit_mode"
               :field="cell.item.originalObj[inputField]"
             />
           </template>
@@ -313,10 +313,10 @@
           <template v-slot:cell(validation)="cell">
             <b-btn-group class="row-controls">
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
-               <i :class="{'fa-pencil-square-o': $store.getters.can_edit_data, 'fa-eye': !$store.getters.can_edit_data}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
+               <i :class="{'fa-pencil-square-o': $store.getters.edit_mode, 'fa-eye': !$store.getters.edit_mode}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
               </span>
               <span
-                v-if="$store.getters.can_edit_data"
+                v-if="$store.getters.edit_mode"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -371,7 +371,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -383,7 +383,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -411,7 +411,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_polyols'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.quantity_polyols"
                 />
               </b-input-group>
@@ -423,7 +423,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_polyols'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.decision_polyols"
                 />
               </b-input-group>
@@ -511,10 +511,10 @@
           </template>
           <template v-slot:[`cell(${getCountrySlot})`]="cell">
             <CloneField
-              :disabled="!$store.getters.can_edit_data"
+              :disabled="!$store.getters.edit_mode"
               :key="`${cell.item.index}_${getCountrySlot}_${tabName}`"
               v-on:removeThisField="remove_field(cell.item.index, true)"
-              v-if="!cell.item[getCountrySlot] && $store.getters.can_edit_data"
+              v-if="!cell.item[getCountrySlot] && $store.getters.edit_mode"
               :tabName="tabName"
               :current_field="cell.item.originalObj"
             />
@@ -525,14 +525,14 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.can_edit_data"
+              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.edit_mode"
               :field="cell.item.originalObj[inputField]"
             />
           </template>
 
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="$store.getters.can_edit_data"
+              v-show="$store.getters.edit_mode"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -541,10 +541,10 @@
           <template v-slot:cell(validation)="cell">
             <b-btn-group class="row-controls">
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
-               <i :class="{'fa-pencil-square-o': $store.getters.can_edit_data, 'fa-eye': !$store.getters.can_edit_data}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
+               <i :class="{'fa-pencil-square-o': $store.getters.edit_mode, 'fa-eye': !$store.getters.edit_mode}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
               </span>
               <span
-                v-if="$store.getters.can_edit_data"
+                v-if="$store.getters.edit_mode"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -599,7 +599,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -611,7 +611,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -671,7 +671,7 @@
       </div>
     </div>
     <AppAside
-      v-if="$store.getters.can_edit_data || validationLength"
+      v-if="$store.getters.edit_mode || validationLength"
       fixed
     >
       <DefaultAside
@@ -714,7 +714,7 @@
               class="mb-2"
               @input="updateFormField($event, {index:modal_data.index,tabName: tabName, field:'substance'})"
               trackBy="value"
-              :disabled="!$store.getters.can_edit_data"
+              :disabled="!$store.getters.edit_mode"
               label="text"
               :hide-selected="true"
               :placeholder="$gettext('Select substance')"
@@ -731,7 +731,7 @@
             <b-col>
               <fieldGenerator
                 :fieldInfo="{index:modal_data.index,tabName: tabName, field:order}"
-                :disabled="!$store.getters.can_edit_data"
+                :disabled="!$store.getters.edit_mode"
                 v-if="modal_data.field[order].type != 'multiselect'"
                 :field="modal_data.field[order]"
               />
@@ -740,7 +740,7 @@
                 :clear-on-select="true"
                 :hide-selected="true"
                 :close-on-select="true"
-                :disabled="!$store.getters.can_edit_data"
+                :disabled="!$store.getters.edit_mode"
                 trackBy="value"
                 label="text"
                 :placeholder="$gettext('Countries')"
@@ -765,7 +765,7 @@
               <b-input-group class="modal-group" :prepend="labels['quantity']">
                 <fieldGenerator
                   :fieldInfo="{index:modal_data.index,tabName: tabName, field:`quantity_${order}`}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="modal_data.field[`quantity_${order}`]"
                 />
               </b-input-group>
@@ -774,7 +774,7 @@
               <b-input-group class="modal-group" :prepend="labels['decision']">
                 <fieldGenerator
                   :fieldInfo="{index:modal_data.index,tabName: tabName, field:`decision_${order}`}"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                   :field="modal_data.field[`decision_${order}`]"
                 />
               </b-input-group>

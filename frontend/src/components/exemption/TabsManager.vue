@@ -57,10 +57,11 @@
     <Footer style="display:inline">
       <Save
         class="actions mt-2 mb-2"
-        v-if="$store.getters.can_save_form"
+        v-show="$store.getters.can_save_form && $store.getters.edit_mode"
         :data="$store.state.form"
         :submission="submission"
       ></Save>
+      <Edit class="actions mt-2 mb-2" />
       <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
       <b-button-group class="pull-right actions mt-2 mb-2">
         <b-btn
@@ -114,6 +115,7 @@
 <script>
 import { Footer } from '@coreui/vue'
 import SubmissionInfo from '@/components/common/SubmissionInfo.vue'
+import Edit from '@/components/common/Edit'
 import Files from '@/components/common/Files'
 import { getInstructions } from '@/components/common/services/api'
 import Save from '@/components/exemption/Save'
@@ -127,6 +129,7 @@ import { getAlerts } from '@/components/common/dataDefinitions/alerts'
 export default {
   components: {
     SubmissionInfo,
+    Edit,
     Files,
     Footer,
     Save,

@@ -34,7 +34,7 @@
                 <b-col>
                   <fieldGenerator
                     :fieldInfo="{index:order, tabName: info.name, field:order}"
-                    :disabled="checkUserType(order)"
+                    :disabled="isDisabled(order)"
                     :field="info.form_fields[order]"
                   ></fieldGenerator>
                 </b-col>
@@ -57,7 +57,7 @@
                   <fieldGenerator
                     :fieldInfo="{index:'submitted_at', tabName: info.name, field:'submitted_at'}"
                     :field="info.form_fields.submitted_at"
-                    :disabled="!$store.state.current_submission.can_change_submitted_at"
+                    :disabled="isDisabled('submitted_at')"
                   ></fieldGenerator>
                 </b-col>
               </b-row>
@@ -74,7 +74,7 @@
                 <div class="d-flex" v-for="order in general_flags" :key="order">
                   <fieldGenerator
                     :fieldInfo="{index:order, tabName: flags_info.name, field:order}"
-                    :disabled="$store.getters.transitionState"
+                    :disabled="$store.getters.transitionState || !$store.getters.edit_mode"
                     :field="flags_info.form_fields[order]"
                     :id="order"
                     @change="setTabStatus"
@@ -97,7 +97,7 @@
                 <div class="d-flex" v-for="order in blank_flags" :key="order">
                     <fieldGenerator
                       :fieldInfo="{index:order, tabName: flags_info.name, field:order}"
-                      :disabled="$store.getters.transitionState || (is_secretariat && is_submitted && created_by_party)"
+                      :disabled="$store.getters.transitionState || !$store.getters.edit_mode || (is_secretariat && is_submitted && created_by_party)"
                       :field="flags_info.form_fields[order]"
                       :id="order"
                       @change="setTabStatus"
@@ -136,7 +136,7 @@
                   <span cols="1">
                     <fieldGenerator
                       :fieldInfo="{index:order, tabName: flags_info.name, field:order}"
-                      :disabled="$store.getters.transitionState"
+                      :disabled="$store.getters.transitionState || !$store.getters.edit_mode"
                       :field="flags_info.form_fields[order]"
                       :id="order"
                       @change="setTabStatus"
@@ -266,6 +266,18 @@ export default {
         return true
       }
       return !this.$store.getters.can_edit_data
+    },
+    isDisabled(order) {
+      if (order === 'reporting_channel') {
+        return !(this.$store.getters.can_change_reporting_channel && this.$store.getters.edit_mode)
+      }
+      if (order === 'submission_format' && !this.$store.state.currentUser.is_secretariat) {
+        return true
+      }
+      if (order === 'submitted_at') {
+        !(this.$store.state.current_submission.can_change_submitted_at && this.$store.getters.edit_mode)
+      }
+      return !this.$store.getters.edit_mode
     },
     setTabStatus(fieldInfo) {
       //  Set flags tab status when flag is ticked

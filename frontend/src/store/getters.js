@@ -115,6 +115,7 @@ const getters = {
 		|| state.permissions.form.can_change_remarks_party
 		|| state.permissions.form.can_upload_files
 		|| (state.current_submission && state.current_submission.changeable_flags.length)),
+  edit_mode: (state) => state.permissions.form && state.permissions.form.edit_mode && state.permissions.form.can_edit_data,
 
   /**
    * this getter needs state.initialData.countryOptions or state.dashboard.parties
@@ -160,7 +161,9 @@ const getters = {
 
   getPeriodStatus: (state) => (periodId) => state.dashboard.periods.find((period) => period.value === periodId).is_reporting_open,
 
-  checkIfBlendAlreadyEists: (state) => (blendName) => state.initialData.blends.find((blend) => blend.blend_id === blendName)
+  checkIfBlendAlreadyEists: (state) => (blendName) => state.initialData.blends.find((blend) => blend.blend_id === blendName),
+
+  getFilesUploadInProgress: (state) => state.filesUploadInProgress
 
 }
 

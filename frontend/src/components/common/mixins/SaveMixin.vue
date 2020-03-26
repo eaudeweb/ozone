@@ -1,6 +1,6 @@
 <template>
   <b-btn
-    :disabled="isFilesUploadInProgress"
+    :disabled="$store.getters.getFilesUploadInProgress"
     @click="validation"
     id="save-button"
     ref="save_button"
@@ -55,6 +55,7 @@ export default {
     resetActionToDispatch() {
       this.$store.commit('setActionToDispatch', null)
       this.$store.commit('setDataForAction', null)
+      this.$store.commit('updateEditMode', true)
     },
     validation() {
       this.invalidTabs = []
@@ -231,7 +232,7 @@ export default {
             }
 
             await update(url, current_tab_data)
-            // console.log('update done', tab.name)
+            console.log('update done', tab.name)
 
             if (tab.name === 'files') {
               await this.getSubmissionFiles()
@@ -239,7 +240,6 @@ export default {
             if (tab.status !== null) {
               this.$store.commit('setTabStatus', { tab: tab.name, value: true })
             }
-
             if (Array.isArray(tab.form_fields)) {
               if (!tab.form_fields.length) {
                 this.$store.commit('updateNewTabs', tab.name)

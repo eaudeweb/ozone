@@ -6,7 +6,7 @@
             <label>{{field.label}}</label>
             <fieldGenerator
               :fieldInfo="{index:field.name, tabName: info.name, field:field.name}"
-              :disabled="!$store.getters.can_edit_data"
+              :disabled="!$store.getters.edit_mode"
               :field="field"
             />
           </div>
@@ -24,7 +24,7 @@
         <!-- addComment(state, { data, tab, field }) { -->
         <textarea
           @change="$store.commit('addComment', {data: $event.target.value, tab:info.name, field: comment_key})"
-          :disabled="getCommentFieldPermission(comment_key)"
+          :disabled="getCommentFieldPermission(comment_key) || !$store.getters.edit_mode"
           class="form-control"
           :value="comment.selected"
         ></textarea>

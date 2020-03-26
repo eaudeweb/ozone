@@ -219,7 +219,6 @@ module.exports = {
     addComment(browser, 'has_exports_tab', 'Hakuna Matata')
     saveSubmission(browser, ['Questionnaire', 'Exports'])
   },
-  /*
   BU_008: browser => {
     const row_values = {
       quantity_total_produced: 0.12
@@ -248,13 +247,12 @@ module.exports = {
     addEntity(browser, 'has_produced_tab', 'substance', 'A/I Chlorofluorocarbons (CFCs)', ['CFC-11'], 1, true)
     addValues(browser, 'substance-table', 'has_produced_tab', 1, row_values, modal_values)
 
-    addEntity(browser, 'has_produced_tab', 'substance', 'F I/II Hydrofluorocarbons (HFCs)', ['HFC-23'], 1, true)
+    addEntity(browser, 'has_produced_tab', 'substance', 'F Hydrofluorocarbons (HFCs)', ['HFC-23'], 1, true)
     addValues(browser, 'fii-table', 'has_produced_tab', 1, row_values, modal_values)
 
     addComment(browser, 'has_produced_tab', 'Hakuna Matata')
     saveSubmission(browser, ['Questionnaire', 'Production'])
   },
-  */
   BU_009: browser => {
     const row_values = {
       quantity_destroyed: 0.12
@@ -389,7 +387,6 @@ module.exports = {
     login(browser, 'p_ro', 'p_ro')
     createSubmission(browser, 'Accounting for Essential and Critical uses (RAF)', '2018', '')
     fillSubmissionInfo(browser, submissionInfo)
-    saveSubmission(browser, ['Submission Info'])
     saveSubmission(browser, ['Submission Info'])
     logout(browser)
   },

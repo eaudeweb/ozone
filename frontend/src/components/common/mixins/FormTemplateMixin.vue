@@ -287,10 +287,10 @@ export default {
       let type = fieldName.split('_')
       type = type[type.length - 1]
       if (type === 'party') {
-        return !this.$store.getters.can_change_remarks_party
+        return !this.$store.getters.can_change_remarks_party || !this.$store.getters.edit_mode
       }
       if (['secretariat', 'os'].includes(type)) {
-        return !this.$store.getters.can_change_remarks_secretariat
+        return !this.$store.getters.can_change_remarks_secretariat || !this.$store.getters.edit_mode
       }
     },
 

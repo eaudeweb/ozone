@@ -16,6 +16,7 @@
             trackBy="value"
             :multiple="true"
             v-model="selected_categories.selected"
+            :disabled="!$store.getters.edit_mode"
             :options="categories"
           />
         </b-input-group>
@@ -28,8 +29,10 @@
             variant="primary"
           >
             <span
-              v-translate="selected_categories.selected.length ? {length: selected_categories.selected.length} : {length: ''}"
-            >Add %{length} categories</span>
+              v-html="$store.getters.edit_mode ?
+                `Add ${selected_categories.selected.length > 0 ? selected_categories.selected.length : ''} categories`
+                : `Enable edit mode`"
+            ></span>
           </b-btn>
           <b-btn v-if="selected_categories.selected.length" @click="resetData">
             <span v-translate>Cancel</span>

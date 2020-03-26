@@ -40,7 +40,7 @@
           </template>
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="$store.getters.can_edit_data"
+              v-show="$store.getters.edit_mode"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -69,17 +69,17 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.can_edit_data"
+              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.edit_mode"
               :field="cell.item.originalObj[inputField]"
             ></fieldGenerator>
           </template>
           <template v-slot:cell(validation)="cell">
             <b-btn-group class="row-controls">
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
-                <i :class="{'fa-pencil-square-o': $store.getters.can_edit_data, 'fa-eye': !$store.getters.can_edit_data}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
+                <i :class="{'fa-pencil-square-o': $store.getters.edit_mode, 'fa-eye': !$store.getters.edit_mode}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
               </span>
               <span
-                v-if="$store.getters.can_edit_data"
+                v-if="$store.getters.edit_mode"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -174,17 +174,17 @@
               v-else
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.can_edit_data"
+              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.edit_mode"
               :field="cell.item.originalObj[inputField]"
             ></fieldGenerator>
           </template>
           <template v-slot:cell(validation)="cell">
             <b-btn-group class="row-controls">
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
-               <i :class="{'fa-pencil-square-o': $store.getters.can_edit_data, 'fa-eye': !$store.getters.can_edit_data}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
+               <i :class="{'fa-pencil-square-o': $store.getters.edit_mode, 'fa-eye': !$store.getters.edit_mode}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
               </span>
               <span
-                v-if="$store.getters.can_edit_data"
+                v-if="$store.getters.edit_mode"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -255,7 +255,7 @@
               class="mb-2"
               @input="updateFormField($event, {index:modal_data.index,tabName: tabName, field:'substance'})"
               trackBy="value"
-              :disabled="!$store.getters.can_edit_data"
+              :disabled="!$store.getters.edit_mode"
               :hide-selected="true"
               label="text"
               :placeholder="$gettext('Select substance')"
@@ -276,7 +276,7 @@
               <fieldGenerator
                 style="text-align:right"
                 :fieldInfo="{index:modal_data.index,tabName: tabName, field:order}"
-                :disabled="!$store.getters.can_edit_data"
+                :disabled="!$store.getters.edit_mode"
                 v-if="modal_data.field[order].type != 'multiselect'"
                 :field="modal_data.field[order]"
               />
@@ -285,7 +285,7 @@
                 :clear-on-select="true"
                 :hide-selected="true"
                 :close-on-select="true"
-                :disabled="!$store.getters.can_edit_data"
+                :disabled="!$store.getters.edit_mode"
                 trackBy="value"
                 label="text"
                 :placeholder="$gettext('Countries')"
@@ -301,7 +301,7 @@
           v-else-if="order === 'imports'"
         >
           <div
-            v-if="$store.getters.can_edit_data || modal_data.field.imports.length"
+            v-if="$store.getters.edit_mode || modal_data.field.imports.length"
             v-translate
           >Amount acquired by import & countries of manufacture</div>
           <b-row>
@@ -310,7 +310,7 @@
                 :parties="modal_data.field.imports"
                 :index="modal_data.index"
                 :tabName="tabName"
-                v-if="$store.getters.can_edit_data"
+                v-if="$store.getters.edit_mode"
               ></addParties>
             </b-col>
           </b-row>
@@ -325,7 +325,7 @@
               <fieldGenerator
                 :fieldInfo="{index:modal_data.index,tabName: tabName, field: country, party:country.party}"
                 :field="country"
-                :disabled="!$store.getters.can_edit_data"
+                :disabled="!$store.getters.edit_mode"
               />
             </b-col>
             <b-col cols="1" class="d-flex align-items-center">
@@ -358,7 +358,7 @@
                 <fieldGenerator
                   :fieldInfo="{ index:modal_data.index,tabName: tabName, field: category, category: category.critical_use_category }"
                   :field="category"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!$store.getters.edit_mode"
                 />
               </b-col>
               <b-col cols="1">
@@ -392,7 +392,7 @@
       </div>
     </b-modal>
     <AppAside
-      v-if="$store.getters.can_edit_data || validationLength"
+      v-if="$store.getters.edit_mode || validationLength"
       fixed
     >
       <DefaultAside

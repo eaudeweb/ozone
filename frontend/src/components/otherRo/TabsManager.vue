@@ -66,11 +66,12 @@
     <Footer style="display:inline">
       <Save
         class="actions mt-2 mb-2"
-        v-if="$store.getters.can_save_form"
+        v-show="$store.getters.can_save_form && $store.getters.edit_mode"
         :data="$store.state.form"
         :submission="submission"
       ></Save>
-      <router-link class="btn btn-light ml-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
+      <Edit class="actions mt-2 mb-2" />
+      <router-link class="btn mt-2 mb-2 btn-light ml-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
       <b-button-group v-if="$store.state.recordDataObligations.includes(obligation_type) != -1 && $store.state.currentUser.is_secretariat && $store.state.current_submission.submitted_at" class="pull-right actions ml-2 mt-2 mb-2">
         <b-btn
           :href="`${api}/admin/core/transfer/add/?submission_id=${$store.state.current_submission.id}`"
@@ -147,9 +148,12 @@
 <script>
 import { Footer } from '@coreui/vue'
 import SubmissionInfo from '@/components/common/SubmissionInfo.vue'
+import Edit from '@/components/common/Edit'
 import Files from '@/components/common/Files'
+
 import { api, getInstructions, cloneSubmission } from '@/components/common/services/api'
-import Save from '@/components/hat/Save'
+import Save from '@/components/otherRo/Save'
+
 import SubmissionHistory from '@/components/common/SubmissionHistory.vue'
 import { getLabels } from '@/components/hat/dataDefinitions/labels'
 import TabTitleWithLoader from '@/components/common/TabTitleWithLoader'
@@ -160,6 +164,7 @@ import { getAlerts } from '@/components/common/dataDefinitions/alerts'
 export default {
   components: {
     SubmissionInfo,
+    Edit,
     Files,
     Footer,
     Save,
