@@ -1453,6 +1453,9 @@ input[type="text"].highlighted {
   .nav-tabs {
     .nav-item {
       position: relative;
+      .nav-link {
+        padding: 0.5rem 0.25rem;
+      }
     }
   }
 }
