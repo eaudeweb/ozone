@@ -142,3 +142,4 @@ ozone/media/
 
 /.vagrant
 /.env
+*.code-workspace
