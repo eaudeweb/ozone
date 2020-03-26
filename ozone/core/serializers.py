@@ -1858,7 +1858,7 @@ def generate_report(report, submission):
 
     report = cls.for_submission(submission)
     data = report.render()
-    with open(f'/vagrant/tmp/{filename}', 'wb') as f: f.write(data.getvalue())
+    with open(f'/tmp/{filename}', 'wb') as f: f.write(data.getvalue())
     return {
         'title': cls.display_name,
         'filename': filename,
