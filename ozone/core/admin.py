@@ -1520,9 +1520,12 @@ class OtherCountryProfileDataAdmin(BaseCountryPofileAdmin, admin.ModelAdmin):
     )
     search_fields = ('party__name', )
     list_filter = (
-        ('party', MainPartyFilter),
+        ('party', party_dropdown_filter(OtherCountryProfileData)),
         ('obligation', OtherCountryProfileDataObligationFilter),
-        ('reporting_period__name', custom_title_dropdown_filter('period')),
+        (
+            'reporting_period',
+            reporting_period_dropdown_filter(OtherCountryProfileData)
+        ),
     )
     ordering = ('party__name', 'reporting_period__name')
 
