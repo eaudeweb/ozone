@@ -389,7 +389,12 @@ def _export_diff(
             col_widths([1.0, 4, 2.9, 2.5, 2.5, 2.5, 2.5, 4.8, 4.8]),
             styles
         )
-        ret += (Paragraph(sub_subtitle, h3_style), table)
+        ret += (
+            Paragraph(sub_subtitle, h3_style),
+            table,
+            # Also insert linebreak to keep it beautiful
+            Paragraph('<br/>', h3_style)
+        )
 
     # TODO: also diff between comments and previous_comments?!
     return ret
