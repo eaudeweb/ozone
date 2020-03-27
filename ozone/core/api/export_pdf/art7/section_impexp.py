@@ -1,5 +1,3 @@
-import itertools
-
 from django.utils.translation import gettext_lazy as _
 from reportlab.platypus import Paragraph
 
@@ -14,7 +12,7 @@ from ..util import (
     get_remarks,
     get_substance_or_blend_name,
     get_group_name,
-    h2_style,
+    h2_style, h3_style,
     sm_c, sm_l, sm_r,
     smb_l, smb_r,
     rows_to_table,
@@ -317,37 +315,84 @@ def _export_diff(
     """
     Export data difference between two submissions
     """
+    def instances_equal(instance1, instance2):
+        """
+        Compares two given import/export data model instances.
+        Returns True if their data is identical, False otherwise
+        """
+        for field_name in instance1.QUANTITY_FIELDS:
+            if getattr(instance1, field_name) != getattr(instance2, field_name):
+                return False
+        return True
+
     subtitle = Paragraph(texts['section_title'], h2_style)
     header = _get_header(texts)
 
     data = preprocess_subtotals(data)
     previous_data = preprocess_subtotals(previous_data)
 
-    print(f'Data is: {data}')
+    data_dict = dict()
+    for item in data:
+        key = (item.substance, item.blend, getattr(item, party_field))
+        data_dict[key] = item
+    # It's OK to use set() on the keys as they are unique
+    data_set = set(data_dict.keys())
 
-    # TODO: compute diff_data based on data and previous_data
-    diff_data = data
+    previous_data_dict = dict()
+    for item in previous_data:
+        key = (item.substance, item.blend, getattr(item, party_field))
+        previous_data_dict[key] = item
+    # It's OK to use set() on the keys as they are unique
+    previous_data_set = set(previous_data_dict.keys())
 
-    rows = list()
-    for item in diff_data:
-        (_rows, _styles) = to_row(
-            item,
-            len(rows) + len(header),
-            party_field,
-            texts['qps_quantity']
-        )
-        rows.extend(_rows)
-        styles.extend(_styles)
+    # Compute added, changed and removed keys, taking into account they are
+    # unique.
+    added_keys = list(data_set.difference(previous_data_set))
+    changed_keys = [
+        key
+        for key in data_set.intersection(previous_data_set)
+        if instances_equal(data_dict[key], previous_data_dict[key]) is False
+    ]
+    removed_keys = list(previous_data_set.difference(data_set))
 
-    table = rows_to_table(
-        header,
-        rows,
-        col_widths([1.0, 4, 2.9, 2.5, 2.5, 2.5, 2.5, 4.8, 4.8]),
-        styles
+    if not added_keys and not changed_keys and not removed_keys:
+        # Nothing has been changed, return empty paragraph
+        return Paragraph(' ', h3_style),
+
+    # Now populate PDF
+    ret = (subtitle,)
+    all_data = (
+        (_('Added'), added_keys, data_dict),
+        (_('Changed'), changed_keys, data_dict),
+        (_('Removed'), removed_keys, previous_data_dict),
     )
+    for sub_subtitle, keys, dictionary in all_data:
+        if not keys:
+            # Do not add anything if there are no keys for this sub-section
+            continue
 
-    # TODO: diff between comments and previous_comments!
-    return (subtitle, table) + comments
+        rows = list()
+        for key in keys:
+            item = dictionary[key]
+            (_rows, _styles) = to_row(
+                item,
+                len(rows) + len(header),
+                party_field,
+                texts['qps_quantity']
+            )
+            rows.extend(_rows)
+            styles.extend(_styles)
+
+        table = rows_to_table(
+            header,
+            rows,
+            col_widths([1.0, 4, 2.9, 2.5, 2.5, 2.5, 2.5, 4.8, 4.8]),
+            styles
+        )
+        ret += (Paragraph(sub_subtitle, h3_style), table)
+
+    # TODO: also diff between comments and previous_comments?!
+    return ret
 
 
 def export_imports(submission, queryset):
