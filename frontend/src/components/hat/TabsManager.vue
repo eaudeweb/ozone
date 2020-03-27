@@ -257,7 +257,7 @@ export default {
     },
     async exportPDF() {
       this.$store.dispatch('downloadStuff', {
-        url: `${this.submission}export_pdf/`,
+        url: `submissions/${this.submission}/export_pdf/`,
         fileName: `${this.$store.state.current_submission.obligation} - ${this.$store.state.initialData.display.countries[this.$store.state.current_submission.party]} - ${this.$store.state.current_submission.reporting_period}.pdf`
       })
     }

@@ -99,7 +99,7 @@ export default {
           created_by: element.filled_by_secretariat ? 'Secretariat' : 'Party',
           updated_at: dateFormatToDisplay(element.updated_at),
           current_state: `${this.labels[element.current_state]} ${this.getStatus(element)}`,
-          actions: element.id,
+          actions: element.url,
           details: element,
           _rowVariant: this.currentVersion === element.version ? 'info' : ''
         })
