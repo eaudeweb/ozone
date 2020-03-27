@@ -244,10 +244,8 @@ export default {
         return
       }
       cloneSubmission(submissionId).then((response) => {
-        console.log(response.data)
         this.$router.push({ name: this.$route.name, query: { submission: response.data.id } })
-        // this.$router.go(this.$router.currentRoute)
-        console.log('cloneSubmission(' + submissionId + ')', this.$router.currentRoute)
+        this.$router.go(this.$router.currentRoute)
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,
           message: { __all__: [this.alerts.clone_success] },
