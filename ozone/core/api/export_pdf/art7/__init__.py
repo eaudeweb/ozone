@@ -11,8 +11,8 @@ from ozone.core.models import ReportingPeriod
 from ozone.core.models import Submission
 from ozone.core.models import Substance
 
-from .section_info import export_info
-from .section_impexp import export_imports
+from .section_info import export_info, export_info_diff
+from .section_impexp import export_imports, export_imports_diff
 from .section_impexp import export_exports
 from .section_production import export_production
 from .section_destruction import export_destruction
@@ -91,13 +91,82 @@ class Art7RawdataReport(ReportForSubmission):
         if self.submission:
             submissions = [self.submission]
         else:
-            art7 = Obligation.objects.get(_obligation_type=ObligationTypes.ART7.value)
+            art7 = Obligation.objects.get(
+                _obligation_type=ObligationTypes.ART7.value
+            )
             submissions = get_submissions(art7, self.periods, self.parties)
 
         if not submissions:
             yield Paragraph('No data', left_paragraph_style)
         else:
             yield from export_submissions(submissions)
+
+
+def export_submission_diff(submission):
+    previous_submission = submission.get_previous_version()
+    if previous_submission is None:
+        yield Paragraph(
+            'No previous submission to compare to', left_paragraph_style
+        )
+    else:
+        yield from export_info_diff(submission, previous_submission)
+
+        yield from export_imports_diff(
+            submission,
+            previous_submission,
+            exclude_blend_items(submission.article7imports),
+            exclude_blend_items(previous_submission.article7imports),
+        )
+
+        """
+        yield from export_exports_diff(
+            submission,
+            exclude_blend_items(submission.article7exports),
+        )
+
+        yield from export_production_diff(
+            submission,
+            submission.article7productions.all(),
+        )
+
+        yield from export_destruction_diff(
+            submission,
+            exclude_blend_items(submission.article7destructions),
+        )
+
+        yield from export_nonparty_diff(
+            submission,
+            exclude_blend_items(submission.article7nonpartytrades),
+        )
+
+        yield from export_emission_diff(
+            submission,
+            submission.article7emissions.all(),
+        )
+
+        # For lab uses, consumption is actually data from imports
+        # Apparently there aren't any lab uses in exports (?)
+        yield from export_labuses_diff(
+            filter_lab_uses(exclude_blend_items(submission.article7imports)),
+            filter_lab_uses(submission.article7productions),
+        )
+        """
+
+        yield PageBreak()
+
+
+class Art7RawdataDiffReport(ReportForSubmission):
+    name = "art7_raw"
+    has_party_param = True
+    has_period_param = True
+    display_name = "Raw data reported - diff from previous version - Article 7"
+    landscape = True
+
+    def get_flowables(self):
+        if not self.submission:
+            yield Paragraph('No data', left_paragraph_style)
+        else:
+            yield from export_submission_diff(self.submission)
 
 
 class SubstanceFilter:

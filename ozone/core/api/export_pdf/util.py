@@ -33,7 +33,7 @@ from ozone.core.models import Submission
 __all__ = [
     'hr',
     'page_title',
-    'p_c', 'p_l', 'p_r',
+    'p_c', 'p_c_g', 'p_l', 'p_r',
     'b_c', 'b_l', 'b_r',
     'sm_c', 'sm_l', 'sm_r',
     'smb_c', 'smb_l', 'smb_r',
@@ -99,9 +99,14 @@ hr = HRFlowable(
     spaceBefore=1, spaceAfter=1, hAlign='CENTER', vAlign='BOTTOM', dash=None
 )
 
-_bodytext = partial(_style, 'BodyText', fontSize=FONTSIZE_DEFAULT, fontName='Helvetica')
+_bodytext = partial(
+    _style, 'BodyText', fontSize=FONTSIZE_DEFAULT, fontName='Helvetica'
+)
 
 centered_paragraph_style = _bodytext(alignment=TA_CENTER)
+centered_grey_paragraph_style = _bodytext(
+    alignment=TA_CENTER, color=colors.white
+)
 left_paragraph_style = _bodytext(alignment=TA_LEFT)
 right_paragraph_style = _bodytext(alignment=TA_RIGHT)
 
@@ -168,6 +173,7 @@ page_title_style = _style(
 
 
 p_c = partial(Paragraph, style=centered_paragraph_style)
+p_c_g = partial(Paragraph, style=centered_grey_paragraph_style)
 p_l = partial(Paragraph, style=left_paragraph_style)
 p_r = partial(Paragraph, style=right_paragraph_style)
 

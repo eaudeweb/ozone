@@ -1,3 +1,5 @@
+import itertools
+
 from django.utils.translation import gettext_lazy as _
 from reportlab.platypus import Paragraph
 
@@ -21,6 +23,21 @@ from ..util import (
     DOUBLE_HEADER_TABLE_STYLES,
     EXEMPTED_FIELDS
 )
+
+# Texts to be used when exporting Import data
+imports_texts = {
+    'section_title': "%s (%s)" % (_('Imports'), _('metric tonnes')),
+    'party': _('Exporting country/region/territory'),
+    'total_quantity': _('Total quantity imported for all uses'),
+    'exempted_quantity': _(
+        'Quantity of new substance imported for exempted essential, '
+        'critical, high-ambient-temperature or other uses'
+    ),
+    'feedstock_quantity': _('Import for feedstock'),
+    'qps_quantity': _(
+        'Amount imported for QPS applications within your country'
+    ),
+}
 
 
 def to_row(obj, row_index, party_field, text_qps):
@@ -219,23 +236,23 @@ def preprocess_subtotals(data):
     return newdata
 
 
-def _export(data, comments, party_field, texts):
-    if not data and not any(comments):
-        return tuple()
+# Styles to be used when exporting both imports and exports data
+styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
+     ('SPAN', (0, 0), (0, 1)),  # Annex/Group
+     ('SPAN', (1, 0), (1, 1)),  # Substance
+     ('SPAN', (2, 0), (2, 1)),  # Party
+     ('SPAN', (3, 0), (4, 0)),  # Total quantity
+     ('SPAN', (5, 0), (5, 1)),  # Feedstock
+     ('SPAN', (6, 0), (7, 0)),  # Exempted
+     ('SPAN', (8, 0), (8, 1)),  # Remarks
+]
 
-    subtitle = Paragraph(texts['section_title'], h2_style)
 
-    styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
-         ('SPAN', (0, 0), (0, 1)),  # Annex/Group
-         ('SPAN', (1, 0), (1, 1)),  # Substance
-         ('SPAN', (2, 0), (2, 1)),  # Party
-         ('SPAN', (3, 0), (4, 0)),  # Total quantity
-         ('SPAN', (5, 0), (5, 1)),  # Feedstock
-         ('SPAN', (6, 0), (7, 0)),  # Exempted
-         ('SPAN', (8, 0), (8, 1)),  # Remarks
-    ]
-
-    header = [
+def _get_header(texts):
+    """
+    Get table header for imports/exports based on predefined texts
+    """
+    return [
         (
             sm_c(_('Annex/Group')),
             sm_c(_('Substance')),
@@ -260,6 +277,17 @@ def _export(data, comments, party_field, texts):
         ),
     ]
 
+
+def _export(data, comments, party_field, texts):
+    """
+    Export data for one submission.
+    """
+    subtitle = Paragraph(texts['section_title'], h2_style)
+    header = _get_header(texts)
+
+    if not data and not any(comments):
+        return tuple()
+
     data = preprocess_subtotals(data)
 
     rows = list()
@@ -283,18 +311,61 @@ def _export(data, comments, party_field, texts):
     return (subtitle, table) + comments
 
 
+def _export_diff(
+    data, previous_data, comments, previous_comments, party_field, texts
+):
+    """
+    Export data difference between two submissions
+    """
+    subtitle = Paragraph(texts['section_title'], h2_style)
+    header = _get_header(texts)
+
+    data = preprocess_subtotals(data)
+    previous_data = preprocess_subtotals(previous_data)
+
+    print(f'Data is: {data}')
+
+    # TODO: compute diff_data based on data and previous_data
+    diff_data = data
+
+    rows = list()
+    for item in diff_data:
+        (_rows, _styles) = to_row(
+            item,
+            len(rows) + len(header),
+            party_field,
+            texts['qps_quantity']
+        )
+        rows.extend(_rows)
+        styles.extend(_styles)
+
+    table = rows_to_table(
+        header,
+        rows,
+        col_widths([1.0, 4, 2.9, 2.5, 2.5, 2.5, 2.5, 4.8, 4.8]),
+        styles
+    )
+
+    # TODO: diff between comments and previous_comments!
+    return (subtitle, table) + comments
+
+
 def export_imports(submission, queryset):
     comments = get_comments_section(submission, 'imports')
-    texts = {
-        'section_title': "%s (%s)" % (_('Imports'), _('metric tonnes')),
-        'party': _('Exporting country/region/territory'),
-        'total_quantity': _('Total quantity imported for all uses'),
-        'exempted_quantity': _('Quantity of new substance imported for exempted essential, '
-                               'critical, high-ambient-temperature or other uses'),
-        'feedstock_quantity': _('Import for feedstock'),
-        'qps_quantity': _('Amount imported for QPS applications within your country'),
-    }
-    return _export(list(queryset), comments, 'source_party', texts)
+    return _export(list(queryset), comments, 'source_party', imports_texts)
+
+
+def export_imports_diff(
+    submission, previous_submission, queryset, previous_queryset
+):
+    comments = get_comments_section(submission, 'imports')
+    previous_comments = get_comments_section(previous_submission, 'imports')
+    return _export_diff(
+        list(queryset), list(previous_queryset),
+        comments, previous_comments,
+        'source_party',
+        imports_texts
+    )
 
 
 def export_exports(submission, queryset):
@@ -303,8 +374,10 @@ def export_exports(submission, queryset):
         'section_title': "%s (%s)" % (_('Exports'), _('metric tonnes')),
         'party': _('Importing country/region/territory'),
         'total_quantity': _('Total quantity exported for all uses'),
-        'exempted_quantity': _('Quantity of new substance exported for exempted essential, '
-                               'critical, high-ambient-temperature or other uses'),
+        'exempted_quantity': _(
+            'Quantity of new substance exported for exempted essential, '
+            'critical, high-ambient-temperature or other uses'
+        ),
         'feedstock_quantity': _('Export for feedstock'),
         'qps_quantity': _('Amount exported for QPS applications'),
     }

@@ -1,6 +1,6 @@
 from .prodcons.prod_imp_exp import ProdImpExpReport
 from .hfc_baseline import HFCBaselineReport
-from ..art7 import Art7RawdataReport
+from ..art7 import Art7RawdataReport, Art7RawdataDiffReport
 from ..art7 import BaselineHfcRawReport
 from ..art7.labuse_report import LabUseReport
 from .raf import RafReport
@@ -18,6 +18,7 @@ from .prodcons import ProdConsNonArt5PartiesReport
 
 registry = [
     Art7RawdataReport,
+    Art7RawdataDiffReport,
     LabUseReport,
     RafReport,
     ProdConsReport,
