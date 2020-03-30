@@ -56,7 +56,8 @@ export default {
       })
       this.tabsToSave = [...justSave, ...removeDataAndSave]
       if (!stopSave) {
-        this.$store.commit('updateEditMode', false)
+        this.updateEditMode(false)
+        this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode: false }, params: { obligation_type: this.obligation_type } })
         Object.values(this.form.tabs).filter(tab => tab.hasOwnProperty('form_fields')).forEach(async tab => {
           const url = this.$store.state.current_submission[tab.endpoint_url]
           if (!doNotSave.includes(tab.name)) {

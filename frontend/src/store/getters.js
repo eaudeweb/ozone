@@ -115,7 +115,7 @@ const getters = {
 		|| state.permissions.form.can_change_remarks_party
 		|| state.permissions.form.can_upload_files
 		|| (state.current_submission && state.current_submission.changeable_flags.length)),
-  edit_mode: (state) => state.permissions.form && state.permissions.form.edit_mode && state.permissions.form.can_edit_data,
+  edit_mode: (state) => state.permissions.form && (state.permissions.form.edit_mode === true || state.permissions.form.edit_mode === 'true') && state.permissions.form.can_edit_data,
 
   /**
    * this getter needs state.initialData.countryOptions or state.dashboard.parties

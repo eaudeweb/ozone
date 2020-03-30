@@ -22,7 +22,11 @@ import { getAlerts } from '@/components/common/dataDefinitions/alerts'
 export default {
   mixins: [FilesMixin],
   props: {
-    submission: String
+    submission: String,
+    obligation_type: {
+      type: String,
+      default: null
+    }
   },
 
   data() {
@@ -55,7 +59,11 @@ export default {
     resetActionToDispatch() {
       this.$store.commit('setActionToDispatch', null)
       this.$store.commit('setDataForAction', null)
-      this.$store.commit('updateEditMode', true)
+      this.updateEditMode(true)
+    },
+    updateEditMode(edit_mode) {
+      this.$store.commit('updateEditMode', edit_mode)
+      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode: edit_mode }, params: { obligation_type: this.obligation_type } })
     },
     validation() {
       this.invalidTabs = []

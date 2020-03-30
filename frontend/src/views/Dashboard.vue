@@ -186,7 +186,7 @@
                 <b-button-group>
                   <router-link
                     class="btn btn-light btn-sm"
-                    :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id }, params: { obligation_type: getFormName(row.item.details.obligation) }}"
+                    :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id, edit_mode: row.item.details.can_edit_data && !currentUser.is_read_only }, params: { obligation_type: getFormName(row.item.details.obligation) }}"
                   >
                     <span
                       v-if="row.item.details.can_edit_data && !currentUser.is_read_only"

@@ -69,8 +69,9 @@
         v-show="$store.getters.can_save_form && $store.getters.edit_mode"
         :data="$store.state.form"
         :submission="submission"
+        :obligation_type="obligation_type"
       ></Save>
-      <Edit class="actions mt-2 mb-2" />
+      <Edit :submission="submission" :obligation_type="obligation_type" class="actions mt-2 mb-2" />
       <router-link class="btn mt-2 mb-2 btn-light ml-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
       <b-button-group v-if="$store.state.recordDataObligations.includes(obligation_type) != -1 && $store.state.currentUser.is_secretariat && $store.state.current_submission.submitted_at" class="pull-right actions ml-2 mt-2 mb-2">
         <b-btn

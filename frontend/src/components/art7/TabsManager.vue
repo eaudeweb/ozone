@@ -96,7 +96,7 @@
         :data="$store.state.form"
         :submission="submission"
       ></Save>
-      <Edit class="actions mt-2 mb-2" />
+      <Edit :submission="submission" class="actions mt-2 mb-2" />
       <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
       <b-button-group class="pull-right actions mt-2 mb-2">
         <AggregationsModal :submission="submission"></AggregationsModal>

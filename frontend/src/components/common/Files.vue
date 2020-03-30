@@ -262,7 +262,7 @@ export default {
     resetActionToDispatch() {
       this.$store.commit('setActionToDispatch', null)
       this.$store.commit('setDataForAction', null)
-      this.$store.commit('updateEditMode', true)
+      this.this.updateEditMode(true)
     }
   },
   watch: {

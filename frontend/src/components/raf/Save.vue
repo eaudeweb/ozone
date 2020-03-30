@@ -6,7 +6,7 @@ export default {
   methods: {
     prepareDataForSave() {
       const justSave = []
-      this.$store.commit('updateEditMode', false)
+      this.updateEditMode(false)
       Object.values(this.form.tabs).filter(tab => tab.hasOwnProperty('form_fields') && tab.hasOwnProperty('endpoint_url')).forEach(async tab => {
         if (tab.status === 'edited') {
           justSave.push(tab.name)
