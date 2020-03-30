@@ -191,3 +191,9 @@ def export_production(submission, queryset):
     )
 
     return (subtitle, table_f1, table_f2) + comments
+
+
+def export_production_diff(
+    submission, previous_submission, queryset, previous_queryset
+):
+    pass
