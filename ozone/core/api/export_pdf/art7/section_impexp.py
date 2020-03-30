@@ -9,6 +9,7 @@ from ..util import (
     format_decimal_diff,
     get_comments_section,
     get_decision,
+    get_decision_diff,
     get_remarks,
     get_substance_or_blend_name,
     get_group_name,
@@ -86,6 +87,9 @@ def to_row(
                 getattr(obj, f), getattr(previous_obj, f)
             )
 
+    decision = get_decision(obj, first_field) if not diff \
+        else get_decision_diff(obj, previous_obj, first_field)
+
     base_row = [
         sm_c(get_group_name(obj)),
         sm_l(substance_name),
@@ -97,8 +101,7 @@ def to_row(
         sm_l(
             '%s %s' % (
                 EXEMPTED_FIELDS[first_field],
-                # TODO: replace get_decision
-                get_decision(obj, first_field)
+                decision
             )
         ) if first_field else '',
         sm_l(get_remarks(obj)),
@@ -126,17 +129,21 @@ def to_row(
 
     # Add more rows if there are still fields in field_names
     for f in field_names:
+        decision = get_decision(obj, f) if not diff else \
+            get_decision_diff(obj, previous_obj, f)
         rows.append((
             # Don't repeat previously shown fields
             '', '', '', '', '', '',
             p_r_func(field_dict['quantity_' + f]),
-            sm_l('%s %s' % (EXEMPTED_FIELDS[f], get_decision(obj, f))),
+            sm_l('%s %s' % (EXEMPTED_FIELDS[f], decision)),
             '',
         ))
 
     # quantity_quarantine_pre_shipment
     if field_dict['quantity_quarantine_pre_shipment']:
         # Add two more rows for QPS
+        decision = get_decision(obj, 'quarantine_pre_shipment') if not diff else \
+            get_decision_diff(obj, previous_obj, 'quarantine_pre_shipment')
         rows.extend([
             (
                 '', '', '', '', '', '',
@@ -146,7 +153,7 @@ def to_row(
             (
                 '', '', '', '', '', '',
                 p_r_func(field_dict['quantity_quarantine_pre_shipment']),
-                sm_l(get_decision(obj, 'quarantine_pre_shipment')),
+                sm_l(decision),
                 '',
             )
         ])
@@ -207,6 +214,8 @@ def to_row(
                 ('SPAN', (0, current_row), (2, current_row)),
             ])
         else:
+            decision = get_decision(obj, 'polyols') if not diff else \
+                get_decision_diff(obj, previous_obj, 'polyols')
             rows.extend([
                 (
                     sm_r('%s %s' % (_('Polyols containing'), obj.substance.name)),
@@ -214,7 +223,7 @@ def to_row(
                     sm_l(party.name if party else ''),
                     '', '', '',
                     sm_r(field_dict['quantity_polyols']),
-                    sm_l(get_decision(obj, 'polyols')),
+                    sm_l(decision),
                     '',
                 )
             ])

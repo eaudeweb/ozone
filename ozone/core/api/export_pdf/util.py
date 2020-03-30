@@ -331,6 +331,16 @@ def get_decision(obj, field):
     return getattr(obj, 'decision_' + field) if field else None
 
 
+def get_decision_diff(obj, previous_obj, field):
+    decision = get_decision(obj, field)
+    previous_decision = get_decision(obj, field)
+
+    if decision is None and previous_decision is None:
+        return None
+
+    return '{} ({})'.format(decision, previous_decision)
+
+
 def get_substance_or_blend_name(obj):
     return (
         obj.substance.name
