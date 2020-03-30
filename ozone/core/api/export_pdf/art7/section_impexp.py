@@ -37,6 +37,19 @@ imports_texts = {
     ),
 }
 
+# Text to be used when exporting Export data
+exports_texts = {
+    'section_title': "%s (%s)" % (_('Exports'), _('metric tonnes')),
+    'party': _('Importing country/region/territory'),
+    'total_quantity': _('Total quantity exported for all uses'),
+    'exempted_quantity': _(
+        'Quantity of new substance exported for exempted essential, '
+        'critical, high-ambient-temperature or other uses'
+    ),
+    'feedstock_quantity': _('Export for feedstock'),
+    'qps_quantity': _('Amount exported for QPS applications'),
+}
+
 
 def to_row(
     obj, row_index, party_field, text_qps, diff=False, previous_obj=None
@@ -453,15 +466,17 @@ def export_imports_diff(
 
 def export_exports(submission, queryset):
     comments = get_comments_section(submission, 'exports')
-    texts = {
-        'section_title': "%s (%s)" % (_('Exports'), _('metric tonnes')),
-        'party': _('Importing country/region/territory'),
-        'total_quantity': _('Total quantity exported for all uses'),
-        'exempted_quantity': _(
-            'Quantity of new substance exported for exempted essential, '
-            'critical, high-ambient-temperature or other uses'
-        ),
-        'feedstock_quantity': _('Export for feedstock'),
-        'qps_quantity': _('Amount exported for QPS applications'),
-    }
     return _export(list(queryset), comments, 'destination_party', texts)
+
+
+def export_exports_diff(
+    submission, previous_submission, queryset, previous_queryset
+):
+    comments = get_comments_section(submission, 'exports')
+    previous_comments = get_comments_section(previous_submission, 'exports')
+    return _export_diff(
+        list(queryset), list(previous_queryset),
+        comments, previous_comments,
+        'destination_party',
+        exports_texts
+    )

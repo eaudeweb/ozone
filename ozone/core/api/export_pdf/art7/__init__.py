@@ -13,7 +13,7 @@ from ozone.core.models import Substance
 
 from .section_info import export_info, export_info_diff
 from .section_impexp import export_imports, export_imports_diff
-from .section_impexp import export_exports
+from .section_impexp import export_exports, export_exports_diff
 from .section_production import export_production
 from .section_destruction import export_destruction
 from .section_nonparty import export_nonparty
@@ -118,12 +118,14 @@ def export_submission_diff(submission):
             exclude_blend_items(previous_submission.article7imports),
         )
 
-        """
         yield from export_exports_diff(
             submission,
+            previous_submission,
             exclude_blend_items(submission.article7exports),
+            exclude_blend_items(previous_submission.article7exports),
         )
 
+        """
         yield from export_production_diff(
             submission,
             submission.article7productions.all(),
