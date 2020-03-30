@@ -223,6 +223,15 @@ def format_decimal(nr):
     return '{:,f}'.format(nr.normalize())
 
 
+def format_decimal_diff(nr, previous_nr):
+    if nr is None and previous_nr is None:
+        # Just show an empty cell if both values were None
+        return ''
+    nr = format_decimal(nr)
+    previous_nr = format_decimal(previous_nr)
+    return '{} ({})'.format(nr, previous_nr)
+
+
 def round_big_float(nr, precision):
     if not nr:
         return ''

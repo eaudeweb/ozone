@@ -6,8 +6,8 @@ from ozone.core.models.utils import sum_decimals
 from ..util import (
     col_widths,
     format_decimal,
+    format_decimal_diff,
     get_comments_section,
-    get_quantity,
     get_decision,
     get_remarks,
     get_substance_or_blend_name,
@@ -38,14 +38,23 @@ imports_texts = {
 }
 
 
-def to_row(obj, row_index, party_field, text_qps):
-    # row_index represents the current number of table rows, including header
+def to_row(
+    obj, row_index, party_field, text_qps, diff=False, previous_obj=None
+):
+    """
+    - row_index represents the current number of table rows, including header
+    - if diff is True, will display row containing both current (obj) and
+      previous value (previous_obj)
+    """
     rows = list()
     styles = list()
-    # there are no blends in production form, so it's safe to assume a substance
 
     # Check if there are any non-null exemption fields
-    field_names = [f for f in EXEMPTED_FIELDS if getattr(obj, 'quantity_' + f)]
+    field_names = [
+        f for f in EXEMPTED_FIELDS
+        if getattr(obj, 'quantity_' + f)
+        or getattr(previous_obj, 'quantity_' + f, None)
+    ]
     first_field = field_names.pop(0) if field_names else None
     party = getattr(obj, party_field)
 
@@ -53,17 +62,29 @@ def to_row(obj, row_index, party_field, text_qps):
     substance_name = get_substance_or_blend_name(obj)
     is_subtotal = hasattr(obj, 'is_subtotal')
     p_r_func = smb_r if is_subtotal else sm_r
+
+    # Build up dictionary of field_name: formatted_value
+    field_dict = {}
+    for f in obj.QUANTITY_FIELDS + ['quantity_polyols']:
+        if not diff:
+            field_dict[f] = format_decimal(getattr(obj, f))
+        else:
+            field_dict[f] = format_decimal_diff(
+                getattr(obj, f), getattr(previous_obj, f)
+            )
+
     base_row = [
         sm_c(get_group_name(obj)),
         sm_l(substance_name),
         sm_l(party.name if party else ''),
-        p_r_func(format_decimal(obj.quantity_total_new)),
-        p_r_func(format_decimal(obj.quantity_total_recovered)),
-        p_r_func(format_decimal(obj.quantity_feedstock)),
-        p_r_func(format_decimal(get_quantity(obj, first_field)) if first_field else ''),
+        p_r_func(field_dict['quantity_total_new']),
+        p_r_func(field_dict['quantity_total_recovered']),
+        p_r_func(field_dict['quantity_feedstock']),
+        p_r_func(field_dict['quantity_' + first_field] if first_field else ''),
         sm_l(
             '%s %s' % (
                 EXEMPTED_FIELDS[first_field],
+                # TODO: replace get_decision
                 get_decision(obj, first_field)
             )
         ) if first_field else '',
@@ -80,7 +101,7 @@ def to_row(obj, row_index, party_field, text_qps):
     if is_subtotal:
         base_row[0] = smb_l(
             '%s %s (%s)' % (_('Subtotal'), substance_name, _('excluding polyols'))
-            if obj.quantity_polyols
+            if field_dict['quantity_polyols']
             else '%s %s' % (_('Subtotal'), substance_name)
         )
         base_row[1] = ''  # Substance name
@@ -95,13 +116,13 @@ def to_row(obj, row_index, party_field, text_qps):
         rows.append((
             # Don't repeat previously shown fields
             '', '', '', '', '', '',
-            p_r_func(format_decimal(get_quantity(obj, f))),
+            p_r_func(field_dict['quantity_' + f]),
             sm_l('%s %s' % (EXEMPTED_FIELDS[f], get_decision(obj, f))),
             '',
         ))
 
     # quantity_quarantine_pre_shipment
-    if obj.quantity_quarantine_pre_shipment:
+    if field_dict['quantity_quarantine_pre_shipment']:
         # Add two more rows for QPS
         rows.extend([
             (
@@ -111,7 +132,7 @@ def to_row(obj, row_index, party_field, text_qps):
             ),
             (
                 '', '', '', '', '', '',
-                p_r_func(format_decimal(obj.quantity_quarantine_pre_shipment)),
+                p_r_func(field_dict['quantity_quarantine_pre_shipment']),
                 sm_l(get_decision(obj, 'quarantine_pre_shipment')),
                 '',
             )
@@ -155,7 +176,7 @@ def to_row(obj, row_index, party_field, text_qps):
                 ('SPAN', (8, row_index), (8, current_row)),  # Remarks
             ])
     # quantity_polyols
-    if obj.quantity_polyols:
+    if field_dict['quantity_polyols']:
         # Add another row for polyols
         current_row = row_index + len(rows)
         if is_subtotal:
@@ -163,7 +184,7 @@ def to_row(obj, row_index, party_field, text_qps):
                 (
                     smb_l('%s %s' % (_('Subtotal polyols containing'), obj.substance.name)),
                     '', '', '', '', '',
-                    smb_r(format_decimal(obj.quantity_polyols)),
+                    smb_r(field_dict['quantity_polyols']),
                     '', '',
                 )
             ])
@@ -179,7 +200,7 @@ def to_row(obj, row_index, party_field, text_qps):
                     '',
                     sm_l(party.name if party else ''),
                     '', '', '',
-                    sm_r(format_decimal(obj.quantity_polyols)),
+                    sm_r(field_dict['quantity_polyols']),
                     sm_l(get_decision(obj, 'polyols')),
                     '',
                 )
@@ -362,23 +383,35 @@ def _export_diff(
     # Now populate PDF
     ret = (subtitle,)
     all_data = (
-        (_('Added'), added_keys, data_dict),
-        (_('Changed'), changed_keys, data_dict),
-        (_('Removed'), removed_keys, previous_data_dict),
+        (_('Added'), added_keys, data_dict, {}),
+        (_('Changed'), changed_keys, data_dict, previous_data_dict),
+        (_('Removed'), removed_keys, {}, previous_data_dict),
     )
-    for sub_subtitle, keys, dictionary in all_data:
+    for sub_subtitle, keys, dictionary, previous_dictionary in all_data:
         if not keys:
             # Do not add anything if there are no keys for this sub-section
             continue
 
         rows = list()
         for key in keys:
-            item = dictionary[key]
+            diff = False
+            previous_item = None
+            if not previous_dictionary:
+                item = dictionary[key]
+            elif not dictionary:
+                item = previous_dictionary[key]
+            else:
+                diff = True
+                item = dictionary[key]
+                previous_item = previous_dictionary[key]
+
             (_rows, _styles) = to_row(
                 item,
                 len(rows) + len(header),
                 party_field,
-                texts['qps_quantity']
+                texts['qps_quantity'],
+                diff,
+                previous_item
             )
             rows.extend(_rows)
             styles.extend(_styles)

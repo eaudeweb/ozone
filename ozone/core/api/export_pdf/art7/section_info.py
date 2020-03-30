@@ -174,7 +174,7 @@ def get_questionnaire_table_diff(submission, previous_submission):
         if item != previous_item:
             diff_row.append(b_c(item))
         else:
-            diff_row.append(p_c_g(item))
+            diff_row.append(p_c_g(''))
 
     return (
         Table(
