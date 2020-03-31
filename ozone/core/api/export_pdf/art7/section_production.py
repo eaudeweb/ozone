@@ -2,9 +2,8 @@ from django.utils.translation import gettext_lazy as _
 from reportlab.platypus import Paragraph
 
 from ..util import (
-    format_decimal,
+    format_decimal, format_decimal_diff,
     instances_equal,
-    get_quantity,
     get_decision, get_decision_diff,
     get_comments_section,
     get_group_name,
