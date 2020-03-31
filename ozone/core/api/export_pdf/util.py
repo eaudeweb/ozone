@@ -32,19 +32,6 @@ from ozone.core.models import ReportingPeriod
 from ozone.core.models import Submission
 
 
-__all__ = [
-    'hr',
-    'page_title',
-    'p_c', 'p_c_g', 'p_l', 'p_r',
-    'b_c', 'b_l', 'b_r',
-    'sm_c', 'sm_l', 'sm_r',
-    'smb_c', 'smb_l', 'smb_r',
-    'smi_c', 'smi_l', 'smi_r',
-    'smbi_l', 'smbi_r', 'smbi_c',
-    'p_bullet',
-]
-
-
 STYLES = getSampleStyleSheet()
 
 FONTSIZE_SMALL = 7
