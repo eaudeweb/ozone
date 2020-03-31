@@ -295,7 +295,7 @@ def export_production_diff(
 
             if item.substance.is_captured:
                 # process them in a second pass
-                captured_items.append((item, previous_item,))
+                captured_items.append((item, previous_item, diff,))
                 continue
             (p_rows, p_styles) = to_row(
                 item,
@@ -316,7 +316,7 @@ def export_production_diff(
         # Start over another table, for captured substances
         captured_styles = list(SINGLE_HEADER_TABLE_STYLES)
         rows = list()
-        for item, previous_item in captured_items:
+        for item, previous_item, diff in captured_items:
             (p_rows, p_styles) = to_row(
                 item,
                 len(rows) + len(header_f2),
