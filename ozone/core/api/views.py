@@ -1554,7 +1554,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         detail=True,
         methods=["post"],
         url_path="call-transition",
-        permission_classes = [IsSecretariatOrSamePartySubmissionTransition]
+        permission_classes=[IsSecretariatOrSamePartySubmissionTransition]
     )
     def call_transition(self, request, pk=None):
         """

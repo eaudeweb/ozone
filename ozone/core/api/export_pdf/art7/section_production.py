@@ -3,14 +3,15 @@ from reportlab.platypus import Paragraph
 
 from ..util import (
     format_decimal,
+    instances_equal,
     get_quantity,
-    get_decision,
+    get_decision, get_decision_diff,
     get_comments_section,
     get_group_name,
     get_remarks,
     rows_to_table,
     sm_c, sm_l, sm_r,
-    h2_style, col_widths,
+    h2_style, h3_style, col_widths,
     lighter_grey,
     SINGLE_HEADER_TABLE_STYLES,
     DOUBLE_HEADER_TABLE_STYLES,
@@ -18,46 +19,75 @@ from ..util import (
 )
 
 
-def to_row(obj, row_index):
-    # row_index represents the current number of table rows, including header
+def to_row(obj, row_index, diff=False, previous_obj=None):
+    """
+    - row_index represents the current number of table rows, including header
+    - if diff is True, will display row containing both current (obj) and
+      previous value (previous_obj)
+    """
     rows = list()
     styles = list()
     # there are no blends in production form, so it's safe to assume a substance
 
     # Check if there are any non-null exemption fields
-    field_names = [f for f in EXEMPTED_FIELDS if getattr(obj, 'quantity_' + f)]
+    field_names = [
+        f for f in EXEMPTED_FIELDS
+        if getattr(obj, 'quantity_' + f)
+        or getattr(previous_obj, 'quantity_' + f, None)
+    ]
     first_field = field_names.pop(0) if field_names else None
+
+    # Build up dictionary of field_name: formatted_value
+    field_dict = {}
+    for f in obj.QUANTITY_FIELDS + ['quantity_polyols']:
+        if not diff:
+            field_dict[f] = format_decimal(getattr(obj, f))
+        else:
+            field_dict[f] = format_decimal_diff(
+                getattr(obj, f), getattr(previous_obj, f)
+            )
+
+    decision = get_decision(obj, first_field) if not diff \
+        else get_decision_diff(obj, previous_obj, first_field)
 
     # Add base row
     rows.append((
         sm_c(get_group_name(obj)),
         sm_l(obj.substance.name),
-        sm_r(format_decimal(obj.quantity_total_produced)),
-        sm_r(format_decimal(obj.quantity_feedstock)),
-        sm_r(format_decimal(obj.quantity_for_destruction)),
-        sm_r(format_decimal(get_quantity(obj, first_field))) if first_field else '',
+        sm_r(field_dict['quantity_total_produced']),
+        sm_r(field_dict['quantity_feedstock']),
+        sm_r(field_dict['quantity_for_destruction']),
+        sm_r(field_dict['quantity_' + first_field] if first_field else ''),
         sm_l(
             '%s %s' % (
                 EXEMPTED_FIELDS[first_field],
-                get_decision(obj, first_field)
+                decision
             )
         ) if first_field else '',
-        sm_r(format_decimal(obj.quantity_article_5)),
+        sm_r(field_dict['quantity_article_5']),
+        # TODO: diff the remarks
         sm_l(get_remarks(obj)),
     ))
 
     # Add more rows if there are still fields in field_names
     for f in field_names:
+        decision = get_decision(obj, f) if not diff else \
+            get_decision_diff(obj, previous_obj, f)
         rows.append((
             # Don't repeat previously shown fields
             '', '', '', '', '',
-            sm_r(format_decimal(get_quantity(obj, f))),
-            sm_l('%s %s' % (EXEMPTED_FIELDS[f], get_decision(obj, f))),
+            sm_r(field_dict['quantity_' + f]),
+            sm_l('%s %s' % (EXEMPTED_FIELDS[f], decision)),
             '', '',
         ))
 
     # quantity_quarantine_pre_shipment
-    if obj.quantity_quarantine_pre_shipment:
+    if field_dict['quantity_quarantine_pre_shipment']:
+        decision = get_decision(
+            obj, 'quantity_quarantine_pre_shipment'
+        ) if not diff else get_decision_diff(
+            obj, previous_obj, 'quantity_quarantine_pre_shipment'
+        )
         # Add two rows for QPS
         rows.extend([
             (
@@ -67,8 +97,8 @@ def to_row(obj, row_index):
             ),
             (
                 '', '', '', '', '',
-                sm_r(format_decimal(obj.quantity_quarantine_pre_shipment)),
-                get_decision(obj, 'quarantine_pre_shipment'),
+                sm_r(field_dict['quantity_quarantine_pre_shipment']),
+                decision,
                 '', '',
             )
         ])
@@ -91,7 +121,61 @@ def to_row(obj, row_index):
             ('SPAN', (7, row_index), (7, current_row)),  # Art 5
             ('SPAN', (8, row_index), (8, current_row)),  # Remarks
         ])
-    return (rows, styles)
+    return rows, styles
+
+
+# These will be used for
+subtitle = Paragraph(
+    "%s (%s)" % (_('Production'), _('metric tonnes')),
+    h2_style
+)
+
+styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
+    ('SPAN', (0, 0), (0, 1)),  # Annex/Group
+    ('SPAN', (1, 0), (1, 1)),  # Substance
+    ('SPAN', (2, 0), (2, 1)),  # Total production
+    ('SPAN', (3, 0), (3, 1)),  # Feedstock
+    ('SPAN', (5, 0), (6, 0)),  # Exempted
+    ('SPAN', (7, 0), (7, 1)),  # Art 5
+    ('SPAN', (8, 0), (8, 1)),  # Remarks
+]
+header_f1 = [
+    (
+        sm_c(_('Annex/Group')),
+        sm_c(_('Substance')),
+        sm_c(_('Total production for all uses')),
+        sm_c(_('Production for feedstock uses within your country')),
+        '',  # Destruction column is not needed for F/I but
+             # it's added (invisible) to have a single to_row function
+        sm_c(_('Production for exempted essential, '
+               'critical or other uses within your country')),
+        '',
+        sm_c(_('Production for supply to Article 5 countries')),
+        sm_c(_('Remarks')),
+    ),
+    (
+        '',
+        '',
+        '',
+        '',
+        '',
+        sm_c(_('Quantity')),
+        sm_c(_('Decision / type of use')),
+        '',
+        '',
+    ),
+]
+# Header for captured substances
+header_f2 = [
+    (
+        # Table header for F/II substances
+        '', '',
+        sm_c(_('Captured for all uses')),
+        sm_c(_('Captured for feedstock uses within your country')),
+        sm_c(_('Captured for destruction')),
+        '', '', '', ''
+    ),
+]
 
 
 def export_production(submission, queryset):
@@ -101,64 +185,20 @@ def export_production(submission, queryset):
     if not data and not any(comments):
         return tuple()
 
-    subtitle = Paragraph(
-        "%s (%s)" % (_('Production'), _('metric tonnes')),
-        h2_style
-    )
-
-    styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
-        ('SPAN', (0, 0), (0, 1)),  # Annex/Group
-        ('SPAN', (1, 0), (1, 1)),  # Substance
-        ('SPAN', (2, 0), (2, 1)),  # Total production
-        ('SPAN', (3, 0), (3, 1)),  # Feedstock
-        ('SPAN', (5, 0), (6, 0)),  # Exempted
-        ('SPAN', (7, 0), (7, 1)),  # Art 5
-        ('SPAN', (8, 0), (8, 1)),  # Remarks
-    ]
-    header_f1 = [
-        (
-            sm_c(_('Annex/Group')),
-            sm_c(_('Substance')),
-            sm_c(_('Total production for all uses')),
-            sm_c(_('Production for feedstock uses within your country')),
-            '',  # Destruction column is not needed for F/I but
-                 # it's added (invisible) to have a single to_row function
-            sm_c(_('Production for exempted essential, '
-                   'critical or other uses within your country')),
-            '',
-            sm_c(_('Production for supply to Article 5 countries')),
-            sm_c(_('Remarks')),
-        ),
-        (
-            '',
-            '',
-            '',
-            '',
-            '',
-            sm_c(_('Quantity')),
-            sm_c(_('Decision / type of use')),
-            '',
-            '',
-        ),
-    ]
-
     captured_items = list()
     rows = list()
-
-    def prepare_item(obj, num_header_rows):
-        (p_rows, p_styles) = to_row(
-            p,
-            len(rows) + num_header_rows
-        )
-        rows.extend(p_rows)
-        styles.extend(p_styles)
 
     for p in data:
         if p.substance.is_captured:
             # process them in a second pass
             captured_items.append(p)
             continue
-        prepare_item(p, len(header_f1))
+        (p_rows, p_styles) = to_row(
+            p,
+            len(rows) + len(header_f1)
+        )
+        rows.extend(p_rows)
+        styles.extend(p_styles)
 
     table_f1 = rows_to_table(
         header_f1,
@@ -168,26 +208,21 @@ def export_production(submission, queryset):
     )
 
     # Start over another table, for captured substances
-    header_f2 = [
-        (
-            # Table header for F/II substances
-            '', '',
-            sm_c(_('Captured for all uses')),
-            sm_c(_('Captured for feedstock uses within your country')),
-            sm_c(_('Captured for destruction')),
-            '', '', '', ''
-        ),
-    ]
-    styles = list(SINGLE_HEADER_TABLE_STYLES)
+    captured_styles = list(SINGLE_HEADER_TABLE_STYLES)
     rows = list()
     for p in captured_items:
-        prepare_item(p, len(header_f2))
+        (p_rows, p_styles) = to_row(
+            p,
+            len(rows) + len(header_f2)
+        )
+        rows.extend(p_rows)
+        captured_styles.extend(p_styles)
 
     table_f2 = rows_to_table(
         header_f2,
         rows,
         col_widths([1.0, 2.8, 2.5, 2.5, 2.5, 2.5, 5, 2.5, 6]),  # 27.3
-        styles
+        captured_styles
     )
 
     return (subtitle, table_f1, table_f2) + comments
@@ -196,4 +231,101 @@ def export_production(submission, queryset):
 def export_production_diff(
     submission, previous_submission, queryset, previous_queryset
 ):
-    pass
+    data = list(queryset)
+    previous_data = list(previous_queryset)
+    comments = get_comments_section(submission, 'production')
+    previous_comments = get_comments_section(previous_submission, 'production')
+
+    if not data and not any(comments):
+        return tuple()
+
+    data_dict = dict()
+    for item in data:
+        key = item.substance
+        data_dict[key] = item
+    # It's OK to use set() on the keys as they are unique
+    data_set = set(data_dict.keys())
+
+    previous_data_dict = dict()
+    for item in previous_data:
+        key = item.substance
+        previous_data_dict[key] = item
+    # It's OK to use set() on the keys as they are unique
+    previous_data_set = set(previous_data_dict.keys())
+
+    # Compute added, changed and removed keys, taking into account they are
+    # unique.
+    added_keys = list(data_set.difference(previous_data_set))
+    changed_keys = [
+        key
+        for key in data_set.intersection(previous_data_set)
+        if instances_equal(data_dict[key], previous_data_dict[key]) is False
+    ]
+    removed_keys = list(previous_data_set.difference(data_set))
+
+    if not added_keys and not changed_keys and not removed_keys:
+        # Nothing has been changed, return empty paragraph
+        return Paragraph(' ', h3_style),
+
+    # Now populate PDF
+    ret = (subtitle,)
+    all_data = (
+        (_('Added'), added_keys, data_dict, {}),
+        (_('Changed'), changed_keys, data_dict, previous_data_dict),
+        (_('Removed'), removed_keys, {}, previous_data_dict),
+    )
+    for sub_subtitle, keys, dictionary, previous_dictionary in all_data:
+        if not keys:
+            # Do not add anything if there are no keys for this sub-section
+            continue
+
+        captured_items = list()
+        rows = list()
+
+        for p in data:
+            if p.substance.is_captured:
+                # process them in a second pass
+                captured_items.append(p)
+                continue
+            (p_rows, p_styles) = to_row(
+                p,
+                len(rows) + len(header_f1)
+            )
+            rows.extend(p_rows)
+            styles.extend(p_styles)
+
+        table_f1 = rows_to_table(
+            header_f1,
+            rows,
+            col_widths([1.0, 2.8, 2.5, 5, 0, 2.5, 5, 2.5, 6]),  # 27.3
+            styles
+        )
+
+        # Start over another table, for captured substances
+        captured_styles = list(SINGLE_HEADER_TABLE_STYLES)
+        rows = list()
+        for p in captured_items:
+            (p_rows, p_styles) = to_row(
+                p,
+                len(rows) + len(header_f2)
+            )
+            rows.extend(p_rows)
+            captured_styles.extend(p_styles)
+
+        table_f2 = rows_to_table(
+            header_f2,
+            rows,
+            col_widths([1.0, 2.8, 2.5, 2.5, 2.5, 2.5, 5, 2.5, 6]),  # 27.3
+            captured_styles
+        )
+
+        ret += (
+            Paragraph(sub_subtitle, h3_style),
+            table_f1,
+            table_f2,
+            # Also insert linebreak to keep it beautiful
+            Paragraph('<br/>', h3_style)
+        )
+
+    # TODO: also diff between comments and previous_comments?!
+    return ret

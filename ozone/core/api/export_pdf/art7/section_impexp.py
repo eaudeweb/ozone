@@ -8,6 +8,7 @@ from ..util import (
     format_decimal,
     format_decimal_diff,
     get_comments_section,
+    instances_equal,
     get_decision,
     get_decision_diff,
     get_remarks,
@@ -142,8 +143,11 @@ def to_row(
     # quantity_quarantine_pre_shipment
     if field_dict['quantity_quarantine_pre_shipment']:
         # Add two more rows for QPS
-        decision = get_decision(obj, 'quarantine_pre_shipment') if not diff else \
-            get_decision_diff(obj, previous_obj, 'quarantine_pre_shipment')
+        decision = get_decision(
+            obj, 'quarantine_pre_shipment'
+        ) if not diff else get_decision_diff(
+            obj, previous_obj, 'quarantine_pre_shipment'
+        )
         rows.extend([
             (
                 '', '', '', '', '', '',
@@ -358,16 +362,6 @@ def _export_diff(
     """
     Export data difference between two submissions
     """
-    def instances_equal(instance1, instance2):
-        """
-        Compares two given import/export data model instances.
-        Returns True if their data is identical, False otherwise
-        """
-        for field_name in instance1.QUANTITY_FIELDS:
-            if getattr(instance1, field_name) != getattr(instance2, field_name):
-                return False
-        return True
-
     subtitle = Paragraph(texts['section_title'], h2_style)
     header = _get_header(texts)
 

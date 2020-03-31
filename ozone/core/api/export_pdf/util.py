@@ -9,6 +9,8 @@ from xml.sax.saxutils import escape
 
 from django.utils.translation import gettext_lazy as _
 from django.http import HttpResponse
+from django.db import models
+
 from reportlab.platypus import SimpleDocTemplate
 from reportlab.platypus import ListFlowable
 from reportlab.platypus import ListItem
@@ -315,6 +317,21 @@ EXEMPTED_FIELDS = OrderedDict([
     ('process_agent_uses', _('Process agent uses')),
     ('other_uses', _('Other/unspecified uses')),
 ])
+
+
+def instances_equal(instance1, instance2):
+    """
+    Compares two instances of the same data model.
+    Returns True if their data is identical, False otherwise.
+    """
+    quantity_fields = [
+        f for f in instance1.__class__._meta.fields
+        if isinstance(f, models.fields.DecimalField)
+    ]
+    for field_name in quantity_fields:
+        if getattr(instance1, field_name) != getattr(instance2, field_name):
+            return False
+    return True
 
 
 def get_quantity(obj, field):
