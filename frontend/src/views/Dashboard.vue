@@ -464,17 +464,18 @@ export default {
     },
 
     sortOptionsStatus() {
-      // return this.statuses
-      const data = [
-        { text: 'Any', value: null },
-        ...Object.keys(this.submissionStates).map(state => ({
-          // TODO: use backend names instead of getCommonLabels?
-          // text: this.submissionStates[state],
-          text: getCommonLabels(this.$gettext)[state],
-          value: state
-        }))
-      ]
-      return data
+      if (this.submissionStates) {
+        return [
+          { text: 'Any', value: null },
+          ...Object.keys(this.submissionStates).map(state => ({
+            // TODO: use backend names instead of getCommonLabels?
+            // text: this.submissionStates[state],
+            text: getCommonLabels(this.$gettext)[state],
+            value: state
+          }))
+        ]
+      }
+      return []
     },
 
     sortOptionsParties() {

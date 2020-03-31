@@ -5,7 +5,7 @@
         <div class="col-7 mb-2">
           <b-form-file
             id="choose-files-button"
-            :disabled="!$store.getters.can_upload_files || loadingInitialFiles || !$store.getters.edit_mode"
+            :disabled="!$store.getters.can_upload_files || !$store.getters.edit_mode || loadingInitialFiles"
             :multiple="true"
             ref="filesInput"
             v-model="selectedFiles"
@@ -34,6 +34,7 @@
           class="d-inline"
           placeholder="Optional description"
           :value="cell.value"
+          :disabled="!$store.getters.can_upload_files || !$store.getters.edit_mode"
           style="height: unset"
           @input="onFileDescriptionChanged($event, cell.item.details)"
         />
@@ -59,7 +60,7 @@
       v-translate
       v-if="tableItemsToUpload.length"
       v-html="$store.getters.edit_mode ? 'Start upload': 'Enable edit mode to upload files'"
-      :disabled="!$store.getters.edit_mode"
+      :disabled="!$store.getters.can_upload_files || !$store.getters.edit_mode"
       @click="startUpload"
     ></b-btn>
     <!-- TODO: there needs to be a method for just saving files. This is a dirty workaround -->
@@ -255,14 +256,9 @@ export default {
         if (this.$store.state.actionToDispatch) {
           this.$store.dispatch('clearEdited')
           this.$store.dispatch('saveCallback', { actionToDispatch: this.$store.state.actionToDispatch, data: this.$store.state.dataForAction })
-          this.resetActionToDispatch()
+          this.resetActionToDispatch(false)
         }
       }
-    },
-    resetActionToDispatch() {
-      this.$store.commit('setActionToDispatch', null)
-      this.$store.commit('setDataForAction', null)
-      this.this.updateEditMode(true)
     }
   },
   watch: {

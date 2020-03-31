@@ -3,7 +3,7 @@
     :disabled="$store.getters.getFilesUploadInProgress"
     @click="enterEditMode()"
     id="edit-button"
-    v-show="$store.getters.can_edit_data && !$store.getters.edit_mode"
+    v-show="$store.getters.can_enable_edit_mode && !$store.getters.edit_mode"
     variant="outline-primary"
   >
     <span v-translate>Edit</span>
@@ -31,8 +31,8 @@ export default {
 
   methods: {
     enterEditMode() {
-      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode: true }, params: { obligation_type: this.obligation_type } })
       this.$store.commit('updateEditMode', true)
+      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode: true }, params: { obligation_type: this.obligation_type } })
     }
   }
 }

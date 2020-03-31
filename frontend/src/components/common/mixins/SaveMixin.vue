@@ -56,14 +56,14 @@ export default {
   },
 
   methods: {
-    resetActionToDispatch() {
+    resetActionToDispatch(edit_mode = true) {
       this.$store.commit('setActionToDispatch', null)
       this.$store.commit('setDataForAction', null)
-      this.updateEditMode(true)
+      this.updateEditMode(edit_mode)
     },
     updateEditMode(edit_mode) {
       this.$store.commit('updateEditMode', edit_mode)
-      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode: edit_mode }, params: { obligation_type: this.obligation_type } })
+      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode }, params: { obligation_type: this.obligation_type } })
     },
     validation() {
       this.invalidTabs = []
@@ -273,9 +273,10 @@ export default {
       this.tabsToSave = this.tabsToSave.filter(t => t !== tabName)
       if (this.tabsToSave.length === 0) {
         if (this.$store.state.actionToDispatch) {
+          console.log('checkIfThereIsAnotherActionToDoBeforeReturning', false)
           this.$store.dispatch('clearEdited')
           this.$store.dispatch('saveCallback', { actionToDispatch: this.$store.state.actionToDispatch, data: this.$store.state.dataForAction })
-          this.resetActionToDispatch()
+          this.resetActionToDispatch(false)
         }
       }
     }

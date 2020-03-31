@@ -57,7 +57,7 @@
     <Footer style="display:inline">
       <Save
         class="actions mt-2 mb-2"
-        v-show="$store.getters.can_save_form && $store.getters.edit_mode"
+        v-show="$store.getters.can_enable_edit_mode && $store.getters.edit_mode"
         :data="$store.state.form"
         :submission="submission"
       ></Save>

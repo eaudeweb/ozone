@@ -34,7 +34,7 @@
                 <b-col>
                   <fieldGenerator
                     :fieldInfo="{index:order, tabName: info.name, field:order}"
-                    :disabled="isDisabled(order)"
+                    :disabled="submissionInfoIsDisabled(order)"
                     :field="info.form_fields[order]"
                   ></fieldGenerator>
                 </b-col>
@@ -57,7 +57,7 @@
                   <fieldGenerator
                     :fieldInfo="{index:'submitted_at', tabName: info.name, field:'submitted_at'}"
                     :field="info.form_fields.submitted_at"
-                    :disabled="isDisabled('submitted_at')"
+                    :disabled="submissionInfoIsDisabled('submitted_at')"
                   ></fieldGenerator>
                 </b-col>
               </b-row>
@@ -74,7 +74,7 @@
                 <div class="d-flex" v-for="order in general_flags" :key="order">
                   <fieldGenerator
                     :fieldInfo="{index:order, tabName: flags_info.name, field:order}"
-                    :disabled="$store.getters.transitionState || !$store.getters.edit_mode"
+                    :disabled="flagIsDisabled(order)"
                     :field="flags_info.form_fields[order]"
                     :id="order"
                     @change="setTabStatus"
@@ -97,7 +97,7 @@
                 <div class="d-flex" v-for="order in blank_flags" :key="order">
                     <fieldGenerator
                       :fieldInfo="{index:order, tabName: flags_info.name, field:order}"
-                      :disabled="$store.getters.transitionState || !$store.getters.edit_mode || (is_secretariat && is_submitted && created_by_party)"
+                      :disabled="flagIsDisabled(order)"
                       :field="flags_info.form_fields[order]"
                       :id="order"
                       @change="setTabStatus"
@@ -136,7 +136,7 @@
                   <span cols="1">
                     <fieldGenerator
                       :fieldInfo="{index:order, tabName: flags_info.name, field:order}"
-                      :disabled="$store.getters.transitionState || !$store.getters.edit_mode"
+                      :disabled="flagIsDisabled(order)"
                       :field="flags_info.form_fields[order]"
                       :id="order"
                       @change="setTabStatus"
@@ -203,20 +203,25 @@ export default {
     onlySelectedValue() {
       return Object.keys(this.info.form_fields).filter(field => !['current_state', 'validation'].includes(field)).map(field => this.info.form_fields[field].selected)
     },
+
     error_danger() {
       return this.info.status === false
     },
+
     general_flags() {
       return ['flag_provisional']
     },
+
     exclude_flags() {
       return ['flag_superseded', 'flag_valid']
     },
+
     blank_flags() {
-      return Object.keys(this.flags_info.form_fields).filter(f => this.flags_info.fields_order.includes(f) && f !== 'validation' && f.split('_').includes('blanks'))
+      return ['flag_checked_blanks', 'flag_has_blanks', 'flag_confirmed_blanks']
     },
 
     specific_flags() {
+      // has_reported_xxx
       return Object.keys(this.flags_info.form_fields).filter(f => this.flags_info.fields_order.includes(f) && ![...this.general_flags, ...this.exclude_flags, ...this.blank_flags, 'validation'].includes(f))
     },
 
@@ -227,13 +232,12 @@ export default {
     is_secretariat() {
       return this.$store.state.currentUser.is_secretariat
     },
+
     is_data_entry() {
       this.info.form_fields.current_state.selected = this.$store.state.current_submission.current_state === 'data_entry'
       return this.$store.state.current_submission.current_state === 'data_entry'
     },
-    is_submitted() {
-      return this.$store.state.current_submission.current_state === 'submitted'
-    },
+
     created_by_party() {
       return this.$store.state.current_submission.created_by !== 'secretariat'
     }
@@ -267,17 +271,23 @@ export default {
       }
       return !this.$store.getters.can_edit_data
     },
-    isDisabled(order) {
+    submissionInfoIsDisabled(order) {
+      const disabled = !(this.$store.getters.can_edit_data && this.$store.getters.edit_mode)
       if (order === 'reporting_channel') {
-        return !(this.$store.getters.can_change_reporting_channel && this.$store.getters.edit_mode)
+        return !(this.$store.getters.can_change_reporting_channel) && disabled
       }
       if (order === 'submission_format' && !this.$store.state.currentUser.is_secretariat) {
         return true
       }
       if (order === 'submitted_at') {
-        !(this.$store.state.current_submission.can_change_submitted_at && this.$store.getters.edit_mode)
+        !(this.$store.state.current_submission.can_change_submitted_at) && disabled
       }
-      return !this.$store.getters.edit_mode
+      return disabled
+    },
+    flagIsDisabled(order) {
+      return !this.$store.state.current_submission.changeable_flags.includes(order)
+        || !this.$store.getters.edit_mode
+        || (this.is_secretariat === this.created_by_party)
     },
     setTabStatus(fieldInfo) {
       //  Set flags tab status when flag is ticked

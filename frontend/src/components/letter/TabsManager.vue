@@ -47,20 +47,20 @@
     <Footer style="display:inline">
       <Save
         class="actions mt-2 mb-2"
-        v-show="$store.getters.can_save_form && $store.getters.edit_mode"
+        v-show="$store.getters.can_enable_edit_mode && $store.getters.edit_mode"
         :data="$store.state.form"
         :submission="submission"
         :obligation_type="obligation_type"
       ></Save>
       <Edit :submission="submission" :obligation_type="obligation_type" class="actions mt-2 mb-2" />
       <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
-      <b-button-group v-if="$store.state.recordDataObligations.includes(obligation_type) != -1 && $store.state.currentUser.is_secretariat && $store.state.current_submission.submitted_at" class="pull-right actions ml-2 mt-2 mb-2">
+      <b-button-group v-if="$store.state.recordDataObligations.includes(obligation_type) && $store.state.currentUser.is_secretariat && $store.state.current_submission.submitted_at" class="pull-right actions ml-2 mt-2 mb-2">
         <b-btn
           :href="`${api}/admin/core/othercountryprofiledata/add/?submission_id=${$store.state.current_submission.id}`"
           target="_blank"
           variant="outline-primary"
         >
-          <span v-translate>Record Data</span>
+          <span v-translate>Record data</span>
         </b-btn>
       </b-button-group>
       <b-button-group class="pull-right actions mt-2 mb-2">
