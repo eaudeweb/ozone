@@ -281,14 +281,27 @@ def export_production_diff(
         captured_items = list()
         rows = list()
 
-        for p in data:
-            if p.substance.is_captured:
+        for key in keys:
+            diff = False
+            previous_item = None
+            if not previous_dictionary:
+                item = dictionary[key]
+            elif not dictionary:
+                item = previous_dictionary[key]
+            else:
+                diff = True
+                item = dictionary[key]
+                previous_item = previous_dictionary[key]
+
+            if item.substance.is_captured:
                 # process them in a second pass
-                captured_items.append(p)
+                captured_items.append((item, previous_item,))
                 continue
             (p_rows, p_styles) = to_row(
-                p,
-                len(rows) + len(header_f1)
+                item,
+                len(rows) + len(header_f1),
+                diff,
+                previous_item
             )
             rows.extend(p_rows)
             styles.extend(p_styles)
@@ -303,10 +316,12 @@ def export_production_diff(
         # Start over another table, for captured substances
         captured_styles = list(SINGLE_HEADER_TABLE_STYLES)
         rows = list()
-        for p in captured_items:
+        for item, previous_item in captured_items:
             (p_rows, p_styles) = to_row(
-                p,
-                len(rows) + len(header_f2)
+                item,
+                len(rows) + len(header_f2),
+                diff,
+                previous_item
             )
             rows.extend(p_rows)
             captured_styles.extend(p_styles)
