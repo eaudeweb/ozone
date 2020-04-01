@@ -173,8 +173,10 @@ def get_questionnaire_table_diff(submission, previous_submission):
     for item, previous_item in itertools.zip_longest(row, previous_row):
         if item != previous_item:
             diff_row.append(b_c(item))
-        else:
-            diff_row.append(p_c_g(''))
+
+    if not diff_row:
+        # Return empty tuple so we do not display the table
+        return ()
 
     return (
         Table(
