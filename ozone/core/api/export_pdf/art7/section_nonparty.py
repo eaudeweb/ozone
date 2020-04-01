@@ -166,8 +166,8 @@ def export_nonparty_diff(
     removed_keys = list(previous_data_set.difference(data_set))
 
     if not added_keys and not changed_keys and not removed_keys:
-        # Nothing has been changed, return empty paragraph
-        return Paragraph(' ', h3_style),
+        # Nothing has been changed, return empty tuple
+        return ()
 
     # Now populate PDF
     ret = (subtitle,)
