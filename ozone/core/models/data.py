@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
+from django.utils.functional import cached_property
 
 from model_utils import FieldTracker
 
@@ -477,6 +478,17 @@ class BaseReport(models.Model):
         help_text="This allows the interface to keep the data entries in their "
                   "original order, as given by the user."
     )
+
+    @classmethod
+    def decimal_fields(cls):
+        return [
+            f.name for f in cls._meta.fields
+            if isinstance(f, models.fields.DecimalField)
+        ]
+
+    @cached_property
+    def decimal_field_names(self):
+        return self.__class__.decimal_fields()
 
     class Meta:
         abstract = True

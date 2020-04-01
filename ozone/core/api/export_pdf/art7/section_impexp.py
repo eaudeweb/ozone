@@ -469,7 +469,7 @@ def export_imports_diff(
 
 def export_exports(submission, queryset):
     comments = get_comments_section(submission, 'exports')
-    return _export(list(queryset), comments, 'destination_party', texts)
+    return _export(list(queryset), comments, 'destination_party', exports_texts)
 
 
 def export_exports_diff(

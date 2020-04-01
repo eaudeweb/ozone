@@ -38,7 +38,7 @@ def to_row(obj, row_index, diff=False, previous_obj=None):
 
     # Build up dictionary of field_name: formatted_value
     field_dict = {}
-    for f in obj.QUANTITY_FIELDS + ['quantity_polyols']:
+    for f in obj.decimal_field_names:
         if not diff:
             field_dict[f] = format_decimal(getattr(obj, f))
         else:
@@ -235,7 +235,13 @@ def export_production_diff(
     comments = get_comments_section(submission, 'production')
     previous_comments = get_comments_section(previous_submission, 'production')
 
-    if not data and not any(comments):
+    # If it's all empty do not return anything
+    if (
+        not data
+        and not previous_data
+        and not any(comments)
+        and not any(previous_comments)
+    ):
         return tuple()
 
     data_dict = dict()

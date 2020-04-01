@@ -79,7 +79,13 @@ def export_destruction_diff(
     comments = get_comments_section(submission, 'destruction')
     previous_comments = get_comments_section(previous_submission, 'destruction')
 
-    if not data and not any(comments):
+    # If it's all empty do not return anything
+    if (
+        not data
+        and not previous_data
+        and not any(comments)
+        and not any(previous_comments)
+    ):
         return tuple()
 
     data_dict = dict()
@@ -123,13 +129,17 @@ def export_destruction_diff(
             continue
 
         if not previous_dictionary:
-            data = map(table_row, dictionary.values())
+            data = tuple(map(table_row, dictionary.values()))
         elif not dictionary:
-            data = map(table_row, previous_dictionary.values())
+            data = tuple(map(table_row, previous_dictionary.values()))
         else:
-            data = map(
-                table_row_diff,
-                zip_longest(dictionary.values(), previous_dictionary.values())
+            data = tuple(
+                map(
+                    table_row_diff,
+                    zip_longest(
+                        dictionary.values(), previous_dictionary.values()
+                    )
+                )
             )
 
         table = rows_to_table(
@@ -138,8 +148,13 @@ def export_destruction_diff(
             col_widths([2.1, 8, 4, 13.2]),
             SINGLE_HEADER_TABLE_STYLES
         )
-        ret += (sub_subtitle, table)
+        ret += (
+            Paragraph(sub_subtitle, h3_style),
+            table,
+            # Also insert linebreak to keep it beautiful
+            Paragraph('<br/>', h3_style)
+        )
 
     # TODO: comments diff
-    return ret + (comments,)
+    return ret
 
