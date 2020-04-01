@@ -90,14 +90,14 @@ def export_destruction_diff(
 
     data_dict = dict()
     for item in data:
-        key = item.substance
+        key = (item.substance, item.blend)
         data_dict[key] = item
     # It's OK to use set() on the keys as they are unique
     data_set = set(data_dict.keys())
 
     previous_data_dict = dict()
     for item in previous_data:
-        key = item.substance
+        key = (item.substance, item.blend)
         previous_data_dict[key] = item
     # It's OK to use set() on the keys as they are unique
     previous_data_set = set(previous_data_dict.keys())
