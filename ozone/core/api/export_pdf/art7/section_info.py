@@ -216,6 +216,8 @@ def export_info_diff(submission, previous_submission):
             ('(%s)' % (_('Provisional'),)) if submission.flag_provisional else '',
         ), h1_style),
     )
+    # TODO: display info about both current and previous submission
+    # (date of reporting and submission info)
     return (
         title
         + (p_l('%s: %s' % (_('Printed at'), datetime.now().strftime('%d %B %Y %H:%M:%S'))),)
