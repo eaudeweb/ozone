@@ -1,5 +1,6 @@
-from django.utils.translation import gettext_lazy as _
 from reportlab.platypus import Paragraph
+
+from django.utils.translation import gettext_lazy as _
 
 from ozone.core.models.utils import sum_decimals
 

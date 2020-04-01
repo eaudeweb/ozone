@@ -218,6 +218,8 @@ def format_decimal_diff(nr, previous_nr):
         return ''
     nr = format_decimal(nr)
     previous_nr = format_decimal(previous_nr)
+    if nr != previous_nr:
+        return '<b>{} ({})</b>'.format(nr, previous_nr)
     return '{} ({})'.format(nr, previous_nr)
 
 
