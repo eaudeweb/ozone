@@ -312,7 +312,7 @@ def instances_equal(instance1, instance2):
     Returns True if their data is identical, False otherwise.
     """
     quantity_fields = [
-        f for f in instance1.__class__._meta.fields
+        f.name for f in instance1.__class__._meta.fields
         if isinstance(f, models.fields.DecimalField)
     ]
     for field_name in quantity_fields:
