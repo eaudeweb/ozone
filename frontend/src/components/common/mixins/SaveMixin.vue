@@ -1,5 +1,6 @@
 <template>
   <b-btn
+    v-show="canEnableEditMode && $store.getters.edit_mode"
     :disabled="$store.getters.getFilesUploadInProgress"
     @click="validation"
     id="save-button"
@@ -16,11 +17,12 @@ import { post, update } from '@/components/common/services/api'
 import { isObject } from '@/components/common/services/utilsService'
 import { dateFormatToYYYYMMDD } from '@/components/common/services/languageService'
 import FilesMixin from './FilesMixin'
+import PermissionsMixin from './PermissionsMixin'
 import { getCommonLabels } from '@/components/common/dataDefinitions/labels'
 import { getAlerts } from '@/components/common/dataDefinitions/alerts'
 
 export default {
-  mixins: [FilesMixin],
+  mixins: [FilesMixin, PermissionsMixin],
   props: {
     submission: String,
     obligation_type: {

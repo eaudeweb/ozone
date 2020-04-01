@@ -3,8 +3,11 @@ import { Aside as AppAside } from '@coreui/vue'
 import fieldGenerator from '@/components/common/form-components/fieldGenerator'
 import DefaultAside from '@/components/common/form-components/DefaultAside'
 import Multiselect from '@/components/common/ModifiedMultiselect'
+import PermissionsMixin from './PermissionsMixin'
 
 export default {
+  mixins: [PermissionsMixin],
+
   props: {
     tabName: String,
     tabId: Number,
@@ -280,17 +283,6 @@ export default {
           value: this.getGroupBySubstance(value),
           fieldInfo: { index: fieldInfo.index, tabName: fieldInfo.tabName, field: 'group' }
         })
-      }
-    },
-
-    getCommentFieldPermission(fieldName) {
-      let type = fieldName.split('_')
-      type = type[type.length - 1]
-      if (type === 'party') {
-        return !this.$store.getters.can_change_remarks_party || !this.$store.getters.edit_mode
-      }
-      if (['secretariat', 'os'].includes(type)) {
-        return !this.$store.getters.can_change_remarks_secretariat || !this.$store.getters.edit_mode
       }
     },
 

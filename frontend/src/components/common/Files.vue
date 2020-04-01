@@ -5,7 +5,7 @@
         <div class="col-7 mb-2">
           <b-form-file
             id="choose-files-button"
-            :disabled="!$store.getters.can_upload_files || !$store.getters.edit_mode || loadingInitialFiles"
+            :disabled="!canUploadFiles || loadingInitialFiles"
             :multiple="true"
             ref="filesInput"
             v-model="selectedFiles"
@@ -34,7 +34,7 @@
           class="d-inline"
           placeholder="Optional description"
           :value="cell.value"
-          :disabled="!$store.getters.can_upload_files || !$store.getters.edit_mode"
+          :disabled="!canUploadFiles"
           style="height: unset"
           @input="onFileDescriptionChanged($event, cell.item.details)"
         />
@@ -42,7 +42,7 @@
 
       <template v-slot:cell(actions)="cell">
         <div class="d-flex">
-          <b-button variant="outline-danger" v-if="$store.getters.can_upload_files && $store.getters.edit_mode" @click="deleteFile($event, cell.item.details)">
+          <b-button variant="outline-danger" v-if="canUploadFiles" @click="deleteFile($event, cell.item.details)">
             <i class="fa fa-trash" aria-hidden="true"></i>
           </b-button>
           <div class="ml-2" style="min-width:300px" v-if="cell.item.details.percentage">
@@ -60,7 +60,7 @@
       v-translate
       v-if="tableItemsToUpload.length"
       v-html="$store.getters.edit_mode ? 'Start upload': 'Enable edit mode to upload files'"
-      :disabled="!$store.getters.can_upload_files || !$store.getters.edit_mode"
+      :disabled="!canUploadFiles"
       @click="startUpload"
     ></b-btn>
     <!-- TODO: there needs to be a method for just saving files. This is a dirty workaround -->
@@ -80,7 +80,7 @@
             v-b-tooltip
             :title="downloadLabel"
           ><i class="fa fa-download"></i></b-btn>
-          <b-button class="ml-2 mr-2" variant="outline-danger" v-if="$store.getters.can_upload_files && $store.getters.edit_mode" @click="deleteFile($event, cell.item.details)">
+          <b-button class="ml-2 mr-2" variant="outline-danger" v-if="canUploadFiles" @click="deleteFile($event, cell.item.details)">
             <i class="fa fa-trash" aria-hidden="true"></i>
           </b-button>
         </template>
@@ -94,10 +94,11 @@ import { isObject } from '@/components/common/services/utilsService'
 import { update } from '@/components/common/services/api'
 import FilesMixin from '@/components/common/mixins/FilesMixin'
 import SaveMixin from '@/components/common/mixins/SaveMixin'
+import PermissionsMixin from '@/components/common/mixins/PermissionsMixin'
 import { dateFormatToDisplay, dateFormatToYYYYMMDD } from '@/components/common/services/languageService.js'
 
 export default {
-  mixins: [FilesMixin, SaveMixin],
+  mixins: [FilesMixin, SaveMixin, PermissionsMixin],
 
   props: {
     tabId: Number,
@@ -144,9 +145,6 @@ export default {
     },
     newTabs() {
       return this.$store.state.newTabs
-    },
-    is_secretariat() {
-      return this.$store.state.currentUser.is_secretariat
     }
   },
   methods: {
@@ -205,7 +203,7 @@ export default {
         if (isObject(tab.form_fields)) {
           const save_obj = JSON.parse(JSON.stringify(tab.default_properties))
           Object.keys(save_obj).forEach(key => {
-            if (key === 'submitted_at' && !this.is_secretariat) {
+            if (key === 'submitted_at' && !this.isSecretariat) {
               resolve()
               return
             }

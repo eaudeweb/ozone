@@ -13,7 +13,6 @@
         <multiselect
           :placeholder="$gettext('Select option')"
           @input="prepareSubstances"
-          :disabled="!$store.getters.can_edit_data || !$store.getters.edit_mode"
           :multiple="true"
           label="text"
           :hide-selected="true"
@@ -29,7 +28,6 @@
           :hide-selected="true"
           :clear-on-select="true"
           :close-on-select="false"
-          :disabled="!$store.getters.can_edit_data || !$store.getters.edit_mode"
           label="text"
           trackBy="value"
           :multiple="true"

@@ -15,7 +15,6 @@
             :placeholder="$gettext('Select option')"
             :clear-on-select="false"
             :hide-selected="true"
-            :disabled="!$store.getters.can_edit_data || !$store.getters.edit_mode"
             trackBy="value"
             label="text"
             :close-on-select="true"
@@ -32,7 +31,6 @@
               :placeholder="$gettext('Select option')"
               trackBy="value"
               :hide-selected="true"
-              :disabled="!$store.getters.can_edit_data || !$store.getters.edit_mode"
               :clear-on-select="true"
               :close-on-select="false"
               :multiple="true"
@@ -76,7 +74,7 @@
         <b-btn variant="light" v-if="selected_blends.selected.length" @click="resetData">Cancel</b-btn>
       </b-btn-group>
 
-      <div v-if="!new_blend && !selected_blends.selected.length && $store.getters.can_edit_data && $store.getters.edit_mode">
+      <div v-if="!new_blend && !selected_blends.selected.length">
         <hr>
         <h5>
           <span v-translate>Add custom mixture</span>
@@ -86,7 +84,7 @@
         </b-btn>
       </div>
 
-      <div v-if="new_blend && $store.getters.can_edit_data && $store.getters.edit_mode">
+      <div v-if="new_blend">
         <h5>
           <span v-translate>Add custom mixture</span>
         </h5>

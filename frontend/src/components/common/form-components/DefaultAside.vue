@@ -2,13 +2,13 @@
   <div>
     <AsideToggler :validationButton="showValidationButton" :hasAssideMenu="$store.state.form.tabs[tabName].hasAssideMenu" />
     <b-tabs no-key-nav v-model="tabIndex">
-      <b-tab v-if="hasSubstances && $store.getters.can_edit_data">
+      <b-tab v-if="hasSubstances && canEditSubstanceData">
         <template slot="title">
           <span v-translate>Substances</span>
         </template>
         <add :tabName="tabName"></add>
       </b-tab>
-      <b-tab v-if="hasBlends && $store.getters.can_edit_data">
+      <b-tab v-if="hasBlends && canEditSubstanceData">
         <template slot="title">
           <span v-translate>Mixtures</span>
         </template>
@@ -17,7 +17,7 @@
       <b-tab :title-link-class="validationLength > 0 ? {} : null">
         <template slot="title">
           <span v-translate>Validation</span>
-          <b-badge v-if="validationLength" variant="danger">{{validationLength}}</b-badge>
+          <b-badge :style="{marginLeft: '5px'}" v-if="validationLength" variant="danger">{{validationLength}}</b-badge>
         </template>
         <Validation
           v-on:fillSearch="$emit('fillSearch', $event)"
@@ -66,11 +66,19 @@ import Validation from './Validation'
 
 export default {
   name: 'DefaultAside',
+
   components: {
     add: Add,
     AddBlend,
     AsideToggler,
     Validation
+  },
+
+  props: {
+    hovered: null,
+    tabName: String,
+    parentTabIndex: Number,
+    canEditSubstanceData: Boolean
   },
 
   data() {
@@ -87,17 +95,11 @@ export default {
       return Object.keys(this.$store.state.form.tabs[this.tabName].default_properties).includes('blend')
     },
     showValidationButton() {
-      return !this.$store.getters.can_edit_data && this.validationLength
+      return !this.canEditSubstanceData && this.validationLength > 0
     },
     validationLength() {
       return this.$store.getters.getValidationForCurrentTab(this.tabName).filter(field => field.validation.length).length
     }
-  },
-
-  props: {
-    hovered: null,
-    tabName: String,
-    parentTabIndex: Number
   },
 
   watch: {

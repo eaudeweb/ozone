@@ -114,7 +114,7 @@ const getters = {
 		|| state.permissions.form.can_change_reporting_channel
 		|| state.permissions.form.can_change_remarks_party
 		|| state.permissions.form.can_upload_files
-    || (state.current_submission && state.current_submission.changeable_flags.length)),
+    || (state.current_submission && state.current_submission.changeable_flags.length > 0)),
   // eslint-disable-next-line
   edit_mode: (state, getters) => state.permissions.form && state.permissions.form.edit_mode && getters.can_enable_edit_mode,
   /**

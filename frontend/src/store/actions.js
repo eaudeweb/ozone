@@ -469,7 +469,7 @@ const actions = {
           can_change_reporting_channel: response.data.can_change_reporting_channel,
           can_upload_files: response.data.can_upload_files,
           can_edit_data: response.data.can_edit_data,
-          edit_mode: router.app.$route.query.edit_mode === 'true' || router.app.$route.query.edit_mode || false
+          edit_mode: router.app.$route.query.edit_mode === 'true' || router.app.$route.query.edit_mode === true || false
         })
         resolve(response.data.reporting_period)
       })
