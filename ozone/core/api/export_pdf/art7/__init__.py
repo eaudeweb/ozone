@@ -16,7 +16,7 @@ from .section_impexp import export_imports, export_imports_diff
 from .section_impexp import export_exports, export_exports_diff
 from .section_production import export_production, export_production_diff
 from .section_destruction import export_destruction, export_destruction_diff
-from .section_nonparty import export_nonparty
+from .section_nonparty import export_nonparty, export_nonparty_diff
 from .section_emission import export_emission
 from .section_labuses import export_labuses
 from .labuse_report import export_labuse_report
@@ -139,12 +139,14 @@ def export_submission_diff(submission):
             exclude_blend_items(previous_submission.article7destructions)
         )
 
-        """
         yield from export_nonparty_diff(
             submission,
+            previous_submission,
             exclude_blend_items(submission.article7nonpartytrades),
+            exclude_blend_items(previous_submission.article7nonpartytrades),
         )
 
+        """
         yield from export_emission_diff(
             submission,
             submission.article7emissions.all(),
