@@ -115,9 +115,8 @@ const allowEditMode = () => {
         permissionsDictionaryIndex < permissions[dataType][submissionStatus].length;
         permissionsDictionaryIndex += 1
       ) {
-        if (permissions[dataType][submissionStatus][permissionsDictionaryIndex] === false) {
+        if (!permissions[dataType][submissionStatus][permissionsDictionaryIndex] && !editMode[submissionStatus][permissionsDictionaryIndex]) {
           editMode[submissionStatus][permissionsDictionaryIndex] = true
-          break
         }
       }
     })
