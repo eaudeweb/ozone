@@ -19,10 +19,10 @@ export default {
     },
     //  Submission creator
     isCreatedBySecretariat() {
-      return this.$store.state.current_submission.created_by === 'secretariat'
+      return this.$store.state.current_submission.filled_by_secretariat
     },
     isCreatedByParty() {
-      return this.$store.state.current_submission.created_by !== 'secretariat'
+      return !this.$store.state.current_submission.filled_by_secretariat
     },
     //  Permission dictionary index
     //    0 -> created by party, accesed by party
