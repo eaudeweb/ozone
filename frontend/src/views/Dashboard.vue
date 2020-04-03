@@ -94,7 +94,7 @@
             <template v-slot:cell(actions)="row">
               <router-link
                 class="btn btn-light btn-sm"
-                :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id }, params: { obligation_type: getFormName(row.item.details.obligation) }}"
+                :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id }}"
               >
                 <span v-if="row.item.details.can_edit_data">{{labels['edit']}}</span>
                 <span v-else>{{labels['view']}}</span>
@@ -186,7 +186,7 @@
                 <b-button-group>
                   <router-link
                     class="btn btn-light btn-sm"
-                    :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id }, params: { obligation_type: getFormName(row.item.details.obligation) }}"
+                    :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id }}"
                   >
                     <span
                       v-if="row.item.details.can_edit_data && !currentUser.is_read_only"
@@ -588,7 +588,7 @@ export default {
       }).then(r => {
         this.$store.dispatch('getMyCurrentSubmissions').then(() => {
           const currentSubmission = this.mySubmissions.find(sub => sub.id === r.id)
-          this.$router.push({ name: this.getFormName(r.obligation), query: { submission: currentSubmission.id }, params: { obligation_type: this.getFormName(r.obligation) } })
+          this.$router.push({ name: this.getFormName(r.obligation), query: { submission: currentSubmission.id } })
         })
       })
     },
@@ -602,7 +602,7 @@ export default {
     },
     clone(submissionId, obligation) {
       cloneSubmission(submissionId).then((response) => {
-        this.$router.push({ name: this.getFormName(obligation), query: { submission: response.data.id }, params: { obligation_type: this.getFormName(obligation) } })
+        this.$router.push({ name: this.getFormName(obligation), query: { submission: response.data.id } })
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,
           message: { __all__: [this.alerts.new_version_created] },

@@ -13,7 +13,6 @@ export default {
     return {
       currentFormName: this.$route.name,
       submission: this.$route.query.submission.toString(),
-      obligation_type: this.$route.params.obligation_type ? this.$route.params.obligation_type : null,
       prefilled: false,
       preventMessage: this.$gettext('Do you really want to leave this page? You have unsaved changes!')
     }

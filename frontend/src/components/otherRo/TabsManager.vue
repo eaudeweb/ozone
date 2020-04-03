@@ -71,7 +71,12 @@
         :submission="submission"
       ></Save>
       <router-link class="btn btn-light ml-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
-      <b-button-group v-if="$store.state.recordDataObligations.includes(obligation_type) != -1 && $store.state.currentUser.is_secretariat && $store.state.current_submission.submitted_at" class="pull-right actions ml-2 mt-2 mb-2">
+      <b-button-group
+        v-if="$store.state.recordDataObligations.includes($store.state.current_submission.obligation_type)
+          && $store.state.currentUser.is_secretariat
+          && $store.state.current_submission.submitted_at"
+        class="pull-right actions ml-2 mt-2 mb-2"
+      >
         <b-btn
           :href="`${api}/admin/core/transfer/add/?submission_id=${$store.state.current_submission.id}`"
           target="_blank"
@@ -170,8 +175,7 @@ export default {
   },
   props: {
     data: null,
-    submission: String,
-    obligation_type: String
+    submission: String
   },
   data() {
     return {
@@ -208,7 +212,7 @@ export default {
         return
       }
       cloneSubmission(submissionId).then((response) => {
-        this.$router.push({ name: this.$route.name, query: { submission: response.data.id }, params: { obligation_type: this.obligation_type } })
+        this.$router.push({ name: this.$route.name, query: { submission: response.data.id } })
         this.$router.go(this.$router.currentRoute)
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,
