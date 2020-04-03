@@ -17,7 +17,7 @@ from .section_impexp import export_exports, export_exports_diff
 from .section_production import export_production, export_production_diff
 from .section_destruction import export_destruction, export_destruction_diff
 from .section_nonparty import export_nonparty, export_nonparty_diff
-from .section_emission import export_emission
+from .section_emission import export_emission, export_emission_diff
 from .section_labuses import export_labuses
 from .labuse_report import export_labuse_report
 
@@ -146,12 +146,14 @@ def export_submission_diff(submission):
             exclude_blend_items(previous_submission.article7nonpartytrades),
         )
 
-        """
         yield from export_emission_diff(
             submission,
+            previous_submission,
             submission.article7emissions.all(),
+            previous_submission.article7emissions.all()
         )
 
+        """
         # For lab uses, consumption is actually data from imports
         # Apparently there aren't any lab uses in exports (?)
         yield from export_labuses_diff(
