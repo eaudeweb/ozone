@@ -18,7 +18,7 @@ from .section_production import export_production, export_production_diff
 from .section_destruction import export_destruction, export_destruction_diff
 from .section_nonparty import export_nonparty, export_nonparty_diff
 from .section_emission import export_emission, export_emission_diff
-from .section_labuses import export_labuses
+from .section_labuses import export_labuses, export_labuses_diff
 from .labuse_report import export_labuse_report
 
 from ..util import exclude_blend_items
@@ -153,14 +153,16 @@ def export_submission_diff(submission):
             previous_submission.article7emissions.all()
         )
 
-        """
         # For lab uses, consumption is actually data from imports
         # Apparently there aren't any lab uses in exports (?)
         yield from export_labuses_diff(
             filter_lab_uses(exclude_blend_items(submission.article7imports)),
             filter_lab_uses(submission.article7productions),
+            filter_lab_uses(
+                exclude_blend_items(previous_submission.article7imports)
+            ),
+            filter_lab_uses(previous_submission.article7productions),
         )
-        """
 
         yield PageBreak()
 
