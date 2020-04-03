@@ -1250,6 +1250,8 @@ class SubmissionFlagsSerializer(
         # User should always be on the request due to our permission classes
         user = self.context['request'].user
         instance.check_flags(user, validated_data)
+        # If checks were successful, also inject user into validated data
+        validated_data['last_edited_by'] = self.context['request'].user
         return super().update(instance, validated_data)
 
 
@@ -1303,6 +1305,8 @@ class SubmissionRemarksSerializer(
         # User should always be on the request due to our permission classes
         user = self.context['request'].user
         instance.check_remarks(user, validated_data)
+        # If checks were successful, also inject user into validated data
+        validated_data['last_edited_by'] = self.context['request'].user
         return super().update(instance, validated_data)
 
 
