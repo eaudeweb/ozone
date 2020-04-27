@@ -433,7 +433,8 @@ class ObligationAdmin(admin.ModelAdmin):
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     base_list_display = (
-        "username", "first_name", "last_name", "email", "is_secretariat", "is_read_only", "party",
+        "username", "first_name", "last_name", "email",
+        "is_secretariat", "is_cap", "is_read_only", "party",
         "is_active", "activated", "last_login",
     )
     superuser_list_display = (
@@ -461,16 +462,24 @@ class UserAdmin(admin.ModelAdmin):
             form = PasswordResetForm({'email': user.email})
             form.full_clean()
             form.save(
-                domain_override=domain_override, use_https=use_https, email_template_name=body,
+                domain_override=domain_override,
+                use_https=use_https,
+                email_template_name=body,
                 subject_template_name=subject,
             )
             users.append(user.username)
         if len(users) > 10:
-            self.message_user(request, _("Email sent to %d users for password reset") % len(users),
-                              level=messages.SUCCESS)
+            self.message_user(
+                request,
+                _("Email sent to %d users for password reset") % len(users),
+                level=messages.SUCCESS
+            )
         else:
-            self.message_user(request, _("Email sent to %s for password reset") % ", ".join(users),
-                              level=messages.SUCCESS)
+            self.message_user(
+                request,
+                _("Email sent to %s for password reset") % ", ".join(users),
+                level=messages.SUCCESS
+            )
     reset_password.short_description = _("Reset user password")
 
     def login_as(self, obj):

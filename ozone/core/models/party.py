@@ -242,6 +242,21 @@ class Party(models.Model):
         db_table = 'party'
 
 
+class PartyGroup(models.Model):
+    """
+    Used for modelling access for UNEP CAP users.
+    """
+    name = models.CharField(max_length=256)
+
+    parties = models.ManyToManyField(Party)
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+
+
 def current_year():
     return datetime.date.today().year
 

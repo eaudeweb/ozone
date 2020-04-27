@@ -855,6 +855,7 @@ class Submission(models.Model):
         only changed automatically by the system.
         """
         # First do a quick check based on actual permissions
+        # This also restricts changes only to secretariat or party users.
         if not self.can_edit_flags(user):
             return []
 
@@ -862,7 +863,7 @@ class Submission(models.Model):
         if self.obligation.obligation_type == ObligationTypes.EXEMPTION.value:
             if user.is_secretariat:
                 if self.in_initial_state:
-                    return ['flag_emergency',]
+                    return ['flag_emergency']
             return []
 
         flags_list = []
@@ -889,7 +890,7 @@ class Submission(models.Model):
             else:
                 # valid & approved flags can only be set after submitting
                 flags_list.extend(['flag_valid',])
-        else:
+        elif user.party is not None:
             # Party user
             if self.in_initial_state:
                 if self.filled_by_secretariat:
@@ -940,7 +941,8 @@ class Submission(models.Model):
         Verifies whether user can change remark field `field_name`, based on
         both submission ownership/permissions and remarks mappings (OS vs party)
         """
-        # First do a quick check based purely on ownership
+        # First do a quick check based purely on ownership.
+        # This also restricts changes only to secretariat or party users.
         if not self.can_edit_remarks(user):
             return False
 
@@ -949,7 +951,7 @@ class Submission(models.Model):
         if self.in_initial_state:
             if (
                 (user.is_secretariat and not self.filled_by_secretariat)
-                or (not user.is_secretariat and self.filled_by_secretariat)
+                or (user.party is not None and self.filled_by_secretariat)
             ):
                 return False
 
@@ -962,7 +964,7 @@ class Submission(models.Model):
             # submission was filled by a party.
             return False
         elif not user.is_secretariat and field_name.endswith("_secretariat"):
-            # Party users cannot modify any of the secretariat remark fields
+            # Non-OS users cannot modify any of the secretariat remark fields
             return False
 
         return True
