@@ -1477,7 +1477,7 @@ class Submission(models.Model):
         """
         Return True if the user is a Party Reporter.
         """
-        return not user.is_secretariat
+        return user.party is not None
 
     def set_annex_f_reported(self):
         """
