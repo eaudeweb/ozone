@@ -1008,6 +1008,11 @@ class Submission(models.Model):
         if (
             user.is_secretariat
             or user.party is not None and user.party == party
+            or (
+                user.is_cap
+                and user.party_group is not None
+                and party in user.party_group.parties.all()
+            )
         ):
             return True
         return False
