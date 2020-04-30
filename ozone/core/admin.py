@@ -43,6 +43,7 @@ from .models import (
     Subregion,
     MDGRegion,
     Party,
+    PartyGroup,
     PartyHistory,
     ReportingPeriod,
     Obligation,
@@ -353,6 +354,22 @@ class PartyAdmin(admin.ModelAdmin):
             parent_party__id=F('id'),
         ).order_by('name')
         form.base_fields['parent_party'].queryset = main_parties_queryset
+        return form
+
+
+@admin.register(PartyGroup)
+class PartyGroupAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    list_filter = ('name',)
+    search_fields = ['name']
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        main_parties_queryset = Party.objects.filter(
+            is_active=True,
+            parent_party__id=F('id'),
+        ).order_by('name')
+        form.base_fields['parties'].queryset = main_parties_queryset
         return form
 
 
