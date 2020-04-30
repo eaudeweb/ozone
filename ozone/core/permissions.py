@@ -32,7 +32,8 @@ class IsSecretariatOrSameParty(BasePermission):
         if request.user.is_secretariat:
             return True
         else:
-            return request.user.party == obj.party
+            user_party = request.user.party
+            return user_party is not None and user_party == obj.party
 
 
 class IsSecretariatOrSafeMethod(BasePermission):
