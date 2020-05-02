@@ -242,19 +242,29 @@ class IsOwnerFilterBackend(BaseFilterBackend):
         elif request.user.is_secretariat:
             # Secretariat user
             return queryset
-        else:
-            # Party user
+        elif request.user.party is not None or request.user.is_cap:
+            # Party or CAP user
+            if request.user.party is not None:
+                parties_list = [request.user.party]
+            else:
+                party_group = request.user.party_group
+                parties_list = [] if party_group is None else \
+                    request.user.party_group.parties.all()
+
             if queryset is not None and queryset.model in (Submission, ProdCons, Limit):
-                return queryset.filter(party=request.user.party)
+                return queryset.filter(party__in=parties_list)
             elif queryset is not None and queryset.model in (Transfer,):
                 return queryset.filter(
-                    Q(destination_party=request.user.party) |
-                    Q(source_party=request.user.party)
+                    Q(destination_party__in=parties_list) |
+                    Q(source_party__in=parties_list)
                 )
             elif queryset is not None:
-                return queryset.filter(submission__party=request.user.party)
+                return queryset.filter(submission__party__in=parties_list)
             else:
                 return queryset
+        else:
+            # For all other types of users return nothing
+            return queryset.none()
 
 
 class SerializerRequestContextMixIn(object):
@@ -1352,9 +1362,18 @@ class IsHistoryOwnerFilterBackend(BaseFilterBackend):
         elif request.user.is_secretariat:
             # Secretariat user
             return queryset
-        else:
+        elif request.user.party is not None:
             # Party user
             return queryset.filter(party=request.user.party)
+        elif request.user.is_cap:
+            # CAP user
+            party_group = request.user.party_group
+            if party_group is None:
+                return queryset.none()
+            return queryset.filter(party__in=party_group.parties.all())
+        else:
+            # For all other types of users return nothing
+            return queryset.none()
 
 
 class SubmissionChangeFilterSet(filters.FilterSet):
