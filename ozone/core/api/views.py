@@ -248,8 +248,9 @@ class IsOwnerFilterBackend(BaseFilterBackend):
                 parties_list = [request.user.party]
             else:
                 party_group = request.user.party_group
-                parties_list = [] if party_group is None else \
-                    request.user.party_group.parties.all()
+                if party_group is None:
+                    return queryset.none()
+                parties_list = request.user.party_group.parties.all()
 
             if queryset is not None and queryset.model in (Submission, ProdCons, Limit):
                 return queryset.filter(party__in=parties_list)
