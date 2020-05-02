@@ -71,5 +71,5 @@ class BaseWorkflow(xworkflows.WorkflowEnabled):
         owner = submission.created_by
         return (
             (self.user.is_secretariat and owner.is_secretariat)
-            or (self.user.party == owner.party)
+            or (self.user.party is not None and self.user.party == owner.party)
         )
