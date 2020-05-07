@@ -110,6 +110,7 @@ from ..permissions import (
     IsSecretariatOrSamePartySubmissionRelatedRO,
     IsSecretariat,
     IsSecretariatOrSameParty,
+    IsMobileApp,
 )
 from ..serializers import (
     CurrentUserSerializer,
@@ -433,7 +434,7 @@ class GroupSubstanceViewSet(ReadOnlyMixin, viewsets.ModelViewSet):
 
     queryset = Group.objects.all()
     serializer_class = GroupSubstanceSerializer
-    # Allows unauthenticatd GET requests
+    # Allows unauthenticated GET requests
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
@@ -764,7 +765,8 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
     )
     ordering = ("-reporting_period__start_date", "party", "group")
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartyAggregation,
+        IsAuthenticated,
+        IsSecretariatOrSamePartyAggregation | IsMobileApp,
     )
     pagination_class = AggregationPaginator
 

@@ -12,6 +12,8 @@ from .party import Party, PartyGroup, Language
 
 class User(GuardianUserMixin, AbstractUser):
 
+    # Not null for Party users; all other user types do not have a specific
+    # party assigned.
     party = models.ForeignKey(
         Party, related_name='users',
         null=True,
@@ -30,6 +32,9 @@ class User(GuardianUserMixin, AbstractUser):
 
     is_secretariat = models.BooleanField(default=False)
 
+    # Both Party and Secretariat users can be read-only
+    is_read_only = models.BooleanField(default=True)
+
     # UNEP CAP users support the counties in submitting their data correctly;
     # they have read-only access to all (including draft) data for certain
     # groups of countries.
@@ -44,8 +49,9 @@ class User(GuardianUserMixin, AbstractUser):
         on_delete=models.PROTECT
     )
 
-    # Both Party and Secretariat users can be read-only
-    is_read_only = models.BooleanField(default=True)
+    # Special type of user used by mobile app to retrieve specific data
+    # (generally only aggregations)
+    is_mobile_app = models.BooleanField(default=False)
 
     language = models.ForeignKey(
         Language,
@@ -75,6 +81,10 @@ class User(GuardianUserMixin, AbstractUser):
                 return 'Party Read-Only'
         elif self.is_cap:
             return 'UNEP CAP Read-only'
+        elif self.is_mobile_app:
+            return 'Mobile App'
+        else:
+            return 'Unknown role'
 
     def has_edit_rights(self, user):
         if self == user:
@@ -91,20 +101,34 @@ class User(GuardianUserMixin, AbstractUser):
         # - OS
         # - CAP
         # - Party
+        # - Mobile app
         user_types = [
             self.is_secretariat,
             self.is_cap,
-            self.party is not None
+            self.party is not None,
+            self.is_mobile_app,
         ]
         if user_types.count(True) != 1:
             raise ValidationError(
-                _('User needs to be either Secretariat, CAP or Party')
+                _(
+                    'User needs to be either Secretariat, CAP, Party or '
+                    'Mobile app.'
+                )
             )
 
-        # CAP users cannot have access to the admin interface
-        if self.is_cap and self.is_staff:
+        # CAP or mobile app users cannot have access to the admin interface
+        if (self.is_cap or self.is_mobile_app) and self.is_staff:
             raise ValidationError(
-                _('CAP users cannot have access to the admin interface')
+                _(
+                    'CAP or mobile app users cannot have access to the admin '
+                    'interface.'
+                )
+            )
+
+        # Mobile app user does not receive notification emails
+        if self.is_mobile_app and self.is_notified:
+            raise ValidationError(
+                _('Mobile app user cannot receive email notifications.')
             )
 
         super().clean()

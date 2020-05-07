@@ -334,3 +334,29 @@ class IsSecretariatOrSamePartySubmissionRelatedRO(BasePermission):
         if request.method not in SAFE_METHODS:
             return False
         return True
+
+
+class IsMobileApp(BasePermission):
+    def has_permission(self, request, view):
+        # Only apply this for mobile app user
+        if not request.user.is_mobile_app:
+            return False
+        # Everything is read-only for mobile app
+        if request.method not in SAFE_METHODS:
+            return False
+        # No further check based on party; mobile app should be able to access
+        # relevant data indiscriminately *if* this permission is
+        # used in views.
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        # Only apply this for mobile app user
+        if not request.user.is_mobile_app:
+            return False
+        # Everything is read-only for mobile app
+        if request.method not in SAFE_METHODS:
+            return False
+        # No further check based on object or user's party; mobile app should be
+        # able to access relevant data indiscriminately *if* this permission is
+        # used in views.
+        return True
