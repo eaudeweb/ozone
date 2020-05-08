@@ -78,7 +78,7 @@
         class="pull-right actions ml-2 mt-2 mb-2"
       >
         <b-btn
-          :href="`${api}/admin/core/transfer/add/?submission_id=${$store.state.current_submission.id}`"
+          :href="`${api}/admin/core/${getAdminModel()}/add/?submission_id=${$store.state.current_submission.id}`"
           target="_blank"
           variant="outline-primary"
         >
@@ -261,6 +261,16 @@ export default {
           this.$router.push({ name: 'Dashboard' })
         }
       })
+    },
+    getAdminModel() {
+      const form_type = this.$store.state.current_submission.obligation_type
+      if (form_type === 'procagent') {
+        return 'processagentusesreported'
+      }
+      if (form_type === 'transfer') {
+        return 'transfer'
+      }
+      return '#'
     }
   },
   watch: {
