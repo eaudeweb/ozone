@@ -1,6 +1,6 @@
 <template>
   <div>
-    <tabsmanager v-if="initialDataReady" :submission="submission" :obligation_type="obligation_type" />
+    <tabsmanager v-if="initialDataReady" :submission="submission" />
   </div>
 </template>
 

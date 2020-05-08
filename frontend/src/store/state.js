@@ -79,7 +79,7 @@ const state = {
     }
   },
   alertData: [],
-  recordDataObligations: ['art9', 'transfer']
+  recordDataObligations: ['art9', 'transfer', 'procagent']
 }
 
 export default state
