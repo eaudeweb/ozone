@@ -1421,6 +1421,17 @@ class Submission(models.Model):
             obligation=self.obligation,
         ).prefetch_related('created_by')
 
+    def get_previous_version(self):
+        # TODO: implement this properly - maybe based on HistoricalSubmission
+        # or just on latest() on the superseded versions queryset
+        if self.version == 1:
+            return None
+        return Submission.objects.filter(
+            party=self.party,
+            reporting_period=self.reporting_period,
+            version=(self.version - 1)
+        ).first()
+
     def get_change_history(self):
         """
         Returns a list of relevant changes (i.e. state changes for now) for

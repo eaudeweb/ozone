@@ -1555,7 +1555,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         detail=True,
         methods=["post"],
         url_path="call-transition",
-        permission_classes = [IsSecretariatOrSamePartySubmissionTransition]
+        permission_classes=[IsSecretariatOrSamePartySubmissionTransition]
     )
     def call_transition(self, request, pk=None):
         """
@@ -1600,6 +1600,23 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             cls = reports.Art7RawdataReport
         elif obligation == ObligationTypes.ESSENCRIT.value:
             cls = reports.RafReport
+        else:
+            raise RuntimeError(f"Unknown obligation {obligation!r}")
+
+        report = cls.for_submission(submission)
+        return report.render_to_response()
+
+    @action(detail=True, methods=["get"])
+    def export_diff_pdf(self, request, pk=None):
+        """
+        Returns a PDF containing a diff between current version and the previous
+        one.
+        """
+        submission = Submission.objects.get(pk=pk)
+        obligation = submission.obligation._obligation_type
+
+        if obligation == ObligationTypes.ART7.value:
+            cls = reports.Art7RawdataDiffReport
         else:
             raise RuntimeError(f"Unknown obligation {obligation!r}")
 

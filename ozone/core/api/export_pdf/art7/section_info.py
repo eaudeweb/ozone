@@ -1,14 +1,16 @@
+import itertools
+from datetime import datetime
+
 from ..util import (
     get_comments_section,
     get_submission_dates,
     format_date,
-    p_l, p_c,
+    p_l, p_c, p_c_g, b_c,
     h1_style, no_spacing_style,
     col_widths,
     FONTSIZE_TABLE
 )
 
-from datetime import datetime
 from django.utils.translation import gettext_lazy as _
 from reportlab.platypus import Paragraph
 from reportlab.platypus import Table
@@ -120,10 +122,10 @@ def get_submission_info(info):
     )
 
 
-def get_questionnaire_table(submission):
+def get_questionnaire_table_contents(submission):
     def _yn(condition):
-        return p_c(_('Yes') if condition else _('No'))
-    row = (
+        return _('Yes') if condition else _('No')
+    return (
         _yn(submission.article7questionnaire.has_imports)
         if hasattr(submission, 'article7questionnaire') else '-',
         _yn(submission.article7questionnaire.has_exports)
@@ -148,9 +150,39 @@ def get_questionnaire_table(submission):
         _yn(submission.flag_has_reported_e),
         _yn(submission.flag_has_reported_f),
     )
+
+
+def get_questionnaire_table(submission):
+    contents = get_questionnaire_table_contents(submission)
+    row = map(p_c, contents)
     return (
         Table(
                 TABLE_INFO_HEADER + (row,),
+                colWidths=col_widths([2.47] * 6 + [1.25]*10),
+                style=TABLE_INFO_STYLE,
+                hAlign='LEFT',
+        ),
+    )
+
+
+def get_questionnaire_table_diff(submission, previous_submission):
+    row = get_questionnaire_table_contents(submission)
+    previous_row = get_questionnaire_table_contents(previous_submission)
+
+    diff_row = []
+    for item, previous_item in itertools.zip_longest(row, previous_row):
+        if item != previous_item:
+            diff_row.append(b_c(item))
+        else:
+            diff_row.append(b_c(' '))
+
+    if not diff_row:
+        # Return empty tuple so we do not display the table
+        return ()
+
+    return (
+        Table(
+                TABLE_INFO_HEADER + (diff_row,),
                 colWidths=col_widths([2.47] * 6 + [1.25]*10),
                 style=TABLE_INFO_STYLE,
                 hAlign='LEFT',
@@ -173,5 +205,26 @@ def export_info(submission):
         + get_date_of_reporting(submission)
         + get_submission_info(submission.info)
         + get_questionnaire_table(submission)
+        + get_comments_section(submission, 'questionnaire')
+    )
+
+
+def export_info_diff(submission, previous_submission):
+    title = (
+        Paragraph("%s %s - %s %s" % (
+            submission.reporting_period.description,
+            submission.obligation.name,
+            submission.party.name,
+            ('(%s)' % (_('Provisional'),)) if submission.flag_provisional else '',
+        ), h1_style),
+    )
+    # TODO: display info about both current and previous submission
+    # (date of reporting and submission info)
+    return (
+        title
+        + (p_l('%s: %s' % (_('Printed at'), datetime.now().strftime('%d %B %Y %H:%M:%S'))),)
+        + get_date_of_reporting(submission)
+        + get_submission_info(submission.info)
+        + get_questionnaire_table_diff(submission, previous_submission)
         + get_comments_section(submission, 'questionnaire')
     )
