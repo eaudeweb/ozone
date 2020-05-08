@@ -805,6 +805,8 @@ class Submission(models.Model):
         # If everything went OK, persist the result and the transition.
         self._previous_state = self._current_state
         self._current_state = workflow.state.name
+        # This field will be automatically added to update_fields in save()
+        self.last_edited_by = user
         self.save(update_fields=('_previous_state', '_current_state',))
 
     def is_submittable(self):
@@ -1125,9 +1127,10 @@ class Submission(models.Model):
             "reporting_channel_id",
             "submitted_at",
             # Since various fields on the submission can be changed even after
-            # submit (based on other checks), updated_at needs to be always
-            # update-able.
+            # submit (based on other checks), updated_at and last_edited_by
+            # need to be always update-able.
             "updated_at",
+            "last_edited_by_id"
         ]
 
     @staticmethod
@@ -1756,6 +1759,7 @@ class Submission(models.Model):
         # must be added to the `update_fields` list, since we are using
         # the PartialUpdateMixIn.
         if not self.pk or force_insert:
+
             # Auto-increment submission version if saving for a
             # party-obligation-period combo which already has submissions.
             # select_for_update() is used to lock the rows and ensure proper
@@ -1855,8 +1859,8 @@ class Submission(models.Model):
                         phone=latest_info.phone,
                         email=latest_info.email,
                         date=latest_info.date,
-                        # Don't clone the submission format, it's only needed for Art 7
-                        # and there is already a default value for it
+                        # Don't clone the submission format, it's only needed
+                        # for Art 7 and there is already a default value for it
                         # submission_format=latest_info.submission_format
                     )
                 else:
@@ -1866,10 +1870,12 @@ class Submission(models.Model):
 
         else:
             # This is not the first save
-            # Make sure that `updated_at` is properly updated even for
-            # partial updates.
+            # Make sure that update-related fields (updated_at, last_edited_by)
+            # are properly updated even for partial updates.
             if update_fields is not None:
-                update_fields = list(set(list(update_fields) + ['updated_at']))
+                update_fields = list(
+                    set(list(update_fields) + ['updated_at', 'last_edited_by'])
+                )
 
             self.clean()
 
