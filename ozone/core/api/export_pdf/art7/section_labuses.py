@@ -11,7 +11,7 @@ from ..util import (
     get_group_name,
     rows_to_table,
     sm_c, sm_r, sm_l,
-    h2_style,
+    h2_style, h3_style,
     SINGLE_HEADER_TABLE_STYLES,
     col_widths,
 )

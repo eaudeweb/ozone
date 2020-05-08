@@ -171,14 +171,19 @@ class Art7RawdataDiffReport(ReportForSubmission):
     name = "art7_raw"
     has_party_param = True
     has_period_param = True
-    display_name = "Raw data reported - diff from previous version - Article 7"
+    display_name = "Raw data reported - changes from previous version - Article 7"
     landscape = True
 
     def get_flowables(self):
-        if not self.submission:
-            yield Paragraph('No data', left_paragraph_style)
+        if self.submission:
+            submissions = [self.submission]
         else:
-            yield from export_submission_diff(self.submission)
+            art7 = Obligation.objects.get(
+                _obligation_type=ObligationTypes.ART7.value
+            )
+            submissions = get_submissions(art7, self.periods, self.parties)
+        for submission in submissions:
+            yield from export_submission_diff(submission)
 
 
 class SubstanceFilter:

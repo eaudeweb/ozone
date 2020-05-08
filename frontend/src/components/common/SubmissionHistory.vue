@@ -21,6 +21,11 @@
         >
           <span v-translate>View</span>
         </a>
+        <b-btn v-if="has_diff"
+          variant="outline-dark"
+          size="sm" class="mx-1"
+          @click="showDiffReport(cell.item.actions)"
+        >See changes</b-btn>
       </template>
     </b-table>
   </div>
@@ -34,7 +39,8 @@ import { dateFormatToDisplay } from '@/components/common/services/languageServic
 export default {
   props: {
     history: Array,
-    currentVersion: Number
+    currentVersion: Number,
+    has_diff: Boolean
   },
 
   created() {
@@ -87,6 +93,12 @@ export default {
         return `(${versionFlags.join(',')})`
       }
       return ''
+    },
+    async showDiffReport(submission) {
+      this.$store.dispatch('downloadStuff', {
+        url: `submissions/${submission}/export_diff_pdf/`,
+        fileName: `${this.$store.state.current_submission.obligation} - ${this.$store.state.initialData.display.countries[this.$store.state.current_submission.party]} - ${this.$store.state.current_submission.reporting_period}.pdf`
+      })
     }
   },
 
