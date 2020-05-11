@@ -25,6 +25,7 @@ export default {
       return this.$store.getters.getTabStatus(this.tab.name)
     },
     tabDataLength() {
+      if (this.tab.name === 'files') return this.$store.state.form.tabs[this.tab.name].form_fields.files.length
       return this.$store.state.form.tabs[this.tab.name].form_fields.length
     }
   }

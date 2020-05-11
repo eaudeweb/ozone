@@ -57,6 +57,12 @@ const actions = {
         cancelCallback: () => {
           commit('resetConfirmModal')
           resolve(false)
+        },
+        hideCallBack: (event) => {
+          if (event.trigger === 'esc') {
+            commit('resetConfirmModal')
+            resolve(false)
+          }
         }
       })
     })

@@ -52,6 +52,7 @@
           :visible="$store.state.confirmModal.isVisible"
           @ok="$store.state.confirmModal.okCallback"
           @cancel="$store.state.confirmModal.cancelCallback"
+          @hide="$store.state.confirmModal.hideCallBack"
         >
           <p class="my-2">
             <b>{{$store.state.confirmModal.title}}</b>

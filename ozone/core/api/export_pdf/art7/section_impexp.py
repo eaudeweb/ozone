@@ -1,18 +1,21 @@
-from django.utils.translation import gettext_lazy as _
 from reportlab.platypus import Paragraph
+
+from django.utils.translation import gettext_lazy as _
 
 from ozone.core.models.utils import sum_decimals
 
 from ..util import (
     col_widths,
     format_decimal,
+    format_decimal_diff,
     get_comments_section,
-    get_quantity,
+    instances_equal,
     get_decision,
+    get_decision_diff,
     get_remarks,
     get_substance_or_blend_name,
     get_group_name,
-    h2_style,
+    h2_style, h3_style,
     sm_c, sm_l, sm_r,
     smb_l, smb_r,
     rows_to_table,
@@ -22,15 +25,52 @@ from ..util import (
     EXEMPTED_FIELDS
 )
 
+# Texts to be used when exporting Import data
+imports_texts = {
+    'section_title': "%s (%s)" % (_('Imports'), _('metric tonnes')),
+    'party': _('Exporting country/region/territory'),
+    'total_quantity': _('Total quantity imported for all uses'),
+    'exempted_quantity': _(
+        'Quantity of new substance imported for exempted essential, '
+        'critical, high-ambient-temperature or other uses'
+    ),
+    'feedstock_quantity': _('Import for feedstock'),
+    'qps_quantity': _(
+        'Amount imported for QPS applications within your country'
+    ),
+}
 
-def to_row(obj, row_index, party_field, text_qps):
-    # row_index represents the current number of table rows, including header
+# Text to be used when exporting Export data
+exports_texts = {
+    'section_title': "%s (%s)" % (_('Exports'), _('metric tonnes')),
+    'party': _('Importing country/region/territory'),
+    'total_quantity': _('Total quantity exported for all uses'),
+    'exempted_quantity': _(
+        'Quantity of new substance exported for exempted essential, '
+        'critical, high-ambient-temperature or other uses'
+    ),
+    'feedstock_quantity': _('Export for feedstock'),
+    'qps_quantity': _('Amount exported for QPS applications'),
+}
+
+
+def to_row(
+    obj, row_index, party_field, text_qps, diff=False, previous_obj=None
+):
+    """
+    - row_index represents the current number of table rows, including header
+    - if diff is True, will display row containing both current (obj) and
+      previous value (previous_obj)
+    """
     rows = list()
     styles = list()
-    # there are no blends in production form, so it's safe to assume a substance
 
     # Check if there are any non-null exemption fields
-    field_names = [f for f in EXEMPTED_FIELDS if getattr(obj, 'quantity_' + f)]
+    field_names = [
+        f for f in EXEMPTED_FIELDS
+        if getattr(obj, 'quantity_' + f)
+        or getattr(previous_obj, 'quantity_' + f, None)
+    ]
     first_field = field_names.pop(0) if field_names else None
     party = getattr(obj, party_field)
 
@@ -38,18 +78,32 @@ def to_row(obj, row_index, party_field, text_qps):
     substance_name = get_substance_or_blend_name(obj)
     is_subtotal = hasattr(obj, 'is_subtotal')
     p_r_func = smb_r if is_subtotal else sm_r
+
+    # Build up dictionary of field_name: formatted_value
+    field_dict = {}
+    for f in obj.QUANTITY_FIELDS + ['quantity_polyols']:
+        if not diff:
+            field_dict[f] = format_decimal(getattr(obj, f))
+        else:
+            field_dict[f] = format_decimal_diff(
+                getattr(obj, f), getattr(previous_obj, f)
+            )
+
+    decision = get_decision(obj, first_field) if not diff \
+        else get_decision_diff(obj, previous_obj, first_field)
+
     base_row = [
         sm_c(get_group_name(obj)),
         sm_l(substance_name),
         sm_l(party.name if party else ''),
-        p_r_func(format_decimal(obj.quantity_total_new)),
-        p_r_func(format_decimal(obj.quantity_total_recovered)),
-        p_r_func(format_decimal(obj.quantity_feedstock)),
-        p_r_func(format_decimal(get_quantity(obj, first_field)) if first_field else ''),
+        p_r_func(field_dict['quantity_total_new']),
+        p_r_func(field_dict['quantity_total_recovered']),
+        p_r_func(field_dict['quantity_feedstock']),
+        p_r_func(field_dict['quantity_' + first_field] if first_field else ''),
         sm_l(
             '%s %s' % (
                 EXEMPTED_FIELDS[first_field],
-                get_decision(obj, first_field)
+                decision
             )
         ) if first_field else '',
         sm_l(get_remarks(obj)),
@@ -65,7 +119,7 @@ def to_row(obj, row_index, party_field, text_qps):
     if is_subtotal:
         base_row[0] = smb_l(
             '%s %s (%s)' % (_('Subtotal'), substance_name, _('excluding polyols'))
-            if obj.quantity_polyols
+            if field_dict['quantity_polyols']
             else '%s %s' % (_('Subtotal'), substance_name)
         )
         base_row[1] = ''  # Substance name
@@ -77,17 +131,24 @@ def to_row(obj, row_index, party_field, text_qps):
 
     # Add more rows if there are still fields in field_names
     for f in field_names:
+        decision = get_decision(obj, f) if not diff else \
+            get_decision_diff(obj, previous_obj, f)
         rows.append((
             # Don't repeat previously shown fields
             '', '', '', '', '', '',
-            p_r_func(format_decimal(get_quantity(obj, f))),
-            sm_l('%s %s' % (EXEMPTED_FIELDS[f], get_decision(obj, f))),
+            p_r_func(field_dict['quantity_' + f]),
+            sm_l('%s %s' % (EXEMPTED_FIELDS[f], decision)),
             '',
         ))
 
     # quantity_quarantine_pre_shipment
-    if obj.quantity_quarantine_pre_shipment:
+    if field_dict['quantity_quarantine_pre_shipment']:
         # Add two more rows for QPS
+        decision = get_decision(
+            obj, 'quarantine_pre_shipment'
+        ) if not diff else get_decision_diff(
+            obj, previous_obj, 'quarantine_pre_shipment'
+        )
         rows.extend([
             (
                 '', '', '', '', '', '',
@@ -96,8 +157,8 @@ def to_row(obj, row_index, party_field, text_qps):
             ),
             (
                 '', '', '', '', '', '',
-                p_r_func(format_decimal(obj.quantity_quarantine_pre_shipment)),
-                sm_l(get_decision(obj, 'quarantine_pre_shipment')),
+                p_r_func(field_dict['quantity_quarantine_pre_shipment']),
+                sm_l(decision),
                 '',
             )
         ])
@@ -140,7 +201,7 @@ def to_row(obj, row_index, party_field, text_qps):
                 ('SPAN', (8, row_index), (8, current_row)),  # Remarks
             ])
     # quantity_polyols
-    if obj.quantity_polyols:
+    if field_dict['quantity_polyols']:
         # Add another row for polyols
         current_row = row_index + len(rows)
         if is_subtotal:
@@ -148,7 +209,7 @@ def to_row(obj, row_index, party_field, text_qps):
                 (
                     smb_l('%s %s' % (_('Subtotal polyols containing'), obj.substance.name)),
                     '', '', '', '', '',
-                    smb_r(format_decimal(obj.quantity_polyols)),
+                    smb_r(field_dict['quantity_polyols']),
                     '', '',
                 )
             ])
@@ -158,14 +219,16 @@ def to_row(obj, row_index, party_field, text_qps):
                 ('SPAN', (0, current_row), (2, current_row)),
             ])
         else:
+            decision = get_decision(obj, 'polyols') if not diff else \
+                get_decision_diff(obj, previous_obj, 'polyols')
             rows.extend([
                 (
                     sm_r('%s %s' % (_('Polyols containing'), obj.substance.name)),
                     '',
                     sm_l(party.name if party else ''),
                     '', '', '',
-                    sm_r(format_decimal(obj.quantity_polyols)),
-                    sm_l(get_decision(obj, 'polyols')),
+                    sm_r(field_dict['quantity_polyols']),
+                    sm_l(decision),
                     '',
                 )
             ])
@@ -219,23 +282,23 @@ def preprocess_subtotals(data):
     return newdata
 
 
-def _export(data, comments, party_field, texts):
-    if not data and not any(comments):
-        return tuple()
+# Styles to be used when exporting both imports and exports data
+styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
+     ('SPAN', (0, 0), (0, 1)),  # Annex/Group
+     ('SPAN', (1, 0), (1, 1)),  # Substance
+     ('SPAN', (2, 0), (2, 1)),  # Party
+     ('SPAN', (3, 0), (4, 0)),  # Total quantity
+     ('SPAN', (5, 0), (5, 1)),  # Feedstock
+     ('SPAN', (6, 0), (7, 0)),  # Exempted
+     ('SPAN', (8, 0), (8, 1)),  # Remarks
+]
 
-    subtitle = Paragraph(texts['section_title'], h2_style)
 
-    styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
-         ('SPAN', (0, 0), (0, 1)),  # Annex/Group
-         ('SPAN', (1, 0), (1, 1)),  # Substance
-         ('SPAN', (2, 0), (2, 1)),  # Party
-         ('SPAN', (3, 0), (4, 0)),  # Total quantity
-         ('SPAN', (5, 0), (5, 1)),  # Feedstock
-         ('SPAN', (6, 0), (7, 0)),  # Exempted
-         ('SPAN', (8, 0), (8, 1)),  # Remarks
-    ]
-
-    header = [
+def _get_header(texts):
+    """
+    Get table header for imports/exports based on predefined texts
+    """
+    return [
         (
             sm_c(_('Annex/Group')),
             sm_c(_('Substance')),
@@ -260,6 +323,17 @@ def _export(data, comments, party_field, texts):
         ),
     ]
 
+
+def _export(data, comments, party_field, texts):
+    """
+    Export data for one submission.
+    """
+    subtitle = Paragraph(texts['section_title'], h2_style)
+    header = _get_header(texts)
+
+    if not data and not any(comments):
+        return tuple()
+
     data = preprocess_subtotals(data)
 
     rows = list()
@@ -283,29 +357,130 @@ def _export(data, comments, party_field, texts):
     return (subtitle, table) + comments
 
 
+def _export_diff(
+    data, previous_data, comments, previous_comments, party_field, texts
+):
+    """
+    Export data difference between two submissions
+    """
+    subtitle = Paragraph(texts['section_title'], h2_style)
+    header = _get_header(texts)
+
+    data = preprocess_subtotals(data)
+    previous_data = preprocess_subtotals(previous_data)
+
+    data_dict = dict()
+    for item in data:
+        key = (item.substance, item.blend, getattr(item, party_field))
+        data_dict[key] = item
+    # It's OK to use set() on the keys as they are unique
+    data_set = set(data_dict.keys())
+
+    previous_data_dict = dict()
+    for item in previous_data:
+        key = (item.substance, item.blend, getattr(item, party_field))
+        previous_data_dict[key] = item
+    # It's OK to use set() on the keys as they are unique
+    previous_data_set = set(previous_data_dict.keys())
+
+    # Compute added, changed and removed keys, taking into account they are
+    # unique.
+    added_keys = list(data_set.difference(previous_data_set))
+    changed_keys = [
+        key
+        for key in data_set.intersection(previous_data_set)
+        if instances_equal(data_dict[key], previous_data_dict[key]) is False
+    ]
+    removed_keys = list(previous_data_set.difference(data_set))
+
+    if not added_keys and not changed_keys and not removed_keys:
+        # Nothing has been changed, return empty tuple
+        return tuple()
+
+    # Now populate PDF
+    ret = (subtitle,)
+    all_data = (
+        (_('Added'), added_keys, data_dict, {}),
+        (_('Changed'), changed_keys, data_dict, previous_data_dict),
+        (_('Removed'), removed_keys, {}, previous_data_dict),
+    )
+    for sub_subtitle, keys, dictionary, previous_dictionary in all_data:
+        if not keys:
+            # Do not add anything if there are no keys for this sub-section
+            continue
+
+        rows = list()
+        for key in keys:
+            diff = False
+            previous_item = None
+            if not previous_dictionary:
+                item = dictionary[key]
+            elif not dictionary:
+                item = previous_dictionary[key]
+            else:
+                diff = True
+                item = dictionary[key]
+                previous_item = previous_dictionary[key]
+
+            (_rows, _styles) = to_row(
+                item,
+                len(rows) + len(header),
+                party_field,
+                texts['qps_quantity'],
+                diff,
+                previous_item
+            )
+            rows.extend(_rows)
+            styles.extend(_styles)
+
+        table = rows_to_table(
+            header,
+            rows,
+            col_widths([1.0, 4, 2.9, 2.5, 2.5, 2.5, 2.5, 4.8, 4.8]),
+            styles
+        )
+        ret += (
+            Paragraph(sub_subtitle, h3_style),
+            table,
+            # Also insert linebreak to keep it beautiful
+            Paragraph('<br/>', h3_style)
+        )
+
+    # TODO: also diff between comments and previous_comments?!
+    return ret
+
+
 def export_imports(submission, queryset):
     comments = get_comments_section(submission, 'imports')
-    texts = {
-        'section_title': "%s (%s)" % (_('Imports'), _('metric tonnes')),
-        'party': _('Exporting country/region/territory'),
-        'total_quantity': _('Total quantity imported for all uses'),
-        'exempted_quantity': _('Quantity of new substance imported for exempted essential, '
-                               'critical, high-ambient-temperature or other uses'),
-        'feedstock_quantity': _('Import for feedstock'),
-        'qps_quantity': _('Amount imported for QPS applications within your country'),
-    }
-    return _export(list(queryset), comments, 'source_party', texts)
+    return _export(list(queryset), comments, 'source_party', imports_texts)
+
+
+def export_imports_diff(
+    submission, previous_submission, queryset, previous_queryset
+):
+    comments = get_comments_section(submission, 'imports')
+    previous_comments = get_comments_section(previous_submission, 'imports')
+    return _export_diff(
+        list(queryset), list(previous_queryset),
+        comments, previous_comments,
+        'source_party',
+        imports_texts
+    )
 
 
 def export_exports(submission, queryset):
     comments = get_comments_section(submission, 'exports')
-    texts = {
-        'section_title': "%s (%s)" % (_('Exports'), _('metric tonnes')),
-        'party': _('Importing country/region/territory'),
-        'total_quantity': _('Total quantity exported for all uses'),
-        'exempted_quantity': _('Quantity of new substance exported for exempted essential, '
-                               'critical, high-ambient-temperature or other uses'),
-        'feedstock_quantity': _('Export for feedstock'),
-        'qps_quantity': _('Amount exported for QPS applications'),
-    }
-    return _export(list(queryset), comments, 'destination_party', texts)
+    return _export(list(queryset), comments, 'destination_party', exports_texts)
+
+
+def export_exports_diff(
+    submission, previous_submission, queryset, previous_queryset
+):
+    comments = get_comments_section(submission, 'exports')
+    previous_comments = get_comments_section(previous_submission, 'exports')
+    return _export_diff(
+        list(queryset), list(previous_queryset),
+        comments, previous_comments,
+        'destination_party',
+        exports_texts
+    )

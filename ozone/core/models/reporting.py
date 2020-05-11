@@ -805,6 +805,8 @@ class Submission(models.Model):
         # If everything went OK, persist the result and the transition.
         self._previous_state = self._current_state
         self._current_state = workflow.state.name
+        # This field will be automatically added to update_fields in save()
+        self.last_edited_by = user
         self.save(update_fields=('_previous_state', '_current_state',))
 
     def is_submittable(self):
@@ -833,6 +835,10 @@ class Submission(models.Model):
             if hasattr(self, "article7exports") and self.article7exports:
                 self.article7exports.model.validate_import_export_data(self)
 
+    def permissions_matrix(self, user):
+        wf = self.workflow(user)
+        return wf.permissions_matrix
+
     def can_edit_flags(self, user):
         """
         Returns True if user can set *any* flags on this submission,
@@ -853,6 +859,7 @@ class Submission(models.Model):
         only changed automatically by the system.
         """
         # First do a quick check based on actual permissions
+        # This also restricts changes only to secretariat or party users.
         if not self.can_edit_flags(user):
             return []
 
@@ -860,7 +867,7 @@ class Submission(models.Model):
         if self.obligation.obligation_type == ObligationTypes.EXEMPTION.value:
             if user.is_secretariat:
                 if self.in_initial_state:
-                    return ['flag_emergency',]
+                    return ['flag_emergency']
             return []
 
         flags_list = []
@@ -887,7 +894,7 @@ class Submission(models.Model):
             else:
                 # valid & approved flags can only be set after submitting
                 flags_list.extend(['flag_valid',])
-        else:
+        elif user.party is not None:
             # Party user
             if self.in_initial_state:
                 if self.filled_by_secretariat:
@@ -938,7 +945,8 @@ class Submission(models.Model):
         Verifies whether user can change remark field `field_name`, based on
         both submission ownership/permissions and remarks mappings (OS vs party)
         """
-        # First do a quick check based purely on ownership
+        # First do a quick check based purely on ownership.
+        # This also restricts changes only to secretariat or party users.
         if not self.can_edit_remarks(user):
             return False
 
@@ -947,7 +955,7 @@ class Submission(models.Model):
         if self.in_initial_state:
             if (
                 (user.is_secretariat and not self.filled_by_secretariat)
-                or (not user.is_secretariat and self.filled_by_secretariat)
+                or (user.party is not None and self.filled_by_secretariat)
             ):
                 return False
 
@@ -960,7 +968,7 @@ class Submission(models.Model):
             # submission was filled by a party.
             return False
         elif not user.is_secretariat and field_name.endswith("_secretariat"):
-            # Party users cannot modify any of the secretariat remark fields
+            # Non-OS users cannot modify any of the secretariat remark fields
             return False
 
         return True
@@ -1004,6 +1012,11 @@ class Submission(models.Model):
         if (
             user.is_secretariat
             or user.party is not None and user.party == party
+            or (
+                user.is_cap
+                and user.party_group is not None
+                and party in user.party_group.parties.all()
+            )
         ):
             return True
         return False
@@ -1125,9 +1138,10 @@ class Submission(models.Model):
             "reporting_channel_id",
             "submitted_at",
             # Since various fields on the submission can be changed even after
-            # submit (based on other checks), updated_at needs to be always
-            # update-able.
+            # submit (based on other checks), updated_at and last_edited_by
+            # need to be always update-able.
             "updated_at",
+            "last_edited_by_id"
         ]
 
     @staticmethod
@@ -1421,6 +1435,17 @@ class Submission(models.Model):
             obligation=self.obligation,
         ).prefetch_related('created_by')
 
+    def get_previous_version(self):
+        # TODO: implement this properly - maybe based on HistoricalSubmission
+        # or just on latest() on the superseded versions queryset
+        if self.version == 1:
+            return None
+        return Submission.objects.filter(
+            party=self.party,
+            reporting_period=self.reporting_period,
+            version=(self.version - 1)
+        ).first()
+
     def get_change_history(self):
         """
         Returns a list of relevant changes (i.e. state changes for now) for
@@ -1472,7 +1497,7 @@ class Submission(models.Model):
         """
         Return True if the user is a Party Reporter.
         """
-        return not user.is_secretariat
+        return user.party is not None
 
     def set_annex_f_reported(self):
         """
@@ -1745,6 +1770,7 @@ class Submission(models.Model):
         # must be added to the `update_fields` list, since we are using
         # the PartialUpdateMixIn.
         if not self.pk or force_insert:
+
             # Auto-increment submission version if saving for a
             # party-obligation-period combo which already has submissions.
             # select_for_update() is used to lock the rows and ensure proper
@@ -1844,8 +1870,8 @@ class Submission(models.Model):
                         phone=latest_info.phone,
                         email=latest_info.email,
                         date=latest_info.date,
-                        # Don't clone the submission format, it's only needed for Art 7
-                        # and there is already a default value for it
+                        # Don't clone the submission format, it's only needed
+                        # for Art 7 and there is already a default value for it
                         # submission_format=latest_info.submission_format
                     )
                 else:
@@ -1855,10 +1881,12 @@ class Submission(models.Model):
 
         else:
             # This is not the first save
-            # Make sure that `updated_at` is properly updated even for
-            # partial updates.
+            # Make sure that update-related fields (updated_at, last_edited_by)
+            # are properly updated even for partial updates.
             if update_fields is not None:
-                update_fields = list(set(list(update_fields) + ['updated_at']))
+                update_fields = list(
+                    set(list(update_fields) + ['updated_at', 'last_edited_by'])
+                )
 
             self.clean()
 

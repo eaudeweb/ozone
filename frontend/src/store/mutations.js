@@ -33,7 +33,8 @@ const mutations = {
       title: null,
       description: null,
       okCallback: () => {},
-      cancelCallback: () => {}
+      cancelCallback: () => {},
+      hideCallBack: () => {}
     }
   },
   updateBreadcrumbs(state, data) {
