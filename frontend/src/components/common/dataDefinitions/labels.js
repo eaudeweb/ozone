@@ -37,7 +37,7 @@ const getCommonLabels = ($gettext) => {
     phone: $gettext('Phone'),
     reporting_channel: $gettext('Reporting channel'),
     email: $gettext('E-mail'),
-    date: $gettext('Date'),
+    date: $gettext('Document date'),
     fill_nomination: $gettext('Submit nomination'),
     submitted_at: $gettext('Date submission'),
     art7: $gettext('Article 7'),

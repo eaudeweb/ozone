@@ -43,7 +43,8 @@ const state = {
     title: null,
     description: null,
     okCallback: () => {},
-    cancelCallback: () => {}
+    cancelCallback: () => {},
+    hideCallBack: () => {}
   },
   current_submission: null,
   route: '',
