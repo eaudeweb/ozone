@@ -766,7 +766,7 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ("-reporting_period__start_date", "party", "group")
     permission_classes = (
         IsAuthenticated
-        & (IsSecretariatOrSamePartyAggregation | IsMobileApp)
+        & (IsSecretariatOrSamePartyAggregation | IsMobileApp),
     )
     pagination_class = AggregationPaginator
 
