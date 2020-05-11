@@ -451,20 +451,20 @@ class ObligationAdmin(admin.ModelAdmin):
 class UserAdmin(admin.ModelAdmin):
     base_list_display = (
         "username", "first_name", "last_name", "email",
-        "is_secretariat", "is_cap", "is_read_only", "party",
-        "is_active", "activated", "last_login",
+        "is_secretariat", "is_read_only", "is_cap", "is_mobile_app",
+        "party", "is_active", "activated", "last_login",
     )
     superuser_list_display = (
         "login_as",
     )
-    search_fields = ["username", "first_name", "last_name"]
+    search_fields = ["username", "first_name", "last_name", "party__name"]
     actions = ["reset_password"]
     exclude = ["password", "user_permissions"]
     readonly_fields = ["last_login", "date_joined", "created_by", "activated"]
     list_filter = (
         ("party", MainPartyFilter),
-        "is_secretariat", "is_read_only", "is_staff", "is_superuser",
-        "is_active", "activated",
+        "is_secretariat", "is_read_only", "is_cap", "is_mobile_app",
+        "is_staff", "is_superuser", "is_active", "activated",
     )
 
     def reset_password(self, request, queryset, template="password_reset"):

@@ -10,7 +10,15 @@ from rest_framework.authtoken.models import Token
 from .party import Party, PartyGroup, Language
 
 
+class UserManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'party',
+        )
+
 class User(GuardianUserMixin, AbstractUser):
+
+    objects = UserManager()
 
     # Not null for Party users; all other user types do not have a specific
     # party assigned.
