@@ -1417,6 +1417,8 @@ class SubmissionSerializer(
     obligation = serializers.StringRelatedField(
         many=False, read_only=True
     )
+    # Frontend needs obligation type, as well
+    obligation_type = serializers.SerializerMethodField()
 
     # At most one questionnaire per submission, but multiple other data
     article7questionnaire_url = serializers.HyperlinkedIdentityField(
@@ -1539,6 +1541,8 @@ class SubmissionSerializer(
 
     is_cloneable = serializers.SerializerMethodField()
 
+    permission_matrix = serializers.SerializerMethodField()
+
     changeable_flags = serializers.SerializerMethodField()
 
     can_change_remarks_party = serializers.SerializerMethodField()
@@ -1564,7 +1568,7 @@ class SubmissionSerializer(
         model = Submission
 
         base_fields = (
-            'id', 'party', 'reporting_period', 'obligation', 'version',
+            'id', 'party', 'reporting_period', 'obligation', 'obligation_type', 'version',
             'reporting_period_id', 'reporting_period_description',
             'files', 'files_url',
             'sub_info_url', 'sub_info',
@@ -1580,6 +1584,7 @@ class SubmissionSerializer(
             # Permission-related fields; value is dependent on user
             'available_transitions', 'available_transitions_url',
             'is_cloneable', 'is_versionable',
+            'permission_matrix',
             'changeable_flags',
             'can_change_remarks_party',
             'can_change_remarks_secretariat',
@@ -1636,6 +1641,9 @@ class SubmissionSerializer(
     def get_reporting_period_description(self, obj):
         return obj.reporting_period.description
 
+    def get_obligation_type(self, obj):
+        return obj.obligation.obligation_type
+
     def get_in_initial_state(self, obj):
         return obj.in_initial_state
 
@@ -1646,6 +1654,10 @@ class SubmissionSerializer(
     def get_is_cloneable(self, obj):
         user = self.context['request'].user
         return obj.is_cloneable(user)
+
+    def get_permission_matrix(self, obj):
+        user = self.context['request'].user
+        return obj.permissions_matrix(user)
 
     def get_changeable_flags(self, obj):
         user = self.context['request'].user

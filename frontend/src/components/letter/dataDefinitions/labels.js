@@ -131,7 +131,7 @@ const getLabels = ($gettext) => {
       country: $gettext('Address country'),
       phone: $gettext('Phone'),
       email: $gettext('E-mail'),
-      date: $gettext('Date')
+      date: $gettext('Document date')
     }
   }
   return labels

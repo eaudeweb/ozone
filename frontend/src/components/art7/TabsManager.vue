@@ -151,6 +151,7 @@
       <SubmissionHistory
         :history="$store.state.currentSubmissionHistory"
         :currentVersion="$store.state.current_submission.version"
+        :has_diff=true
       ></SubmissionHistory>
       <div slot="modal-footer">
         <b-btn @click="$refs.history_modal.hide()" variant="success">

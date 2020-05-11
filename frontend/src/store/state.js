@@ -43,7 +43,8 @@ const state = {
     title: null,
     description: null,
     okCallback: () => {},
-    cancelCallback: () => {}
+    cancelCallback: () => {},
+    hideCallBack: () => {}
   },
   current_submission: null,
   route: '',
@@ -79,7 +80,7 @@ const state = {
     }
   },
   alertData: [],
-  recordDataObligations: ['art9', 'transfer']
+  recordDataObligations: ['art9', 'transfer', 'procagent']
 }
 
 export default state

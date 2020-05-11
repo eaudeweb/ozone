@@ -1,3 +1,5 @@
+import copy
+
 import xworkflows
 
 from .emails import notify_workflow_transitioned
@@ -17,6 +19,8 @@ class BaseStateDescription(xworkflows.Workflow):
     states = ()
     transitions = ()
     initial_state = None
+    # Per-state and per-user permissions as nested dictionaries
+    permissions = {}
 
     def log_transition(self, transition, previous_state, workflow):
         """
@@ -73,3 +77,46 @@ class BaseWorkflow(xworkflows.WorkflowEnabled):
             (self.user.is_secretariat and owner.is_secretariat)
             or (self.user.party is not None and self.user.party == owner.party)
         )
+
+    @property
+    def permissions_matrix(self):
+        """
+        Returns the permissions matrix nested dictionaries based on
+        current user and submissions creator.
+        """
+        # TODO: there is no need to modify and return the whole initial matrix,
+        # this is only to make initial frontend changes easier.
+
+        position = None
+        if self.user is not None:
+            created_by_secretariat = self.model_instance.filled_by_secretariat
+            #    0 -> created by party, accessed by party
+            #    1 -> created by party, accessed by secretariat
+            #    2 -> created by secretariat, accessed by party
+            #    3 -> created by secretariat, accessed by secretariat
+            if self.user.is_secretariat and created_by_secretariat:
+                position = 3
+            elif self.user.party and created_by_secretariat:
+                position = 2
+            elif self.user.is_secretariat and not created_by_secretariat:
+                position = 1
+            elif self.user.party and not created_by_secretariat:
+                position = 0
+
+        permissions_dict = copy.deepcopy(self.state.workflow.permissions)
+
+        for key, permission_type_dict in permissions_dict.items():
+            permission_list = permission_type_dict.get(self.state.name, [])
+            if permission_list and position is not None:
+                permission = permission_list[position]
+            else:
+                # default for non-secretariat & non-party users (or unknown
+                # states) is True, which means read-only.
+                permission = True
+
+            for sub_key, sub_value in permission_type_dict.items():
+                # Set the same value for all elements, to make it easier
+                # on the frontend side.
+                permission_type_dict[sub_key] = [permission] * len(sub_value)
+
+        return permissions_dict

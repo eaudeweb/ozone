@@ -1629,6 +1629,23 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return report.render_to_response()
 
     @action(detail=True, methods=["get"])
+    def export_diff_pdf(self, request, pk=None):
+        """
+        Returns a PDF containing a diff between current version and the previous
+        one.
+        """
+        submission = Submission.objects.get(pk=pk)
+        obligation = submission.obligation._obligation_type
+
+        if obligation == ObligationTypes.ART7.value:
+            cls = reports.Art7RawdataDiffReport
+        else:
+            raise RuntimeError(f"Unknown obligation {obligation!r}")
+
+        report = cls.for_submission(submission)
+        return report.render_to_response()
+
+    @action(detail=True, methods=["get"])
     def export_prodcons_pdf(self, request, pk=None):
         submission = Submission.objects.get(pk=pk)
         report = reports.ProdConsReport.for_submission(submission)
