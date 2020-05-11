@@ -6,6 +6,7 @@
     :options="options"
     :track-by="trackBy"
     :label="label"
+    :hide-selected="false"
   >
     <template v-if="customTemplate" slot="singleLabel" slot-scope="props">
       <div :class="{highlighted: props.option[customTemplate]}">
