@@ -114,6 +114,11 @@ class Region(models.Model):
     def get_real_regions(cls):
         return cls.objects.exclude(abbr='UNK')
 
+class SubregionManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'region',
+        )
 
 class Subregion(models.Model):
     """
@@ -122,6 +127,8 @@ class Subregion(models.Model):
     Seems a bit overkill to create a model for these, but it offers more
     flexibility and easier maintenance.
     """
+
+    objects = SubregionManager()
 
     abbr = models.CharField(max_length=32)
     name = models.CharField(max_length=256)
@@ -141,10 +148,19 @@ class Subregion(models.Model):
         db_table = 'subregion'
 
 
+class PartyManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'parent_party', 'subregion', 'subregion__region',
+        )
+
 class Party(models.Model):
     """
     Reporting Party (generally country)
     """
+
+    objects = PartyManager()
+
     name = models.CharField(max_length=256, unique=True)
     abbr = models.CharField(max_length=32, unique=True)
 
