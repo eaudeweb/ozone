@@ -835,6 +835,10 @@ class Submission(models.Model):
             if hasattr(self, "article7exports") and self.article7exports:
                 self.article7exports.model.validate_import_export_data(self)
 
+    def permissions_matrix(self, user):
+        wf = self.workflow(user)
+        return wf.permissions_matrix
+
     def can_edit_flags(self, user):
         """
         Returns True if user can set *any* flags on this submission,

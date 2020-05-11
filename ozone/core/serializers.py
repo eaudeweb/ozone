@@ -1541,6 +1541,8 @@ class SubmissionSerializer(
 
     is_cloneable = serializers.SerializerMethodField()
 
+    permission_matrix = serializers.SerializerMethodField()
+
     changeable_flags = serializers.SerializerMethodField()
 
     can_change_remarks_party = serializers.SerializerMethodField()
@@ -1582,6 +1584,7 @@ class SubmissionSerializer(
             # Permission-related fields; value is dependent on user
             'available_transitions', 'available_transitions_url',
             'is_cloneable', 'is_versionable',
+            'permission_matrix',
             'changeable_flags',
             'can_change_remarks_party',
             'can_change_remarks_secretariat',
@@ -1651,6 +1654,10 @@ class SubmissionSerializer(
     def get_is_cloneable(self, obj):
         user = self.context['request'].user
         return obj.is_cloneable(user)
+
+    def get_permission_matrix(self, obj):
+        user = self.context['request'].user
+        return obj.permissions_matrix(user)
 
     def get_changeable_flags(self, obj):
         user = self.context['request'].user
