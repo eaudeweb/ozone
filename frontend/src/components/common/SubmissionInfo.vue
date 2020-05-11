@@ -40,7 +40,7 @@
                 ></fieldGenerator>
               </b-col>
             </b-row>
-            
+
             <b-row
               v-if="isSecretariat || (!isSecretariat && info.form_fields['submitted_at'].selected)"
             >
