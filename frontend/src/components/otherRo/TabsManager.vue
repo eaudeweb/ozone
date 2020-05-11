@@ -66,10 +66,11 @@
     <Footer style="display:inline">
       <Save
         class="actions mt-2 mb-2"
-        v-if="$store.getters.can_save_form"
         :data="$store.state.form"
         :submission="submission"
+        :obligation_type="obligation_type"
       ></Save>
+      <Edit :submission="submission" :obligation_type="obligation_type" class="actions mt-2 mb-2" />
       <router-link class="btn btn-light ml-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
       <b-button-group
         v-if="$store.state.recordDataObligations.includes($store.state.current_submission.obligation_type)
@@ -152,9 +153,12 @@
 <script>
 import { Footer } from '@coreui/vue'
 import SubmissionInfo from '@/components/common/SubmissionInfo.vue'
+import Edit from '@/components/common/Edit'
 import Files from '@/components/common/Files'
+
 import { api, getInstructions, cloneSubmission } from '@/components/common/services/api'
-import Save from '@/components/hat/Save'
+import Save from '@/components/otherRo/Save'
+
 import SubmissionHistory from '@/components/common/SubmissionHistory.vue'
 import { getLabels } from '@/components/hat/dataDefinitions/labels'
 import TabTitleWithLoader from '@/components/common/TabTitleWithLoader'
@@ -165,6 +169,7 @@ import { getAlerts } from '@/components/common/dataDefinitions/alerts'
 export default {
   components: {
     SubmissionInfo,
+    Edit,
     Files,
     Footer,
     Save,

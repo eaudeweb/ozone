@@ -6,6 +6,7 @@
     :options="options"
     :track-by="trackBy"
     :label="label"
+    :disabled="disabled"
     :hide-selected="false"
   >
     <template v-if="customTemplate" slot="singleLabel" slot-scope="props">
@@ -31,7 +32,7 @@ export default {
   components: {
     Multiselect
   },
-  props: ['value', 'options', 'trackBy', 'customTemplate', 'customTemplateText', 'label'],
+  props: ['value', 'options', 'trackBy', 'customTemplate', 'customTemplateText', 'label', 'disabled'],
   computed: {
     completeValue: {
       get() {

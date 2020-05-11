@@ -335,6 +335,10 @@ const mutations = {
     })
   },
 
+  updateEditMode(state, data) {
+    state.permissions.form.edit_mode = data
+  },
+
   setBlendComponentRowVariant(state, data) {
     data.component._rowVariant = data.value
   },
@@ -508,6 +512,9 @@ const mutations = {
   deleteAllTabFiles(state) {
     const { form_fields } = state.form.tabs.files
     form_fields.files = []
+  },
+  updateFilesUploadInProgress(state, data) {
+    state.filesUploadInProgress = data
   }
 }
 

@@ -56,6 +56,7 @@ export default {
       })
       this.tabsToSave = [...justSave, ...removeDataAndSave]
       if (!stopSave) {
+        this.updateEditMode(false)
         Object.values(this.form.tabs).filter(tab => tab.hasOwnProperty('form_fields')).forEach(async tab => {
           const url = this.$store.state.current_submission[tab.endpoint_url]
           if (!doNotSave.includes(tab.name)) {

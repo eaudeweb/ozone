@@ -80,6 +80,7 @@ const state = {
     }
   },
   alertData: [],
+  filesUploadInProgress: false,
   recordDataObligations: ['art9', 'transfer', 'procagent']
 }
 

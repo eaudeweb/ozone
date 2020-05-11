@@ -64,16 +64,13 @@
       </b-card>
     </div>
     <Footer style="display:inline">
-      <b-button-group class="actions mt-2 mb-2">
-        <Save
-          v-if="$store.getters.can_save_form"
-          :data="$store.state.form"
-          :submission="submission"
-        ></Save>
-      </b-button-group>
-
+      <Save
+        class="actions mt-2 mb-2"
+        :data="$store.state.form"
+        :submission="submission"
+      ></Save>
+      <Edit :submission="submission" class="actions mt-2 mb-2" />
       <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
-
       <b-button-group class="pull-right actions mt-2 mb-2">
         <b-btn
           variant="outline-dark"
@@ -146,6 +143,7 @@
 <script>
 import { Footer } from '@coreui/vue'
 import SubmissionInfo from '@/components/common/SubmissionInfo.vue'
+import Edit from '@/components/common/Edit'
 import Files from '@/components/common/Files'
 import { getInstructions, cloneSubmission } from '@/components/common/services/api'
 import Save from '@/components/raf/Save'
@@ -160,6 +158,7 @@ import { getAlerts } from '@/components/common/dataDefinitions/alerts'
 export default {
   components: {
     SubmissionInfo,
+    Edit,
     Files,
     Footer,
     Save,

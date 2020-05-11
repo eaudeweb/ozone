@@ -6,7 +6,7 @@
             <label>{{field.label}}</label>
             <fieldGenerator
               :fieldInfo="{index:field.name, tabName: info.name, field:field.name}"
-              :disabled="!$store.getters.can_edit_data"
+              :disabled="!canChangeQuestionnaire"
               :field="field"
             />
           </div>
@@ -24,7 +24,7 @@
         <!-- addComment(state, { data, tab, field }) { -->
         <textarea
           @change="$store.commit('addComment', {data: $event.target.value, tab:info.name, field: comment_key})"
-          :disabled="getCommentFieldPermission(comment_key)"
+          :disabled="isRemarkReadOnly(comment_key)"
           class="form-control"
           :value="comment.selected"
         ></textarea>
@@ -37,41 +37,25 @@
 
 import fieldGenerator from '@/components/common/form-components/fieldGenerator'
 import { getCommonLabels } from '@/components/common/dataDefinitions/labels'
+import PermissionsMixin from '@/components/common/mixins/PermissionsMixin'
 
 export default {
+  mixins: [PermissionsMixin],
   name: 'Tab1',
-
   props: {
     info: Object
   },
-
-  computed: {
-    onlySelectedValue() {
-      return Object.keys(this.info.form_fields).map(field => this.info.form_fields[field].selected)
-    }
-  },
-
-  components: { fieldGenerator },
-
-  methods: {
-    getCommentFieldPermission(fieldName) {
-      let type = fieldName.split('_')
-      type = type[type.length - 1]
-      if (type === 'party') {
-        return !this.$store.getters.can_change_remarks_party
-      }
-      if (['secretariat', 'os'].includes(type)) {
-        return !this.$store.getters.can_change_remarks_secretariat
-      }
-    }
-  },
-
   data() {
     return {
       labels: getCommonLabels(this.$gettext)
     }
   },
-
+  computed: {
+    onlySelectedValue() {
+      return Object.keys(this.info.form_fields).map(field => this.info.form_fields[field].selected)
+    }
+  },
+  components: { fieldGenerator },
   watch: {
     'onlySelectedValue': {
       handler(old_val, new_val) {

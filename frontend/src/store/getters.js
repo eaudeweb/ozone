@@ -108,14 +108,15 @@ const getters = {
   can_change_remarks_secretariat: (state) => state.permissions.form && state.permissions.form.can_change_remarks_secretariat,
   can_change_reporting_channel: (state) => state.permissions.form && state.permissions.form.can_change_reporting_channel,
   can_upload_files: (state) => state.permissions.form && state.permissions.form.can_upload_files,
-  can_save_form: (state) => state.permissions.form
+  can_enable_edit_mode: (state) => state.permissions.form
 	&& (state.permissions.form.can_edit_data
 		|| state.permissions.form.can_change_remarks_secretariat
 		|| state.permissions.form.can_change_reporting_channel
 		|| state.permissions.form.can_change_remarks_party
 		|| state.permissions.form.can_upload_files
-		|| (state.current_submission && state.current_submission.changeable_flags.length)),
-
+    || (state.current_submission && state.current_submission.changeable_flags.length > 0)),
+  // eslint-disable-next-line
+  edit_mode: (state, getters) => state.permissions.form && state.permissions.form.edit_mode && getters.can_enable_edit_mode,
   /**
    * this getter needs state.initialData.countryOptions or state.dashboard.parties
    * TODO: maybe change this ?
@@ -160,7 +161,9 @@ const getters = {
 
   getPeriodStatus: (state) => (periodId) => state.dashboard.periods.find((period) => period.value === periodId).is_reporting_open,
 
-  checkIfBlendAlreadyEists: (state) => (blendName) => state.initialData.blends.find((blend) => blend.blend_id === blendName)
+  checkIfBlendAlreadyEists: (state) => (blendName) => state.initialData.blends.find((blend) => blend.blend_id === blendName),
+
+  getFilesUploadInProgress: (state) => state.filesUploadInProgress
 
 }
 

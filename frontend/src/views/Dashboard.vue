@@ -94,7 +94,7 @@
             <template v-slot:cell(actions)="row">
               <router-link
                 class="btn btn-light btn-sm"
-                :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id }}"
+                :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id, edit_mode: !!row.item.details.can_edit_data }}"
               >
                 <span v-if="row.item.details.can_edit_data">{{labels['edit']}}</span>
                 <span v-else>{{labels['view']}}</span>
@@ -186,7 +186,7 @@
                 <b-button-group>
                   <router-link
                     class="btn btn-light btn-sm"
-                    :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id }}"
+                    :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id, edit_mode: row.item.details.can_edit_data && !currentUser.is_read_only }}"
                   >
                     <span
                       v-if="row.item.details.can_edit_data && !currentUser.is_read_only"
@@ -464,17 +464,18 @@ export default {
     },
 
     sortOptionsStatus() {
-      // return this.statuses
-      const data = [
-        { text: 'Any', value: null },
-        ...Object.keys(this.submissionStates).map(state => ({
-          // TODO: use backend names instead of getCommonLabels?
-          // text: this.submissionStates[state],
-          text: getCommonLabels(this.$gettext)[state],
-          value: state
-        }))
-      ]
-      return data
+      if (this.submissionStates) {
+        return [
+          { text: 'Any', value: null },
+          ...Object.keys(this.submissionStates).map(state => ({
+            // TODO: use backend names instead of getCommonLabels?
+            // text: this.submissionStates[state],
+            text: getCommonLabels(this.$gettext)[state],
+            value: state
+          }))
+        ]
+      }
+      return []
     },
 
     sortOptionsParties() {
@@ -588,7 +589,7 @@ export default {
       }).then(r => {
         this.$store.dispatch('getMyCurrentSubmissions').then(() => {
           const currentSubmission = this.mySubmissions.find(sub => sub.id === r.id)
-          this.$router.push({ name: this.getFormName(r.obligation), query: { submission: currentSubmission.id } })
+          this.$router.push({ name: this.getFormName(r.obligation), query: { submission: currentSubmission.id, edit_mode: true } })
         })
       })
     },

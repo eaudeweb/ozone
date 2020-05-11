@@ -1,6 +1,7 @@
 <template>
   <b-btn
-    :disabled="isFilesUploadInProgress"
+    v-show="canEnableEditMode && $store.getters.edit_mode"
+    :disabled="$store.getters.getFilesUploadInProgress"
     @click="validation"
     id="save-button"
     ref="save_button"
@@ -16,13 +17,18 @@ import { post, update } from '@/components/common/services/api'
 import { isObject } from '@/components/common/services/utilsService'
 import { dateFormatToYYYYMMDD } from '@/components/common/services/languageService'
 import FilesMixin from './FilesMixin'
+import PermissionsMixin from './PermissionsMixin'
 import { getCommonLabels } from '@/components/common/dataDefinitions/labels'
 import { getAlerts } from '@/components/common/dataDefinitions/alerts'
 
 export default {
-  mixins: [FilesMixin],
+  mixins: [FilesMixin, PermissionsMixin],
   props: {
-    submission: String
+    submission: String,
+    obligation_type: {
+      type: String,
+      default: null
+    }
   },
 
   data() {
@@ -52,9 +58,14 @@ export default {
   },
 
   methods: {
-    resetActionToDispatch() {
+    resetActionToDispatch(edit_mode = true) {
       this.$store.commit('setActionToDispatch', null)
       this.$store.commit('setDataForAction', null)
+      this.updateEditMode(edit_mode)
+    },
+    updateEditMode(edit_mode) {
+      this.$store.commit('updateEditMode', edit_mode)
+      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode }, params: { obligation_type: this.obligation_type } })
     },
     validation() {
       this.invalidTabs = []
@@ -231,7 +242,7 @@ export default {
             }
 
             await update(url, current_tab_data)
-            // console.log('update done', tab.name)
+            console.log('update done', tab.name)
 
             if (tab.name === 'files') {
               await this.getSubmissionFiles()
@@ -239,7 +250,6 @@ export default {
             if (tab.status !== null) {
               this.$store.commit('setTabStatus', { tab: tab.name, value: true })
             }
-
             if (Array.isArray(tab.form_fields)) {
               if (!tab.form_fields.length) {
                 this.$store.commit('updateNewTabs', tab.name)
@@ -265,9 +275,10 @@ export default {
       this.tabsToSave = this.tabsToSave.filter(t => t !== tabName)
       if (this.tabsToSave.length === 0) {
         if (this.$store.state.actionToDispatch) {
+          console.log('checkIfThereIsAnotherActionToDoBeforeReturning', false)
           this.$store.dispatch('clearEdited')
           this.$store.dispatch('saveCallback', { actionToDispatch: this.$store.state.actionToDispatch, data: this.$store.state.dataForAction })
-          this.resetActionToDispatch()
+          this.resetActionToDispatch(false)
         }
       }
     }

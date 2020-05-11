@@ -2,13 +2,13 @@
   <div class="navbar-toggler-wrapper">
     <AsideToggler/>
     <span v-if="hasAssideMenu" class="toggler-text">
-      <span v-if="!validationButton" v-translate>
-         Add substances
+      <span key="add_substance" v-if="!validationButton" v-translate>
+        Add substances
       </span>
-      <span v-else v-translate>
+      <span key="validation" v-else v-translate>
         Validation
       </span>
-      </span>
+    </span>
   </div>
 </template>
 
@@ -21,7 +21,7 @@ export default {
   },
   props: {
     hasAssideMenu: Boolean,
-    validationButton: null
+    validationButton: Boolean
   }
 }
 </script>

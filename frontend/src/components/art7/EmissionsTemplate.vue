@@ -66,7 +66,7 @@
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
-              :disabled="!$store.getters.can_edit_data"
+              :disabled="!$store.getters.edit_mode"
               :field="cell.item.originalObj.checkForDelete"
             />
           </template>
@@ -75,7 +75,7 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.can_edit_data"
+              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.edit_mode"
               :field="cell.item.originalObj[inputField]"
             />
           </template>
@@ -84,6 +84,7 @@
             <span
               class="row-controls"
               :key="`${cell.item.index}_validation_${tabName}_button`"
+              v-if="$store.getters.edit_mode"
             >
               <i class="fa fa-trash fa-lg" @click="remove_field(cell.item.index)" ></i>&nbsp;
               <ValidationLabel
@@ -95,7 +96,7 @@
           </template>
         </b-table>
       </div>
-      <b-btn v-if="$store.getters.can_edit_data" id="add-facility-button" class="mb-2" variant="primary" @click="addField">
+      <b-btn v-if="$store.getters.edit_mode" id="add-facility-button" class="mb-2" variant="primary" @click="addField">
         <span v-translate>Add facility</span>
       </b-btn>
     </div>
@@ -117,7 +118,7 @@
       </div>
     </div>
 
-    <AppAside v-if="$store.getters.can_edit_data || validationLength" fixed>
+    <AppAside v-if="$store.getters.edit_mode || validationLength" fixed>
       <DefaultAside
         v-on:fillSearch="table.tableFilters = true; table.filters.search = $event.facility"
         :parentTabIndex.sync="sidebarTabIndex"
@@ -252,10 +253,10 @@ export default {
       let type = fieldName.split('_')
       type = type[type.length - 1]
       if (type === 'party') {
-        return !this.$store.getters.can_change_remarks_party
+        return !this.$store.getters.can_change_remarks_party || !this.$store.getters.edit_mode
       }
       if (['secretariat', 'os'].includes(type)) {
-        return !this.$store.getters.can_change_remarks_secretariat
+        return !this.$store.getters.can_change_remarks_secretariat || !this.$store.getters.edit_mode
       }
     },
 

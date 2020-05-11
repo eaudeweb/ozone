@@ -92,10 +92,10 @@
     <Footer style="display:inline">
       <Save
         class="actions mt-2 mb-2"
-        v-if="$store.getters.can_save_form"
         :data="$store.state.form"
         :submission="submission"
       ></Save>
+      <Edit :submission="submission" class="actions mt-2 mb-2" />
       <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
       <b-button-group class="pull-right actions mt-2 mb-2">
         <AggregationsModal :submission="submission"></AggregationsModal>
@@ -173,6 +173,7 @@ import Questionnaire from '@/components/art7/Questionnaire.vue'
 import FormTemplate from '@/components/art7/FormTemplate.vue'
 import EmissionsTemplate from '@/components/art7/EmissionsTemplate.vue'
 import SubmissionInfo from '@/components/common/SubmissionInfo.vue'
+import Edit from '@/components/common/Edit'
 import Files from '@/components/common/Files'
 import { getInstructions, cloneSubmission } from '@/components/common/services/api'
 import Save from '@/components/art7/Save'
@@ -191,6 +192,7 @@ export default {
     FormTemplate,
     EmissionsTemplate,
     SubmissionInfo,
+    Edit,
     Files,
     Footer,
     Save,

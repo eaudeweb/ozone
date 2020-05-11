@@ -16,7 +16,7 @@
     >
       <template v-slot:cell(actions)="cell">
         <a
-          @click="changeRoute({ name: getFormName(cell.item.details.obligation), query: {submission: cell.item.actions}})"
+          @click="changeRoute({ name: getFormName(cell.item.details.obligation), query: {submission: cell.item.details.id}, params: { obligation_type: getFormName(cell.item.details.obligation) }})"
           class="btn btn-outline-primary btn-sm"
         >
           <span v-translate>View</span>
