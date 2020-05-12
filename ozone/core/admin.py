@@ -359,18 +359,39 @@ class PartyAdmin(admin.ModelAdmin):
 
 @admin.register(PartyGroup)
 class PartyGroupAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    list_filter = ('name',)
-    search_fields = ['name']
+    class Media:
+        # bigger width for select2 widgets
+        css = {
+            'all': ('css/admin.css',),
+        }
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        main_parties_queryset = Party.objects.filter(
-            is_active=True,
-            parent_party__id=F('id'),
-        ).order_by('name')
-        form.base_fields['parties'].queryset = main_parties_queryset
-        return form
+    def get_parties(self, obj):
+        return ', '.join(x.name for x in obj.parties.all())
+    get_parties.short_description = 'Parties'
+
+    def get_party_count(self, obj):
+        return obj.parties.count()
+        # return len(obj.parties.all())
+    get_party_count.short_description = '# of parties'
+
+    list_display = ('name', 'get_party_count', 'get_parties', )
+    list_filter = ('name',)
+    search_fields = ['name', 'parties__name',]
+
+    # Autocomplete is nicer, but difficult to filter only main parties
+    # because get_search_results for Party model is used in many places
+    # maybe include django-admin-autocomplete-all when stable
+    autocomplete_fields = ('parties',)
+
+
+    # def get_form(self, request, obj=None, **kwargs):
+    #     form = super().get_form(request, obj, **kwargs)
+    #     main_parties_queryset = Party.objects.filter(
+    #         is_active=True,
+    #         parent_party__id=F('id'),
+    #     ).order_by('name')
+    #     form.base_fields['parties'].queryset = main_parties_queryset
+    #     return form
 
 
 @admin.register(PartyHistory)
