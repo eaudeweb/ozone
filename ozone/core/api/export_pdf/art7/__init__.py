@@ -168,7 +168,7 @@ def export_submission_diff(submission):
 
 
 class Art7RawdataDiffReport(ReportForSubmission):
-    name = "art7_raw"
+    name = "art7_raw_diff"
     has_party_param = True
     has_period_param = True
     display_name = "Raw data reported - changes from previous version - Article 7"
@@ -292,6 +292,7 @@ class BaselineHfcRawReport(Report):
 
     name = "baseline_hfc_raw"
     has_party_param = True
+    landscape = True
     display_name = "HFC baseline - raw data reported"
     description = _("Select one or more parties")
 

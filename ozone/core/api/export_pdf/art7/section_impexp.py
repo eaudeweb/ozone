@@ -283,7 +283,7 @@ def preprocess_subtotals(data):
 
 
 # Styles to be used when exporting both imports and exports data
-styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
+base_styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
      ('SPAN', (0, 0), (0, 1)),  # Annex/Group
      ('SPAN', (1, 0), (1, 1)),  # Substance
      ('SPAN', (2, 0), (2, 1)),  # Party
@@ -337,6 +337,7 @@ def _export(data, comments, party_field, texts):
     data = preprocess_subtotals(data)
 
     rows = list()
+    styles = list(base_styles)
     for item in data:
         (_rows, _styles) = to_row(
             item,
@@ -410,6 +411,7 @@ def _export_diff(
             continue
 
         rows = list()
+        styles = list(base_styles)
         for key in keys:
             diff = False
             previous_item = None
