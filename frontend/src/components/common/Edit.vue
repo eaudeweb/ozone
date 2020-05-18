@@ -3,7 +3,7 @@
     :disabled="$store.getters.getFilesUploadInProgress"
     @click="enterEditMode()"
     id="edit-button"
-    v-show="canEnableEditMode && !$store.getters.edit_mode"
+    v-show="canEnableEditMode && !editModeEnabled"
     variant="outline-primary"
   >
     <span v-translate>Edit</span>
@@ -13,16 +13,11 @@
 <script>
 
 import FilesMixin from '@/components/common/mixins/FilesMixin'
-import PermissionsMixin from '@/components/common/mixins/PermissionsMixin'
 
 export default {
-  mixins: [FilesMixin, PermissionsMixin],
+  mixins: [FilesMixin],
   props: {
-    submission: String,
-    obligation_type: {
-      type: String,
-      default: null
-    }
+    submission: String
   },
   data() {
     return {}
@@ -30,7 +25,7 @@ export default {
   methods: {
     enterEditMode() {
       this.$store.commit('updateEditMode', true)
-      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode: true }, params: { obligation_type: this.obligation_type } })
+      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode: true } })
     }
   }
 }

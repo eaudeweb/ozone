@@ -329,7 +329,7 @@ const mutations = {
     data.forEach(channel => {
       if ((state.currentUser.is_secretariat && channel.is_secretariat)
       || (state.currentUser.is_party && channel.is_party)
-      || !state.current_submission.can_change_reporting_channel) {
+      || !state.current_submission.permission_matrix['reporting_channel']) {
         state.initialData.reportingChannel.push(channel)
       }
     })

@@ -2,27 +2,27 @@ import { expect } from 'chai'
 import getters from '@/store/getters'
 
 describe('store getters', () => {
-  describe('can_edit_data', () => {
-    const { can_edit_data } = getters
+  describe('edit_mode', () => {
+    const { edit_mode } = getters
     it('missing permissions.form', () => {
       const state = {
         permissions: {
           form: null
         }
       }
-      expect(can_edit_data(state)).to.be.null
+      expect(edit_mode(state)).to.be.null
     })
-    it('value is equal to permissions.form.can_edit_data', () => {
+    it('value is equal to permissions.form.edit_mode', () => {
       const state = {
         permissions: {
           form: {
-            can_edit_data: true
+            edit_mode: true
           }
         }
       }
-      expect(can_edit_data(state)).to.be.true
-      state.permissions.form.can_edit_data = false
-      expect(can_edit_data(state)).to.be.false
+      expect(edit_mode(state)).to.be.true
+      state.permissions.form.edit_mode = false
+      expect(edit_mode(state)).to.be.false
     })
   })
 })

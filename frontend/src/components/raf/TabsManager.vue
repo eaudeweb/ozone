@@ -107,7 +107,7 @@
         <b-btn
           @click="removeSubmission"
           id="delete-button"
-          v-if="$store.getters.can_edit_data"
+          v-if="$store.state.current_submission.can_delete_data"
           variant="outline-danger"
         >
           <span v-translate>Delete Submission</span>

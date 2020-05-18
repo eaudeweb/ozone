@@ -3,7 +3,7 @@
     <h5
       class="errorHeading"
       v-if="$store.state.form.tabs.questionaire_questions.form_fields[tabName].selected === false && tab_info.form_fields.length"
-    >The data in this form will not be saved because you have selected in the questionnaire "no" for this section</h5>
+    >Please note that submitting the form is not allowed as long as the selected answer for this section in the questionnare is "No"</h5>
     <div class="form-sections">
       <div class="table-wrapper">
         <div class="table-title mb-3">
@@ -66,7 +66,7 @@
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
-              :disabled="!$store.getters.edit_mode"
+              :disabled="isActionReadOnly('delete', 'substance_data')"
               :field="cell.item.originalObj.checkForDelete"
             />
           </template>
@@ -75,7 +75,7 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.edit_mode"
+              :disabled="isSubstanceDataReadOnly(inputField)"
               :field="cell.item.originalObj[inputField]"
             />
           </template>
@@ -84,9 +84,12 @@
             <span
               class="row-controls"
               :key="`${cell.item.index}_validation_${tabName}_button`"
-              v-if="$store.getters.edit_mode"
             >
-              <i class="fa fa-trash fa-lg" @click="remove_field(cell.item.index)" ></i>&nbsp;
+              <i
+                v-if="!isActionReadOnly('delete', 'substance_data')"
+                class="fa fa-trash fa-lg"
+                @click="remove_field(cell.item.index)"
+              ></i>&nbsp;
               <ValidationLabel
                 :open-validation-callback="openValidation"
                 :validation="cell.item.validation"
@@ -96,7 +99,7 @@
           </template>
         </b-table>
       </div>
-      <b-btn v-if="$store.getters.edit_mode" id="add-facility-button" class="mb-2" variant="primary" @click="addField">
+      <b-btn v-if="!isActionReadOnly('add', 'substance_data')" id="add-facility-button" class="mb-2" variant="primary" @click="addField">
         <span v-translate>Add facility</span>
       </b-btn>
     </div>
@@ -111,16 +114,17 @@
         <!-- addComment(state, { data, tab, field }) { -->
         <textarea
           @change="$store.commit('addComment', {data: $event.target.value, tab:tabName, field: comment_key})"
-          :disabled="getCommentFieldPermission(comment_key)"
+          :disabled="isRemarkReadOnly(comment_key)"
           class="form-control"
           :value="comment.selected"
         ></textarea>
       </div>
     </div>
 
-    <AppAside v-if="$store.getters.edit_mode || validationLength" fixed>
+    <AppAside v-if="(editModeEnabled && canEditSubstanceData) || validationLength" fixed>
       <DefaultAside
         v-on:fillSearch="table.tableFilters = true; table.filters.search = $event.facility"
+        :canEditSubstanceData="canEditSubstanceData"
         :parentTabIndex.sync="sidebarTabIndex"
         :hovered="hovered"
         :tabName="tabName"
@@ -137,8 +141,11 @@ import inputFields from '@/components/art7/dataDefinitions/inputFields'
 import DefaultAside from '@/components/common/form-components/DefaultAside'
 import { Aside as AppAside } from '@coreui/vue'
 import { getLabels } from '@/components/art7/dataDefinitions/labels'
+import PermissionsMixin from '@/components/common/mixins/PermissionsMixin'
 
 export default {
+  mixins: [PermissionsMixin],
+
   props: {
     tabName: String,
     tabId: Number,
@@ -247,17 +254,6 @@ export default {
         indexList: this.selectedForDelete,
         $gettext: this.$gettext
       })
-    },
-
-    getCommentFieldPermission(fieldName) {
-      let type = fieldName.split('_')
-      type = type[type.length - 1]
-      if (type === 'party') {
-        return !this.$store.getters.can_change_remarks_party || !this.$store.getters.edit_mode
-      }
-      if (['secretariat', 'os'].includes(type)) {
-        return !this.$store.getters.can_change_remarks_secretariat || !this.$store.getters.edit_mode
-      }
     },
 
     rowHovered(item) {

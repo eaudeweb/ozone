@@ -44,7 +44,7 @@
           </template>
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="canEditSubstanceData(true)"
+              v-show="canEditSubstanceData"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -58,7 +58,7 @@
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
               :field="cell.item.originalObj[inputField]"
-              :disabled="!canEditSubstanceData(true)"
+              :disabled="!canEditSubstanceData"
               @icon-clicked="createModalData(cell.item.originalObj, cell.item.index)"
             />
           </template>
@@ -68,16 +68,16 @@
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
                 <i
                   :class="{
-                    'fa-pencil-square-o': canEditSubstanceData(true),
-                    'fa-eye': !canEditSubstanceData(true),
+                    'fa-pencil-square-o': !isActionReadOnly('edit', 'substance_data'),
+                    'fa-eye': !isActionReadOnly('view', 'substance_data'),
                     'fa fa-lg': true
                   }"
-                  :title="(canEditSubstanceData(true)) ? $gettext('Edit') : $gettext('View')"
+                  :title="!isActionReadOnly('edit', 'substance_data') ? $gettext('Edit') : $gettext('View')"
                   v-b-tooltip
                 ></i>
               </span>
               <span
-                v-if="canEditSubstanceData(true)"
+                v-if="!isActionReadOnly('delete', 'substance_data')"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -112,12 +112,12 @@
     </div>
     <hr>
     <AppAside
-      v-if="canEditSubstanceData(true) || validationLength > 0"
+      v-if="canEditSubstanceData || validationLength > 0"
       fixed
     >
       <DefaultAside
         v-on:fillSearch="fillTableSearch($event)"
-        :canEditSubstanceData="canEditSubstanceData(true)"
+        :canEditSubstanceData="canEditSubstanceData"
         :parentTabIndex.sync="sidebarTabIndex"
         :hovered="hovered"
         :tabName="tabName"
@@ -150,7 +150,7 @@
               class="mb-2"
               @input="updateFormField($event, {index:modal_data.index,tabName: tabName, field:'substance'})"
               trackBy="value"
-              :disabled="!canEditSubstanceData(true)"
+              :disabled="!canEditSubstanceData"
               :hide-selected="true"
               label="text"
               :placeholder="$gettext('Select substance')"
@@ -167,7 +167,7 @@
             <b-col>
               <fieldGenerator
                 :fieldInfo="{index:modal_data.index, tabName: tabName, field:modalField}"
-                :disabled="!canEditSubstanceData(true)"
+                :disabled="!canEditSubstanceData"
                 :field="modal_data.field[modalField]"
               />
             </b-col>
@@ -180,7 +180,7 @@
               <addCategories
                 :index="modal_data.index"
                 :tabName="tabName"
-                v-if="$store.getters.can_edit_data"
+                v-if="canEditSubstanceData"
               ></addCategories>
             </b-col>
           </b-row>
@@ -194,11 +194,11 @@
                 <fieldGenerator
                   :fieldInfo="{ index:modal_data.index,tabName: tabName, field: category, category: category.critical_use_category }"
                   :field="category"
-                  :disabled="!$store.getters.can_edit_data || !$store.getters.edit_mode"
+                  :disabled="!canEditSubstanceData"
                 />
               </b-col>
-              <b-col cols="1" v-if="$store.getters.can_edit_data && $store.getters.edit_mode" class="d-flex align-items-center">
-                  <i class="fa fa-trash fa-lg cursor-pointer d-flex align-items-center" @click="$store.commit('removeFormField', { index: modal_data.index, tabName: tabName, fieldName: 'approved_uses', fieldIndex: modal_data.field.approved_uses.indexOf(category)})"></i>
+              <b-col cols="1" v-if="!isActionReadOnly('delete', 'substance_data')" class="d-flex align-items-center">
+                <i class="fa fa-trash fa-lg cursor-pointer d-flex align-items-center" @click="$store.commit('removeFormField', { index: modal_data.index, tabName: tabName, fieldName: 'approved_uses', fieldIndex: modal_data.field.approved_uses.indexOf(category)})"></i>
               </b-col>
             </b-row>
           <hr>

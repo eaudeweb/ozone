@@ -59,7 +59,7 @@
       class="mb-4" variant="primary"
       v-translate
       v-if="tableItemsToUpload.length"
-      v-html="$store.getters.edit_mode ? 'Start upload': 'Enable edit mode to upload files'"
+      v-html="editModeEnabled ? 'Start upload': 'Enable edit mode to upload files'"
       :disabled="!canUploadFiles"
       @click="startUpload"
     ></b-btn>
@@ -92,13 +92,11 @@
 <script>
 import { isObject } from '@/components/common/services/utilsService'
 import { update } from '@/components/common/services/api'
-import FilesMixin from '@/components/common/mixins/FilesMixin'
 import SaveMixin from '@/components/common/mixins/SaveMixin'
-import PermissionsMixin from '@/components/common/mixins/PermissionsMixin'
 import { dateFormatToDisplay, dateFormatToYYYYMMDD } from '@/components/common/services/languageService.js'
 
 export default {
-  mixins: [FilesMixin, SaveMixin, PermissionsMixin],
+  mixins: [SaveMixin],
 
   props: {
     tabId: Number,
@@ -142,9 +140,6 @@ export default {
     },
     form() {
       return this.$store.state.form
-    },
-    newTabs() {
-      return this.$store.state.newTabs
     }
   },
   methods: {
