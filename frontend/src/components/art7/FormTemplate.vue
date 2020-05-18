@@ -3,7 +3,7 @@
     <h5
       class="errorHeading"
       v-if="$store.state.form.tabs.questionaire_questions.form_fields[tabName].selected === false && tab_info.form_fields.length"
-    >Please note that submitting the form is not allowed as long as the selected answer for this section in the questionnare is "No"</h5>
+    >Please note that submitting the form is not allowed as long as the selected answer for this section in the questionnaire is "No"</h5>
     <div class="form-sections">
       <div class="table-wrapper">
         <div class="table-title">
