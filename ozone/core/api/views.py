@@ -1589,7 +1589,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         if request.data.get("transition"):
             submission = Submission.objects.get(pk=pk)
-            submission.call_transition(request.data["transition"], request.user)
+            increment_minor = request.data.get("increment_minor", None)
+            submission.call_transition(
+                request.data["transition"], request.user, increment_minor
+            )
             serializer = SubmissionSerializer(
                 submission, many=False, context={"request": request}
             )

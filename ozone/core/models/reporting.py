@@ -379,6 +379,14 @@ class Submission(models.Model):
     # Per Obligation-ReportingPeriod-Party
     version = models.PositiveSmallIntegerField(default=1)
 
+    # This implements a major.minor versioning mechanism.
+    # Default values are None so we only set these at "submit" time.
+    revision_major = models.PositiveSmallIntegerField(
+        null=True, blank=True, default=None)
+    revision_minor = models.PositiveSmallIntegerField(
+        null=True, blank=True, default=None
+    )
+
     cloned_from = models.ForeignKey(
         'self',
         related_name='clones',
@@ -763,11 +771,15 @@ class Submission(models.Model):
                 transitions.append(transition.name)
         return transitions
 
-    def call_transition(self, trans_name, user):
+    def call_transition(self, trans_name, user, increment_minor=None):
         """
         Interface for calling a specific transition name on the workflow.
 
         It automatically persists the previous and current states.
+
+        increment_major can only be used for "submit" transitions, to specify
+        whether the major version should be incremented in the case of
+        OS-filled submissions.
 
         """
         # Call this now so we don't recreate the self.workflow object ad nauseam
@@ -776,14 +788,20 @@ class Submission(models.Model):
         # This is a `TransitionList` and supports the `in` operator
         if trans_name not in workflow.state.workflow.transitions:
             raise TransitionDoesNotExist(
-                _(f'Workflow error. Transition {trans_name} does not exist in this workflow')
+                _(
+                    f'Workflow error. Transition {trans_name} does not exist '
+                    f'in this workflow'
+                )
             )
 
         # This is a list of `Transition`s and doesn't support the `in` operator
         # without explicitly referencing `name`
         if trans_name not in [t.name for t in workflow.state.transitions()]:
             raise TransitionNotAvailable(
-                _(f'Workflow error. Transition {trans_name} does not start from current state')
+                _(
+                    f'Workflow error. Transition {trans_name} does not start '
+                    f'from current state'
+                )
             )
 
         # Transition names are available as attributes on the workflow object
@@ -805,9 +823,47 @@ class Submission(models.Model):
         # If everything went OK, persist the result and the transition.
         self._previous_state = self._current_state
         self._current_state = workflow.state.name
+
         # This field will be automatically added to update_fields in save()
         self.last_edited_by = user
-        self.save(update_fields=('_previous_state', '_current_state',))
+
+        update_fields = ('_previous_state', '_current_state',)
+        if trans_name == 'submit':
+            self.revision_major, self.revision_minor = self.get_next_revision(
+                user, increment_minor
+            )
+            update_fields += ('revision_major', 'revision_minor',)
+        self.save(update_fields=update_fields)
+
+    def get_next_revision(self, user, increment_minor=None):
+        # Only take into account submitted peers of this submission.
+        submissions = Submission.objects.filter(
+            obligation=self.obligation,
+            party=self.party,
+            reporting_period=self.reporting_period
+        ).exclude(
+            _current_state__in=self.editable_states,
+            pk=self.pk,
+            revision_major__isnull=True,
+            revision_minor__isnull=True
+        )
+        # TODO; should I also exclude recalled submissions?
+        if not submissions:
+            # First submitted revision will always be 1.0
+            return 1, 0
+        # Get current major and minor revisions
+        revisions = submissions.values_list('revision_major', 'revision_minor')
+        revision_major = max([r[0] for r in revisions])
+        revision_minor = max([r[1] for r in revisions])
+        if not self.filled_by_secretariat and user.party is not None:
+            # Party user, party-filled submission
+            return revision_major + 1, 0
+        if self.filled_by_secretariat and user.is_secretariat:
+            if increment_minor is None or increment_minor is False:
+                # If increment_minor was not specified, increment major version
+                return revision_major + 1, 0
+            if increment_minor is True:
+                return revision_major, revision_minor + 1
 
     def is_submittable(self):
         """
@@ -1706,7 +1762,8 @@ class Submission(models.Model):
 
     def __str__(self):
         return f'{self.party.name} report on {self.obligation.name} ' \
-               f'for {self.reporting_period.name} - # {self.version}'
+               f'for {self.reporting_period.name} - ' \
+               f'# {self.revision_major}.{self.revision_minor}'
 
     class Meta:
         # TODO: this constraint may not be true in the corner case of
