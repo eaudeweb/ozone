@@ -272,7 +272,7 @@
               @input="updateFormField($event, {index:modal_data.index,tabName: tabName, field:'substance'})"
               trackBy="value"
               :disabled="!canEditSubstanceData"
-              :hide-selected="true"
+              :hide-selected="false"
               label="text"
               :placeholder="$gettext('Select substance')"
               :value="parseInt(modal_data.field.substance.selected)"
@@ -299,7 +299,7 @@
               <multiselect
                 v-else
                 :clear-on-select="true"
-                :hide-selected="true"
+                :hide-selected="false"
                 :close-on-select="true"
                 :disabled="!canEditSubstanceData"
                 trackBy="value"

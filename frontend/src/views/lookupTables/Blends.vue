@@ -12,7 +12,7 @@
             :max-height="250"
             :multiple="true"
             :clear-on-select="false"
-            :hide-selected="true"
+            :hide-selected="false"
             :close-on-select="true"
             label="text"
             trackBy="value"

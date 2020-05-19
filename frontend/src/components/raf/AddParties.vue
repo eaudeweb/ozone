@@ -10,7 +10,7 @@
           <multiselect
             :placeholder="$gettext('Select option')"
             :clear-on-select="false"
-            :hide-selected="true"
+            :hide-selected="false"
             :close-on-select="false"
             label="text"
             trackBy="value"

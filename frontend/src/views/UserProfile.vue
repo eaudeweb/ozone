@@ -15,7 +15,7 @@
           trackBy="value"
           label="text"
           :disabled="readonly"
-          :hide-selected="true"
+          :hide-selected="false"
           v-model="userProfile.language"
           :options="availableLanguages"
         />

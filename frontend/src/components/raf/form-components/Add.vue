@@ -15,7 +15,7 @@
           @input="prepareSubstances"
           :multiple="true"
           label="text"
-          :hide-selected="true"
+          :hide-selected="false"
           :close-on-select="true"
           trackBy="value"
           v-model="selected_groups.selected"
@@ -25,7 +25,7 @@
       <b-input-group id="substance_selector" class="mb-2 mt-2" :prepend="$gettext('Substances')">
         <multiselect
           :placeholder="$gettext('Select option')"
-          :hide-selected="true"
+          :hide-selected="false"
           :clear-on-select="true"
           :close-on-select="false"
           label="text"

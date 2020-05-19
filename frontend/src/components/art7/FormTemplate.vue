@@ -739,7 +739,7 @@
               trackBy="value"
               :disabled="!canEditSubstanceData"
               label="text"
-              :hide-selected="true"
+              :hide-selected="false"
               :placeholder="$gettext('Select substance')"
               :value="parseInt(modal_data.field.substance.selected)"
               :options="tab_data.substances"
@@ -761,7 +761,7 @@
               <multiselect
                 v-else
                 :clear-on-select="true"
-                :hide-selected="true"
+                :hide-selected="false"
                 :close-on-select="true"
                 :disabled="!canEditSubstanceData"
                 trackBy="value"
