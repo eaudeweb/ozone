@@ -103,7 +103,7 @@
         <b-btn
           id="delete-button"
           @click="removeSubmission"
-          v-if="$store.getters.can_edit_data"
+          v-if="$store.state.current_submission.can_delete_data"
           variant="outline-danger"
         >
           <span v-translate>Delete Submission</span>
@@ -193,7 +193,10 @@ export default {
         return
       }
       cloneSubmission(submissionId).then((response) => {
-        this.$router.push({ name: this.$route.name, query: { submission: response.data.id } })
+        this.$router.push({
+          name: this.$route.name,
+          query: { submission: response.data.id, edit_mode: true }
+        })
         this.$router.go(this.$router.currentRoute)
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,

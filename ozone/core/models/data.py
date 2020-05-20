@@ -1102,7 +1102,7 @@ class Article7Emission(ModifyPreventionMixin, BaseReport):
     All quantities expressed in metric tonnes.
     """
 
-    facility_name = models.CharField(max_length=256)
+    facility_name = models.CharField(max_length=256, blank=True)
 
     # Total amount generated
     quantity_generated = models.DecimalField(
@@ -1137,10 +1137,35 @@ class Article7Emission(ModifyPreventionMixin, BaseReport):
     # Amount of generated emissions
     quantity_emitted = models.DecimalField(
         max_digits=DECIMAL_FIELD_DIGITS, decimal_places=DECIMAL_FIELD_DECIMALS,
-        validators=[MinValueValidator(0.0)]
+        validators=[MinValueValidator(0.0)], blank=True, null=True
     )
 
     tracker = FieldTracker()
+
+    @classmethod
+    def validate_data(cls, submission):
+        """
+        Function for validation of all emissions data in a specific Art 7
+        submission.
+        Validation is performed right before the "submit" transition and
+        checks that the facility_name and the quantity_emitted fields are
+        filled.
+        """
+        for entry in cls.objects.filter(submission=submission):
+            if entry.facility_name == '':
+                raise ValidationError(
+                    _(
+                        'Please fill-in column Facility name or identifier (1) '
+                        'for all Article 7 Emissions entries.'
+                    )
+                )
+            if entry.quantity_emitted is None:
+                raise ValidationError(
+                    _(
+                        'Please fill-in column Amount of generated emissions '
+                        '(6) for all Article 7 Emissions entries.'
+                    )
+                )
 
     class Meta(BaseReport.Meta):
         db_table = 'reporting_art7_emissions'

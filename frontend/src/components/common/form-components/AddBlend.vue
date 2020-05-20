@@ -14,7 +14,7 @@
           <multiselect
             :placeholder="$gettext('Select option')"
             :clear-on-select="false"
-            :hide-selected="true"
+            :hide-selected="false"
             trackBy="value"
             label="text"
             :close-on-select="true"
@@ -30,7 +30,7 @@
             <multiselect
               :placeholder="$gettext('Select option')"
               trackBy="value"
-              :hide-selected="true"
+              :hide-selected="false"
               :clear-on-select="true"
               :close-on-select="false"
               :multiple="true"
@@ -118,7 +118,7 @@
             @tag="addTag($event,substance)"
             :taggable="true"
             trackBy="value"
-            :hide-selected="true"
+            :hide-selected="false"
             :close-on-select="true"
             :tag-placeholder="$gettext('Press enter to use a new substance')"
             :placeholder="$gettext('Controlled or new substance')"

@@ -306,6 +306,8 @@ const actions = {
       let message = data.message[key]
       if (Array.isArray(message)) {
         message = message.map(text => escapeHTML(text)).join('<br>')
+      } else if (typeof message === 'object' && message !== null) {
+        message = Object.keys(message).map(messageKey => escapeHTML(`[${messageKey}] ${message[messageKey]}`)).join('<br>')
       } else if (typeof message === 'string') {
         message = escapeHTML(message)
       }
@@ -319,8 +321,6 @@ const actions = {
   },
 
   async doSubmissionTransition({ dispatch }, { source, submission, transition, $gettext, noModal, backToDashboard = true }) {
-    console.log('HERE: ', backToDashboard)
-    // console.log('doing transition')
     if (!noModal) {
       const confirmed = await dispatch('openConfirmModal', { $gettext })
       if (!confirmed) {
@@ -470,11 +470,7 @@ const actions = {
         await context.commit('setFlagsPermissions', response.data.changeable_flags)
         await context.dispatch('getCurrentSubmissionHistory', { submission, $gettext })
         await context.commit('setFormPermissions', {
-          can_change_remarks_party: response.data.can_change_remarks_party,
-          can_change_remarks_secretariat: response.data.can_change_remarks_secretariat,
-          can_change_reporting_channel: response.data.can_change_reporting_channel,
-          can_upload_files: response.data.can_upload_files,
-          can_edit_data: response.data.can_edit_data,
+          permission_matrix: response.data.permission_matrix,
           edit_mode: router.app.$route.query.edit_mode === 'true' || router.app.$route.query.edit_mode === true || false
         })
         resolve(response.data.reporting_period)

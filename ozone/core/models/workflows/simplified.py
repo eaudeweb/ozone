@@ -26,6 +26,70 @@ class SimplifiedWorkflowStateDescription(BaseStateDescription):
 
     initial_state = 'data_entry'
 
+    # Mapping for the permissions in this workflow, according to state
+    #    0 -> created by party, accessed by party
+    #    1 -> created by party, accessed by secretariat
+    #    2 -> created by secretariat, accessed by party
+    #    3 -> created by secretariat, accessed by secretariat
+    #
+    #    True  -> read-only
+    #    False -> not(read-only)
+    #
+    # Is used by the permissions_matrix() method to return relevant
+    # permissions.
+    permissions = {
+        'reporting_channel': {
+            'data_entry': [True, True, True, False],
+            'submitted':  [True, True, True, True],
+            'finalized':  [True, True, True, True],
+        },
+        'submission_format': {
+            'data_entry': [True, True, True, False],
+            'submitted':  [True, True, True, True],
+            'finalized':  [True, True, True, True],
+        },
+        'reporting_officer': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, True, True, True],
+            'finalized':  [True, True, True, True],
+        },
+        'submitted_at': {
+            'data_entry': [True, True, True, False],
+            'submitted':  [True, True, True, True],
+            'finalized':  [True, True, True, True],
+        },
+        'other_submission_info_data': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, True, True, True],
+            'finalized':  [True, True, True, True],
+        },
+        'files': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, False, True, True],
+            'finalized':  [True, True, True, True],
+        },
+        'flag_provisional': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, False, True, False],
+            'finalized':  [True, True, True, True],
+        },
+        'substance_data': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, True, True, True],
+            'finalized':  [True, True, True, True],
+        },
+        'remarks_party': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [False, True, True, True],
+            'finalized':  [True, True, True, True],
+        },
+        'remarks_secretariat': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [False, True, True, False],
+            'finalized':  [True, True, True, True],
+        }
+    }
+
 
 class SimplifiedWorkflow(BaseWorkflow):
 

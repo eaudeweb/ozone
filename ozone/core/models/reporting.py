@@ -891,6 +891,16 @@ class Submission(models.Model):
             if hasattr(self, "article7exports") and self.article7exports:
                 self.article7exports.model.validate_import_export_data(self)
 
+    def check_emissions(self):
+        """
+        Performs pre-submit checks on emissions data in this submission.
+        This allows saving temporary data with facility name or emission
+        totals not yet specified.
+        """
+        if self.obligation.obligation_type == ObligationTypes.ART7.value:
+            if hasattr(self, "article7emissions") and self.article7emissions:
+                self.article7emissions.model.validate_data(self)
+
     def permissions_matrix(self, user):
         wf = self.workflow(user)
         return wf.permissions_matrix

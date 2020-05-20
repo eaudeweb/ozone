@@ -20,7 +20,7 @@
                 trackBy="value"
                 label="text"
                 v-model="submissionNew.obligation"
-                :hide-selected="true"
+                :hide-selected="false"
                 :options="obligationsOptions"
               />
             </b-input-group>
@@ -32,7 +32,7 @@
                 label="description"
                 customTemplateText="<i class='fa fa-clock-o fa-lg'></i>"
                 customTemplate="is_reporting_open"
-                :hide-selected="true"
+                :hide-selected="false"
                 v-model="submissionNew.reporting_period"
                 :options="periods"
               />
@@ -45,7 +45,7 @@
                 label="text"
                 :disabled="Boolean(currentUser.party)"
                 v-model="submissionNew.party"
-                :hide-selected="true"
+                :hide-selected="false"
                 :options="parties"
               />
             </b-input-group>

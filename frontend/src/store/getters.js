@@ -103,20 +103,8 @@ const getters = {
   getTabTitle: (state) => (tabName) => state.form.tabs[tabName].title,
   getTabStatus: (state) => (tabName) => state.form.tabs[tabName].status,
   pageTitle: (state) => state.route,
-  can_edit_data: (state) => state.permissions.form && state.permissions.form.can_edit_data,
-  can_change_remarks_party: (state) => state.permissions.form && state.permissions.form.can_change_remarks_party,
-  can_change_remarks_secretariat: (state) => state.permissions.form && state.permissions.form.can_change_remarks_secretariat,
-  can_change_reporting_channel: (state) => state.permissions.form && state.permissions.form.can_change_reporting_channel,
-  can_upload_files: (state) => state.permissions.form && state.permissions.form.can_upload_files,
-  can_enable_edit_mode: (state) => state.permissions.form
-	&& (state.permissions.form.can_edit_data
-		|| state.permissions.form.can_change_remarks_secretariat
-		|| state.permissions.form.can_change_reporting_channel
-		|| state.permissions.form.can_change_remarks_party
-		|| state.permissions.form.can_upload_files
-    || (state.current_submission && state.current_submission.changeable_flags.length > 0)),
   // eslint-disable-next-line
-  edit_mode: (state, getters) => state.permissions.form && state.permissions.form.edit_mode && getters.can_enable_edit_mode,
+  edit_mode: (state, getters) => state.permissions.form && state.permissions.form.edit_mode,
   /**
    * this getter needs state.initialData.countryOptions or state.dashboard.parties
    * TODO: maybe change this ?

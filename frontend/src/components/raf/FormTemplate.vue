@@ -40,7 +40,7 @@
           </template>
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="$store.getters.can_edit_data && $store.getters.edit_mode"
+              v-show="canEditSubstanceData"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -69,7 +69,7 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? isRemarkReadOnly(inputField) : !canEditSubstanceData()"
+              :disabled="isSubstanceDataReadOnly(inputField)"
               :field="cell.item.originalObj[inputField]"
             ></fieldGenerator>
           </template>
@@ -78,16 +78,16 @@
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
                 <i
                   :class="{
-                    'fa-pencil-square-o': canEditSubstanceData(),
-                    'fa-eye': !canEditSubstanceData(),
+                    'fa-pencil-square-o': !isActionReadOnly('edit', 'substance_data'),
+                    'fa-eye': !isActionReadOnly('view', 'substance_data'),
                     'fa fa-lg': true
                   }"
-                  :title="(canEditSubstanceData()) ? $gettext('Edit') : $gettext('View')"
+                  :title="!isActionReadOnly('edit', 'substance_data') ? $gettext('Edit') : $gettext('View')"
                   v-b-tooltip
                 ></i>
               </span>
               <span
-                v-if="canEditSubstanceData()"
+                v-if="!isActionReadOnly('delete', 'substance_data')"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -182,7 +182,7 @@
               v-else
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? isRemarkReadOnly(inputField) : !canEditSubstanceData()"
+              :disabled="isSubstanceDataReadOnly(inputField)"
               :field="cell.item.originalObj[inputField]"
             ></fieldGenerator>
           </template>
@@ -191,16 +191,16 @@
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
                 <i
                   :class="{
-                    'fa-pencil-square-o': canEditSubstanceData(),
-                    'fa-eye': !canEditSubstanceData(),
+                    'fa-pencil-square-o': !isActionReadOnly('edit', 'substance_data'),
+                    'fa-eye': !isActionReadOnly('view', 'substance_data'),
                     'fa fa-lg': true
                   }"
-                  :title="(canEditSubstanceData()) ? $gettext('Edit') : $gettext('View')"
+                  :title="!isActionReadOnly('edit', 'substance_data') ? $gettext('Edit') : $gettext('View')"
                   v-b-tooltip
                 ></i>
               </span>
               <span
-                v-if="canEditSubstanceData()"
+                v-if="!isActionReadOnly('delete', 'substance_data')"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -271,8 +271,8 @@
               class="mb-2"
               @input="updateFormField($event, {index:modal_data.index,tabName: tabName, field:'substance'})"
               trackBy="value"
-              :disabled="!canEditSubstanceData()"
-              :hide-selected="true"
+              :disabled="!canEditSubstanceData"
+              :hide-selected="false"
               label="text"
               :placeholder="$gettext('Select substance')"
               :value="parseInt(modal_data.field.substance.selected)"
@@ -292,16 +292,16 @@
               <fieldGenerator
                 style="text-align:right"
                 :fieldInfo="{index:modal_data.index,tabName: tabName, field:order}"
-                :disabled="!canEditSubstanceData()"
+                :disabled="!canEditSubstanceData"
                 v-if="modal_data.field[order].type != 'multiselect'"
                 :field="modal_data.field[order]"
               />
               <multiselect
                 v-else
                 :clear-on-select="true"
-                :hide-selected="true"
+                :hide-selected="false"
                 :close-on-select="true"
-                :disabled="!canEditSubstanceData()"
+                :disabled="!canEditSubstanceData"
                 trackBy="value"
                 label="text"
                 :placeholder="$gettext('Countries')"
@@ -317,7 +317,7 @@
           v-else-if="order === 'imports'"
         >
           <div
-            v-if="($store.getters.can_edit_data && $store.getters.edit_mode) || modal_data.field.imports.length"
+            v-if="canEditSubstanceData || modal_data.field.imports.length"
             v-translate
           >Amount acquired by import & countries of manufacture</div>
           <b-row>
@@ -326,7 +326,7 @@
                 :parties="modal_data.field.imports"
                 :index="modal_data.index"
                 :tabName="tabName"
-                v-if="$store.getters.can_edit_data && $store.getters.edit_mode"
+                v-if="canEditSubstanceData"
               ></addParties>
             </b-col>
           </b-row>
@@ -341,7 +341,7 @@
               <fieldGenerator
                 :fieldInfo="{index:modal_data.index,tabName: tabName, field: country, party:country.party}"
                 :field="country"
-                :disabled="!canEditSubstanceData()"
+                :disabled="!canEditSubstanceData"
               />
             </b-col>
             <b-col cols="1" class="d-flex align-items-center">
@@ -360,7 +360,7 @@
               <addCategories
                 :index="modal_data.index"
                 :tabName="tabName"
-                v-if="$store.getters.can_edit_data"
+                v-if="canEditSubstanceData"
               ></addCategories>
             </b-col>
           </b-row>
@@ -374,7 +374,7 @@
                 <fieldGenerator
                   :fieldInfo="{ index:modal_data.index,tabName: tabName, field: category, category: category.critical_use_category }"
                   :field="category"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                 />
               </b-col>
               <b-col cols="1">
@@ -408,11 +408,12 @@
       </div>
     </b-modal>
     <AppAside
-      v-if="($store.getters.can_edit_data && $store.getters.edit_mode) || validationLength"
+      v-if="canEditSubstanceData || validationLength"
       fixed
     >
       <DefaultAside
         v-on:fillSearch="fillTableSearch($event)"
+        :canEditSubstanceData="canEditSubstanceData"
         :parentTabIndex.sync="sidebarTabIndex"
         :hovered="hovered"
         :tabName="tabName"

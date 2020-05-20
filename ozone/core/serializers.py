@@ -260,12 +260,6 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             return None
         return User.objects.get(pk=session['_auth_user_id']).username
 
-    def get_impersonated_by(self, obj):
-        session = self.context['request'].session
-        if '_impersonate' not in session:
-            return None
-        return User.objects.get(pk=session['_auth_user_id']).username
-
 
 class BaseBlendCompositionSerializer(serializers.ModelSerializer):
     """
@@ -464,13 +458,13 @@ class CreateBlendSerializer(BlendSerializer):
                 else:
                     # No substance, but component name in validated_data
                     component_data = validated_mapping.pop(c.component_name)
-                    c.percentage=component_data.get('percentage')
+                    c.percentage = component_data.get('percentage')
                     c.save()
             else:
                 # Substance in validated_data
                 component_data = validated_mapping.pop(c.substance)
-                c.component_name=component_data.get('component_name', "")
-                c.percentage=component_data.get('percentage')
+                c.component_name = component_data.get('component_name', "")
+                c.percentage = component_data.get('percentage')
                 c.save()
 
         # And now create the new ones
@@ -1874,7 +1868,8 @@ def generate_report(report, submission):
 
     report = cls.for_submission(submission)
     data = report.render()
-    with open(f'/tmp/{filename}', 'wb') as f: f.write(data.getvalue())
+    with open(f'/tmp/{filename}', 'wb') as f:
+        f.write(data.getvalue())
     return {
         'title': cls.display_name,
         'filename': filename,

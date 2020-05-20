@@ -3,7 +3,7 @@
     <h5
       class="errorHeading"
       v-if="$store.state.form.tabs.questionaire_questions.form_fields[tabName].selected === false && tab_info.form_fields.length"
-    >The data in this form will not be saved because you have selected in the questionnaire "no" for this section</h5>
+    >Please note that submitting the form is not allowed as long as the selected answer for this section in the questionnaire is "No"</h5>
     <div class="form-sections">
       <div class="table-wrapper">
         <div class="table-title">
@@ -76,7 +76,7 @@
             <CloneField
               :key="`${cell.item.index}_${getCountrySlot}_${tabName}`"
               v-on:removeThisField="remove_field(cell.item.index, cell.item.originalObj)"
-              v-if="!cell.item[getCountrySlot] && canEditSubstanceData()"
+              v-if="!cell.item[getCountrySlot] && canEditSubstanceData"
               :tabName="tabName"
               :current_field="cell.item.originalObj"
             />
@@ -87,14 +87,14 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? isRemarkReadOnly(inputField) : !canEditSubstanceData()"
+              :disabled="isSubstanceDataReadOnly(inputField)"
               :field="cell.item.originalObj[inputField]"
             />
           </template>
 
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="canEditSubstanceData()"
+              v-show="!isActionReadOnly('delete', 'substance_data')"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -105,16 +105,16 @@
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
                 <i
                   :class="{
-                    'fa-pencil-square-o': canEditSubstanceData(),
-                    'fa-eye': !$store.getters.can_edit_data || !$store.getters.edit_mode,
+                    'fa-pencil-square-o': !isActionReadOnly('edit', 'substance_data'),
+                    'fa-eye': !isActionReadOnly('view', 'substance_data'),
                     'fa fa-lg': true
                   }"
-                  :title="(canEditSubstanceData()) ? $gettext('Edit') : $gettext('View')"
+                  :title="!isActionReadOnly('edit', 'substance_data') ? $gettext('Edit') : $gettext('View')"
                   v-b-tooltip
                 ></i>
               </span>
               <span
-                v-if="canEditSubstanceData()"
+                v-if="!isActionReadOnly('delete', 'substance_data')"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -169,7 +169,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -181,7 +181,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -209,7 +209,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_polyols'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_polyols"
                 />
               </b-input-group>
@@ -221,7 +221,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_polyols'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_polyols"
                 />
               </b-input-group>
@@ -237,7 +237,6 @@
           </h6>
           <b-btn class="mr-3" variant="outline-danger" @click="bulkRemove(selectedForDeleteFII)" v-if="selectedForDeleteFII.length">
             <span><span v-translate>Delete</span>&nbsp;{{selectedForDeleteFII.length}}&nbsp;<span v-translate>selected rows</span></span>
-
           </b-btn>
           <div v-show="tableFII.tableFilters" class="table-filters">
             <b-input-group :prepend="$gettext('Filter')">
@@ -299,7 +298,7 @@
 
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="$store.getters.edit_mode"
+              v-show="!isActionReadOnly('delete', 'substance_data')"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -312,7 +311,7 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="!canEditSubstanceData()"
+              :disabled="!canEditSubstanceData"
               :field="cell.item.originalObj[inputField]"
             />
           </template>
@@ -322,16 +321,16 @@
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
                 <i
                     :class="{
-                      'fa-pencil-square-o': canEditSubstanceData(),
-                      'fa-eye': !canEditSubstanceData(),
+                      'fa-pencil-square-o': !isActionReadOnly('edit', 'substance_data'),
+                      'fa-eye': !isActionReadOnly('view', 'substance_data'),
                       'fa fa-lg': true
                     }"
-                    :title="(canEditSubstanceData()) ? $gettext('Edit') : $gettext('View')"
+                    :title="!isActionReadOnly('edit', 'substance_data') ? $gettext('Edit') : $gettext('View')"
                     v-b-tooltip
                 ></i>
               </span>
               <span
-                v-if="canEditSubstanceData()"
+                v-if="!isActionReadOnly('delete', 'substance_data')"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -386,7 +385,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -398,7 +397,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -426,7 +425,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_polyols'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_polyols"
                 />
               </b-input-group>
@@ -438,7 +437,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_polyols'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_polyols"
                 />
               </b-input-group>
@@ -528,7 +527,7 @@
             <CloneField
               :key="`${cell.item.index}_${getCountrySlot}_${tabName}`"
               v-on:removeThisField="remove_field(cell.item.index, true)"
-              v-if="!cell.item[getCountrySlot] && canEditSubstanceData()"
+              v-if="!cell.item[getCountrySlot] && canEditSubstanceData"
               :tabName="tabName"
               :current_field="cell.item.originalObj"
             />
@@ -539,14 +538,14 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? isRemarkReadOnly(inputField) : !canEditSubstanceData()"
+              :disabled="isSubstanceDataReadOnly(inputField)"
               :field="cell.item.originalObj[inputField]"
             />
           </template>
 
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="canEditSubstanceData()"
+              v-show="canEditSubstanceData"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -557,16 +556,16 @@
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
                <i
                   :class="{
-                    'fa-pencil-square-o': canEditSubstanceData(),
-                    'fa-eye': !canEditSubstanceData(),
+                    'fa-pencil-square-o': !isActionReadOnly('edit', 'substance_data'),
+                    'fa-eye': !isActionReadOnly('view', 'substance_data'),
                     'fa fa-lg': true
                   }"
-                  :title="(canEditSubstanceData()) ? $gettext('Edit') : $gettext('View')"
+                  :title="!isActionReadOnly('edit', 'substance_data') ? $gettext('Edit') : $gettext('View')"
                   v-b-tooltip
                 ></i>
               </span>
               <span
-                v-if="canEditSubstanceData()"
+                v-if="!isActionReadOnly('delete', 'substance_data')"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -621,7 +620,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -633,7 +632,7 @@
                 </b-input-group-prepend>
                 <fieldGenerator
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
                 />
               </b-input-group>
@@ -693,12 +692,12 @@
       </div>
     </div>
     <AppAside
-      v-if="canEditSubstanceData() || validationLength > 0"
+      v-if="canEditSubstanceData || validationLength > 0"
       fixed
     >
       <DefaultAside
         v-on:fillSearch="fillTableSearch($event)"
-        :canEditSubstanceData="canEditSubstanceData()"
+        :canEditSubstanceData="canEditSubstanceData"
         :parentTabIndex.sync="sidebarTabIndex"
         :hovered="hovered"
         :tabName="tabName"
@@ -738,9 +737,9 @@
               class="mb-2"
               @input="updateFormField($event, {index:modal_data.index,tabName: tabName, field:'substance'})"
               trackBy="value"
-              :disabled="!canEditSubstanceData()"
+              :disabled="!canEditSubstanceData"
               label="text"
-              :hide-selected="true"
+              :hide-selected="false"
               :placeholder="$gettext('Select substance')"
               :value="parseInt(modal_data.field.substance.selected)"
               :options="tab_data.substances"
@@ -755,16 +754,16 @@
             <b-col>
               <fieldGenerator
                 :fieldInfo="{index:modal_data.index,tabName: tabName, field:order}"
-                :disabled="!canEditSubstanceData()"
+                :disabled="!canEditSubstanceData"
                 v-if="modal_data.field[order].type != 'multiselect'"
                 :field="modal_data.field[order]"
               />
               <multiselect
                 v-else
                 :clear-on-select="true"
-                :hide-selected="true"
+                :hide-selected="false"
                 :close-on-select="true"
-                :disabled="!canEditSubstanceData()"
+                :disabled="!canEditSubstanceData"
                 trackBy="value"
                 label="text"
                 :placeholder="$gettext('Countries')"
@@ -789,7 +788,7 @@
               <b-input-group class="modal-group" :prepend="labels['quantity']">
                 <fieldGenerator
                   :fieldInfo="{index:modal_data.index,tabName: tabName, field:`quantity_${order}`}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="modal_data.field[`quantity_${order}`]"
                 />
               </b-input-group>
@@ -798,7 +797,7 @@
               <b-input-group class="modal-group" :prepend="labels['decision']">
                 <fieldGenerator
                   :fieldInfo="{index:modal_data.index,tabName: tabName, field:`decision_${order}`}"
-                  :disabled="!canEditSubstanceData()"
+                  :disabled="!canEditSubstanceData"
                   :field="modal_data.field[`decision_${order}`]"
                 />
               </b-input-group>

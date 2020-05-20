@@ -1,6 +1,6 @@
 <template>
   <b-btn
-    v-show="canEnableEditMode && $store.getters.edit_mode"
+    v-show="canEnableEditMode && editModeEnabled"
     :disabled="$store.getters.getFilesUploadInProgress"
     @click="validation"
     id="save-button"
@@ -13,22 +13,18 @@
 
 <script>
 
+import FilesMixin from './FilesMixin'
 import { post, update } from '@/components/common/services/api'
 import { isObject } from '@/components/common/services/utilsService'
 import { dateFormatToYYYYMMDD } from '@/components/common/services/languageService'
-import FilesMixin from './FilesMixin'
-import PermissionsMixin from './PermissionsMixin'
 import { getCommonLabels } from '@/components/common/dataDefinitions/labels'
 import { getAlerts } from '@/components/common/dataDefinitions/alerts'
 
 export default {
-  mixins: [FilesMixin, PermissionsMixin],
+  mixins: [FilesMixin],
+
   props: {
-    submission: String,
-    obligation_type: {
-      type: String,
-      default: null
-    }
+    submission: String
   },
 
   data() {
@@ -52,8 +48,11 @@ export default {
     newTabs() {
       return this.$store.state.newTabs
     },
-    is_secretariat() {
-      return this.$store.state.currentUser.is_secretariat
+    tabsToValidate() {
+      return Object.values(this.form.tabs).filter(tab => tab.validate).map(tab => tab.name)
+    },
+    action() {
+      return this.$store.state.dataForAction ? this.$store.state.dataForAction.transition : 'save'
     }
   },
 
@@ -65,14 +64,23 @@ export default {
     },
     updateEditMode(edit_mode) {
       this.$store.commit('updateEditMode', edit_mode)
-      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode }, params: { obligation_type: this.obligation_type } })
+      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode } })
     },
     validation() {
       this.invalidTabs = []
-      const tabsToValidate = Object.values(this.form.tabs).filter(tab => tab.validate).map(tab => tab.name)
-      for (const tab of tabsToValidate) {
-        if (tab === 'sub_info' || (this.$store.state.dataForAction && this.validateBeforeTransitions.includes(this.$store.state.dataForAction.transition))) {
-          if (tab !== 'files' || (tab === 'files' && !this.is_secretariat)) {
+      const restrictedTabs = [] // Tabs that are invalid because questionnaire answer is No while form_fields.length > 0
+      for (const tab of this.tabsToValidate) {
+        if (tab === 'sub_info' || this.validateBeforeTransitions.includes(this.action)) {
+          if (tab !== 'files' || (tab === 'files' && !this.isSecretariat)) {
+            if (
+              this.form.tabs.questionaire_questions
+              && this.form.tabs.questionaire_questions.form_fields.hasOwnProperty(tab)
+              && this.form.tabs.questionaire_questions.form_fields[tab].selected === false
+              && this.form.tabs[tab].form_fields.length > 0
+            ) {
+              restrictedTabs.push(this.form.tabs[tab].name)
+              this.$store.commit('setTabStatus', { tab, value: false })
+            }
             // DO NOT REMOVE THIS
             console.log(this.$store.getters.multiRowValidation(tab), tab)
             if (Object.keys(this.$store.getters.multiRowValidation(tab)).length) {
@@ -100,16 +108,27 @@ export default {
           }
         }
       }
-      if (this.invalidTabs.length) {
+      if (this.invalidTabs.length || restrictedTabs.length) {
         let message = { __all__: [`${this.$gettextInterpolate('Unable to save submission. Fill in the %{invalidTabs}', { invalidTabs: Array.from(new Set(this.invalidTabs)).map(tab => this.labels[tab]).join(', ') })} mandatory fields before saving.`] }
 
-        if (this.$store.state.dataForAction && this.validateBeforeTransitions.includes(this.$store.state.dataForAction.transition)) {
-          message = { __all__: [
-            `${this.$gettextInterpolate('Unable to %{nextTransition} submission. Fill in the %{invalidTabs} mandatory fields %{transition}.', {
-              nextTransition: this.$store.state.dataForAction.nextTransition,
-              invalidTabs: Array.from(new Set(this.invalidTabs)).map(tab => this.labels[tab]).join(', '),
-              transition: this.$store.state.dataForAction.transition.split('-').join(' ')
-            })}`] }
+        if (this.validateBeforeTransitions.includes(this.action)) {
+          message = { __all__: [] }
+          if (this.invalidTabs.length) {
+            message.__all__.push(
+              `${this.$gettextInterpolate('Unable to %{nextTransition} submission. Fill in the %{invalidTabs} mandatory fields %{transition}.', {
+                nextTransition: this.$store.state.dataForAction.nextTransition,
+                invalidTabs: Array.from(new Set(this.invalidTabs)).map(tab => this.labels[tab]).join(', '),
+                transition: this.$store.state.dataForAction.transition.split('-').join(' ')
+              })}`
+            )
+          }
+          if (restrictedTabs.length) {
+            message.__all__.push(
+              `${this.$gettextInterpolate('Submitting the form is not allowed because you have entered substances in %{invalidTabs} tab/tabs while choosing No in the corresponding questionnaire.', {
+                invalidTabs: Array.from(new Set(restrictedTabs)).map(tab => this.labels[tab]).join(', ')
+              })}`
+            )
+          }
         }
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,
@@ -124,7 +143,42 @@ export default {
     },
 
     prepareDataForSave() {
-      //  TODO: will be reimplemented in every component
+      //  This can be reimplemented in every component
+      this.tabsToSave = []
+      const doNotSave = []
+      this.updateEditMode(false)
+      Object.values(this.form.tabs).filter(tab => tab.hasOwnProperty('form_fields') && tab.hasOwnProperty('endpoint_url')).forEach(async tab => {
+        if (this.form.tabs.questionaire_questions && this.form.tabs.questionaire_questions.form_fields) {
+          if ( //  Tabs that are in questionaire_questions and are set to YES
+            this.form.tabs.questionaire_questions.form_fields[tab.name]
+            && this.form.tabs.questionaire_questions.form_fields[tab.name].selected
+            && (tab.status === 'edited' || tab.status === false)
+          ) {
+            this.tabsToSave.push(tab.name)
+          } else if ( //  Tabs that are in questionaire_questions and are set to NO and have data
+            this.form.tabs.questionaire_questions.form_fields[tab.name]
+            && !this.form.tabs.questionaire_questions.form_fields[tab.name].selected
+            && !tab.form_fields.length
+            && this.newTabs.includes(tab.name)
+          ) {
+            doNotSave.push(tab.name)
+          } else if (tab.status === 'edited' || tab.status === false) {
+            this.tabsToSave.push(tab.name)
+          }
+        } else if (tab.status === 'edited' || tab.status === false) {
+          this.tabsToSave.push(tab.name)
+        }
+        //  Submit data
+        if (!doNotSave.includes(tab.name)) {
+          const url = this.$store.state.current_submission[tab.endpoint_url]
+          if (this.tabsToSave.includes(tab.name)) {
+            await this.submitData(tab, url)
+          } else {
+            url && await this.submitData(tab, url)
+          }
+          this.checkIfThereIsAnotherActionToDoBeforeReturning(tab.name)
+        }
+      })
     },
 
     prepareCommentsForSave() {
@@ -155,7 +209,7 @@ export default {
 
     async submitData(tab, url) {
       await new Promise(async (resolve) => {
-        if (tab.name === 'sub_info' && !this.$store.getters.can_edit_data) {
+        if (tab.name === 'sub_info' && !this.canEditSubmissionInfoData) {
           resolve()
           return
         }
@@ -163,7 +217,7 @@ export default {
           resolve()
           return
         }
-        if (tab.status === 'edited') {
+        if (tab.status === 'edited' || tab.status === false) {
           this.$store.commit('setTabStatus', { tab: tab.name, value: 'saving' })
         } else {
           resolve()
@@ -196,7 +250,7 @@ export default {
           const save_obj = JSON.parse(JSON.stringify(tab.default_properties))
           current_tab_data = {}
           Object.keys(save_obj).forEach(key => {
-            if (key === 'submitted_at' && !this.is_secretariat) {
+            if (key === 'submitted_at' && !this.isSecretariat) {
               resolve()
               return
             }
@@ -275,7 +329,6 @@ export default {
       this.tabsToSave = this.tabsToSave.filter(t => t !== tabName)
       if (this.tabsToSave.length === 0) {
         if (this.$store.state.actionToDispatch) {
-          console.log('checkIfThereIsAnotherActionToDoBeforeReturning', false)
           this.$store.dispatch('clearEdited')
           this.$store.dispatch('saveCallback', { actionToDispatch: this.$store.state.actionToDispatch, data: this.$store.state.dataForAction })
           this.resetActionToDispatch(false)

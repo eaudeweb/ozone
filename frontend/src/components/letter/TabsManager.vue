@@ -49,9 +49,8 @@
         class="actions mt-2 mb-2"
         :data="$store.state.form"
         :submission="submission"
-        :obligation_type="obligation_type"
       ></Save>
-      <Edit :submission="submission" :obligation_type="obligation_type" class="actions mt-2 mb-2" />
+      <Edit :submission="submission" class="actions mt-2 mb-2" />
       <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
       <b-button-group
         v-if="$store.state.recordDataObligations.includes($store.state.current_submission.obligation_type)
@@ -94,7 +93,7 @@
         </b-btn>
         <b-btn
           @click="removeSubmission"
-          v-if="$store.getters.can_edit_data"
+          v-if="$store.state.current_submission.can_delete_data"
           variant="outline-danger"
         >
           <span v-translate>Delete Submission</span>
@@ -183,7 +182,10 @@ export default {
         return
       }
       cloneSubmission(submissionId).then((response) => {
-        this.$router.push({ name: this.$route.name, query: { submission: response.data.id } })
+        this.$router.push({
+          name: this.$route.name,
+          query: { submission: response.data.id, edit_mode: true }
+        })
         this.$router.go(this.$router.currentRoute)
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,

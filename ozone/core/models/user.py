@@ -16,6 +16,7 @@ class UserManager(DefaultUserManager):
             'party',
         )
 
+
 class User(GuardianUserMixin, AbstractUser):
 
     objects = UserManager()

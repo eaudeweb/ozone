@@ -1,5 +1,3 @@
-import copy
-
 import xworkflows
 
 from .emails import notify_workflow_transitioned
@@ -84,9 +82,6 @@ class BaseWorkflow(xworkflows.WorkflowEnabled):
         Returns the permissions matrix nested dictionaries based on
         current user and submissions creator.
         """
-        # TODO: there is no need to modify and return the whole initial matrix,
-        # this is only to make initial frontend changes easier.
-
         position = None
         if self.user is not None:
             created_by_secretariat = self.model_instance.filled_by_secretariat
@@ -103,10 +98,10 @@ class BaseWorkflow(xworkflows.WorkflowEnabled):
             elif self.user.party and not created_by_secretariat:
                 position = 0
 
-        permissions_dict = copy.deepcopy(self.state.workflow.permissions)
+        permissions_dict = {}
 
-        for key, permission_type_dict in permissions_dict.items():
-            permission_list = permission_type_dict.get(self.state.name, [])
+        for key, permission_type_map in self.state.workflow.permissions.items():
+            permission_list = permission_type_map.get(self.state.name, [])
             if permission_list and position is not None:
                 permission = permission_list[position]
             else:
@@ -114,9 +109,6 @@ class BaseWorkflow(xworkflows.WorkflowEnabled):
                 # states) is True, which means read-only.
                 permission = True
 
-            for sub_key, sub_value in permission_type_dict.items():
-                # Set the same value for all elements, to make it easier
-                # on the frontend side.
-                permission_type_dict[sub_key] = [permission] * len(sub_value)
+            permissions_dict[key] = permission
 
         return permissions_dict
