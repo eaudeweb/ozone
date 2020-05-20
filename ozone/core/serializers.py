@@ -1426,6 +1426,8 @@ class SubmissionSerializer(
     # Frontend needs obligation type, as well
     obligation_type = serializers.SerializerMethodField()
 
+    revision = serializers.SerializerMethodField()
+
     # At most one questionnaire per submission, but multiple other data
     article7questionnaire_url = serializers.HyperlinkedIdentityField(
         view_name='core:submission-article7-questionnaire-list',
@@ -1574,7 +1576,8 @@ class SubmissionSerializer(
         model = Submission
 
         base_fields = (
-            'id', 'party', 'reporting_period', 'obligation', 'obligation_type', 'version',
+            'id', 'party', 'reporting_period', 'obligation', 'obligation_type',
+            'version', 'revision',
             'reporting_period_id', 'reporting_period_description',
             'files', 'files_url',
             'sub_info_url', 'sub_info',
@@ -1633,6 +1636,7 @@ class SubmissionSerializer(
         fields = list(set(sum(per_type_fields.values(), ())))
 
         read_only_fields = (
+            'version', 'revision',
             'is_cloneable', 'is_versionable',
             'available_transitions', 'changeable_flags',
             'can_change_remarks_party', 'can_change_remarks_secretariat',
@@ -1649,6 +1653,9 @@ class SubmissionSerializer(
 
     def get_obligation_type(self, obj):
         return obj.obligation.obligation_type
+
+    def get_revision(self, obj):
+        return f'{obj.revision_major}.{obj.revision_minor}'
 
     def get_in_initial_state(self, obj):
         return obj.in_initial_state
@@ -1730,6 +1737,7 @@ class CreateSubmissionSerializer(serializers.ModelSerializer):
 class ListSubmissionSerializer(CreateSubmissionSerializer):
     created_at = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
+    revision = serializers.SerializerMethodField()
     available_transitions = serializers.SerializerMethodField()
     is_cloneable = serializers.SerializerMethodField()
     can_edit_data = serializers.SerializerMethodField()
@@ -1742,7 +1750,8 @@ class ListSubmissionSerializer(CreateSubmissionSerializer):
             + (
                 'created_at', 'updated_at', 'submitted_at',
                 'created_by', 'last_edited_by', 'filled_by_secretariat',
-                'version', 'current_state', 'previous_state',
+                'version', 'revision',
+                'current_state', 'previous_state',
                 'data_changes_allowed', 'is_current',
                 'flag_provisional', 'flag_valid', 'flag_superseded',
                 # Permissions-related fields
@@ -1751,6 +1760,9 @@ class ListSubmissionSerializer(CreateSubmissionSerializer):
             )
         )
         extra_kwargs = {'url': {'view_name': 'core:submission-detail'}}
+
+    def get_revision(self, obj):
+        return f'{obj.revision_major}.{obj.revision_minor}'
 
     def get_available_transitions(self, obj):
         user = self.context['request'].user
