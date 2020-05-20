@@ -247,11 +247,15 @@ const actions = {
       return
     }
 
-    const parties_temp = response.data
-      .filter(country => country.id === country.parent_party)
-      .map(country => ({ value: country.id, text: country.name, iso: country.abbr }))
-    context.commit('setDashboardParties', parties_temp)
-    return parties_temp
+    context.commit('setAllParties', response.data)
+
+    const filtered_parties = response.data.filter(
+      country => context.state.currentUser.related_parties.includes(country.id)
+    ).map(
+      country => ({ value: country.id, text: country.name, iso: country.abbr })
+    )
+    context.commit('setDashboardParties', filtered_parties)
+    return filtered_parties
   },
 
   async getPeriods(context) {

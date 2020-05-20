@@ -206,7 +206,9 @@ const mutations = {
     state.initialData.submissionFormats = data
   },
   // dashboard
-
+  setAllParties(state, data) {
+    state.dashboard.all_parties = data
+  },
   setDashboardParties(state, data) {
     state.dashboard.parties = data
   },

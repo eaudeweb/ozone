@@ -88,12 +88,10 @@ export default {
   },
   async created() {
     this.updateBreadcrumbs()
-    const currentUser = await this.$store.dispatch('getMyCurrentUser')
+    await this.$store.dispatch('getMyCurrentUser')
     const parties = await this.$store.dispatch('getDashboardParties')
-    if (currentUser[0].is_secretariat) {
-      this.parties = parties
-    } else {
-      this.parties = parties.filter(p => p.value === currentUser[0].party)
+    this.parties = parties
+    if (parties.length === 1) {
       this.selected.parties = this.parties
     }
     this.periods = await this.$store.dispatch('getDashboardPeriods')

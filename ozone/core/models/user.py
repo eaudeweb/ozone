@@ -89,7 +89,10 @@ class User(GuardianUserMixin, AbstractUser):
             else:
                 return 'Party Read-Only'
         elif self.is_cap:
-            return 'UNEP CAP Read-only'
+            if self.is_read_only:
+                return 'UNEP CAP Read-only'
+            else:
+                return 'UNEP CAP'
         elif self.is_mobile_app:
             return 'Mobile App'
         else:

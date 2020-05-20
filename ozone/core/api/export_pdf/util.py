@@ -630,15 +630,20 @@ def get_doc_template(landscape=False):
 
 
 def get_parties(request):
-    parties = request.GET.getlist(key='party')
     if request.user.is_secretariat:
         qs = Party.get_main_parties()
-        if parties:
-            qs = qs.filter(pk__in=parties)
     else:
+        related_parties = [
+            request.user.party_id
+        ] if request.user.party_id else []
+        if request.user.party_group:
+            related_parties += request.user.party_group.parties.values_list('id', flat=True)
         qs = Party.objects.filter(
-            pk=request.user.party_id
+            pk__in=related_parties
         )
+    parties = request.GET.getlist(key='party')
+    if parties:
+        qs = qs.filter(pk__in=parties)
     return qs.order_by('name')
 
 

@@ -26,8 +26,8 @@
           <span>{{userProfile.username}}</span>
         </b>
       </b-input-group>
-      <b-input-group class="mb-2" v-if="!userProfile.is_secretariat">
-        <span v-translate>Party:</span>&nbsp;
+      <b-input-group class="mb-2" v-if="userProfile.party_name">
+        <span v-translate>Main party:</span>&nbsp;
         <b>
           <span>{{userProfile.party_name}}</span>
         </b>
@@ -35,10 +35,7 @@
       <b-input-group class="mb-2">
         <span v-translate>Role:</span>&nbsp;
         <b>
-          <span v-translate v-if="userProfile.is_secretariat">Secretariat</span>
-          <span v-translate v-else>Party</span>
-          &nbsp;
-          <span v-translate v-if="userProfile.is_read_only">read-only</span>
+          <span>{{userProfile.role}}</span>
         </b>
       </b-input-group>
       <b-input-group class="mb-2">

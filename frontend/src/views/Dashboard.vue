@@ -264,8 +264,8 @@ export default {
   },
 
   async created() {
-    if (this.currentUser.party) {
-      this.$store.commit('setCurrentUserPartyInDashboard', this.currentUser.party)
+    if (!this.$store.state.currentUser) {
+      await this.$store.dispatch('getMyCurrentUser')
     }
     document.querySelector('body').classList.remove('aside-menu-lg-show')
     this.$store.dispatch('getDashboardParties')

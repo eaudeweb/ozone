@@ -242,16 +242,19 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         slug_field='iso'
     )
     party_name = serializers.StringRelatedField(source='party', read_only=True)
+    related_parties = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'is_secretariat', 'is_read_only', 'party', 'party_name',
+            'id', 'username',
+            'is_secretariat', 'is_read_only', 'is_cap', 'is_mobile_app',
+            'party', 'party_name', 'related_parties',
             'first_name', 'last_name', 'email', 'language', 'role',
-            'impersonated_by',
+            'impersonated_by'
         )
         read_only_fields = (
-            'id', 'username', 'is_secretariat', 'is_read_only', 'party', 'role'
+            'id', 'username', 'is_secretariat', 'is_read_only', 'party', 'role', 'related_parties',
         )
 
     def get_impersonated_by(self, obj):
@@ -259,6 +262,15 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         if '_impersonate' not in session:
             return None
         return User.objects.get(pk=session['_auth_user_id']).username
+
+    def get_related_parties(self, obj):
+        if obj.is_secretariat:
+            return [party.pk for party in Party.get_main_parties()]
+        elif obj.party_group:
+            return [party.pk for party in obj.party_group.parties.all()]
+        elif obj.party:
+            return [obj.party.pk]
+        return []
 
 
 class BaseBlendCompositionSerializer(serializers.ModelSerializer):
