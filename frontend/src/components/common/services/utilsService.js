@@ -1,6 +1,16 @@
 import fromExponential from 'from-exponential/dist/index.min.js'
 import { Decimal } from 'decimal.js'
 
+const filterObject = (obj, predicate) => {
+  const result = {}
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key) && !predicate(obj[key])) {
+      result[key] = obj[key]
+    }
+  }
+  return result
+}
+
 const getObjectValue = (path, obj) => {
   const result = path.split('.').reduce((prev, curr, index) => {
     if (Array.isArray(prev)) {
@@ -165,6 +175,7 @@ const escapeHTML = (html) => {
 }
 
 export {
+  filterObject,
   getObjectValue,
   getLevel2PropertyValue,
   isObject,

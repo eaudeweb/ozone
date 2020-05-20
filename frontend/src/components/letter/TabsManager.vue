@@ -47,11 +47,25 @@
     <Footer style="display:inline">
       <Save
         class="actions mt-2 mb-2"
-        v-if="$store.getters.can_save_form"
         :data="$store.state.form"
         :submission="submission"
       ></Save>
+      <Edit :submission="submission" class="actions mt-2 mb-2" />
       <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
+      <b-button-group
+        v-if="$store.state.recordDataObligations.includes($store.state.current_submission.obligation_type)
+          && $store.state.currentUser.is_secretariat
+          && $store.state.current_submission.submitted_at"
+        class="pull-right actions ml-2 mt-2 mb-2"
+      >
+        <b-btn
+          :href="`${api}/admin/core/othercountryprofiledata/add/?submission_id=${$store.state.current_submission.id}`"
+          target="_blank"
+          variant="outline-primary"
+        >
+          <span v-translate>Record data</span>
+        </b-btn>
+      </b-button-group>
       <b-button-group class="pull-right actions mt-2 mb-2">
         <b-btn
           v-if="$store.state.current_submission.available_transitions.includes('submit')"
@@ -79,7 +93,7 @@
         </b-btn>
         <b-btn
           @click="removeSubmission"
-          v-if="$store.getters.can_edit_data"
+          v-if="$store.state.current_submission.can_delete_data"
           variant="outline-danger"
         >
           <span v-translate>Delete Submission</span>
@@ -109,8 +123,9 @@
 <script>
 import { Footer } from '@coreui/vue'
 import SubmissionInfo from '@/components/common/SubmissionInfo.vue'
+import Edit from '@/components/common/Edit'
 import Files from '@/components/common/Files'
-import { getInstructions, cloneSubmission } from '@/components/common/services/api'
+import { api, getInstructions, cloneSubmission } from '@/components/common/services/api'
 import Save from '@/components/letter/Save'
 import SubmissionHistory from '@/components/common/SubmissionHistory.vue'
 import { getLabels } from '@/components/art7/dataDefinitions/labels'
@@ -121,6 +136,7 @@ import { getAlerts } from '@/components/common/dataDefinitions/alerts'
 export default {
   components: {
     SubmissionInfo,
+    Edit,
     Files,
     Footer,
     Save,
@@ -134,6 +150,7 @@ export default {
   },
   data() {
     return {
+      api,
       tabIndex: 0,
       modal_data: null,
       labels: getLabels(this.$gettext).common,
@@ -143,6 +160,7 @@ export default {
   },
   created() {
     this.updateBreadcrumbs()
+    this.api = api.defaults.apiBase
   },
   computed: {
     availableTransitions() {
@@ -158,13 +176,16 @@ export default {
     updateBreadcrumbs() {
       this.$store.commit('updateBreadcrumbs', `${this.$store.state.current_submission.reporting_period_description} ${this.$store.state.current_submission.obligation} ${this.$gettext('data submission for')} ${this.$store.state.initialData.display.countries[this.$store.state.current_submission.party]}`)
     },
-    async clone(url) {
+    async clone(submissionId) {
       const confirmed = await this.$store.dispatch('openConfirmModal', { title: 'Please confirm', description: 'You are about to create a new version for data entry. The current version will be superseded once the new version is submitted.', $gettext: this.$gettext })
       if (!confirmed) {
         return
       }
-      cloneSubmission(url).then((response) => {
-        this.$router.push({ name: this.$route.name, query: { submission: response.data.url } })
+      cloneSubmission(submissionId).then((response) => {
+        this.$router.push({
+          name: this.$route.name,
+          query: { submission: response.data.id, edit_mode: true }
+        })
         this.$router.go(this.$router.currentRoute)
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,
@@ -204,7 +225,7 @@ export default {
     removeSubmission() {
       this.$store.dispatch('removeSubmission', {
         $gettext: this.$gettext,
-        submissionUrl: this.submission
+        submissionId: this.submission
       }).then((result) => {
         if (result) {
           this.$router.push({ name: 'Dashboard' })

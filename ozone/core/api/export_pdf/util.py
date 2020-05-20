@@ -9,6 +9,8 @@ from xml.sax.saxutils import escape
 
 from django.utils.translation import gettext_lazy as _
 from django.http import HttpResponse
+from django.db import models
+
 from reportlab.platypus import SimpleDocTemplate
 from reportlab.platypus import ListFlowable
 from reportlab.platypus import ListItem
@@ -28,19 +30,6 @@ from reportlab.lib.units import mm
 from ozone.core.models import Party
 from ozone.core.models import ReportingPeriod
 from ozone.core.models import Submission
-
-
-__all__ = [
-    'hr',
-    'page_title',
-    'p_c', 'p_l', 'p_r',
-    'b_c', 'b_l', 'b_r',
-    'sm_c', 'sm_l', 'sm_r',
-    'smb_c', 'smb_l', 'smb_r',
-    'smi_c', 'smi_l', 'smi_r',
-    'smbi_l', 'smbi_r', 'smbi_c',
-    'p_bullet',
-]
 
 
 STYLES = getSampleStyleSheet()
@@ -99,9 +88,14 @@ hr = HRFlowable(
     spaceBefore=1, spaceAfter=1, hAlign='CENTER', vAlign='BOTTOM', dash=None
 )
 
-_bodytext = partial(_style, 'BodyText', fontSize=FONTSIZE_DEFAULT, fontName='Helvetica')
+_bodytext = partial(
+    _style, 'BodyText', fontSize=FONTSIZE_DEFAULT, fontName='Helvetica'
+)
 
 centered_paragraph_style = _bodytext(alignment=TA_CENTER)
+centered_grey_paragraph_style = _bodytext(
+    alignment=TA_CENTER, color=colors.white
+)
 left_paragraph_style = _bodytext(alignment=TA_LEFT)
 right_paragraph_style = _bodytext(alignment=TA_RIGHT)
 
@@ -168,6 +162,7 @@ page_title_style = _style(
 
 
 p_c = partial(Paragraph, style=centered_paragraph_style)
+p_c_g = partial(Paragraph, style=centered_grey_paragraph_style)
 p_l = partial(Paragraph, style=left_paragraph_style)
 p_r = partial(Paragraph, style=right_paragraph_style)
 
@@ -215,6 +210,17 @@ def format_decimal(nr):
     if isinstance(nr, int):
         nr = Decimal(nr)
     return '{:,f}'.format(nr.normalize())
+
+
+def format_decimal_diff(nr, previous_nr):
+    if nr is None and previous_nr is None:
+        # Just show an empty cell if both values were None
+        return ''
+    nr = format_decimal(nr)
+    previous_nr = format_decimal(previous_nr)
+    if nr != previous_nr:
+        return '<b>{} ({})</b>'.format(nr, previous_nr)
+    return '{} ({})'.format(nr, previous_nr)
 
 
 def round_big_float(nr, precision):
@@ -302,6 +308,21 @@ EXEMPTED_FIELDS = OrderedDict([
 ])
 
 
+def instances_equal(instance1, instance2):
+    """
+    Compares two instances of the same data model.
+    Returns True if their data is identical, False otherwise.
+    """
+    quantity_fields = [
+        f.name for f in instance1.__class__._meta.fields
+        if isinstance(f, models.fields.DecimalField)
+    ]
+    for field_name in quantity_fields:
+        if getattr(instance1, field_name) != getattr(instance2, field_name):
+            return False
+    return True
+
+
 def get_quantity(obj, field):
     """
     field is a key in EXEMPTED_FIELDS
@@ -314,6 +335,16 @@ def get_decision(obj, field):
     field is a key in EXEMPTED_FIELDS
     """
     return getattr(obj, 'decision_' + field) if field else None
+
+
+def get_decision_diff(obj, previous_obj, field):
+    decision = get_decision(obj, field)
+    previous_decision = get_decision(obj, field)
+
+    if decision is None and previous_decision is None:
+        return None
+
+    return '{} ({})'.format(decision, previous_decision)
 
 
 def get_substance_or_blend_name(obj):
@@ -599,15 +630,20 @@ def get_doc_template(landscape=False):
 
 
 def get_parties(request):
-    parties = request.GET.getlist(key='party')
     if request.user.is_secretariat:
         qs = Party.get_main_parties()
-        if parties:
-            qs = qs.filter(pk__in=parties)
     else:
+        related_parties = [
+            request.user.party_id
+        ] if request.user.party_id else []
+        if request.user.party_group:
+            related_parties += request.user.party_group.parties.values_list('id', flat=True)
         qs = Party.objects.filter(
-            pk=request.user.party_id
+            pk__in=related_parties
         )
+    parties = request.GET.getlist(key='party')
+    if parties:
+        qs = qs.filter(pk__in=parties)
     return qs.order_by('name')
 
 

@@ -52,6 +52,8 @@ htmlcov/
 .tox/
 .coverage
 .coverage.*
+frontend/coverage
+frontend/.nyc_output
 .cache
 nosetests.xml
 coverage.xml
@@ -142,3 +144,4 @@ ozone/media/
 
 /.vagrant
 /.env
+*.code-workspace

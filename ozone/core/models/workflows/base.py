@@ -17,6 +17,8 @@ class BaseStateDescription(xworkflows.Workflow):
     states = ()
     transitions = ()
     initial_state = None
+    # Per-state and per-user permissions as nested dictionaries
+    permissions = {}
 
     def log_transition(self, transition, previous_state, workflow):
         """
@@ -71,5 +73,42 @@ class BaseWorkflow(xworkflows.WorkflowEnabled):
         owner = submission.created_by
         return (
             (self.user.is_secretariat and owner.is_secretariat)
-            or (self.user.party == owner.party)
+            or (self.user.party is not None and self.user.party == owner.party)
         )
+
+    @property
+    def permissions_matrix(self):
+        """
+        Returns the permissions matrix nested dictionaries based on
+        current user and submissions creator.
+        """
+        position = None
+        if self.user is not None:
+            created_by_secretariat = self.model_instance.filled_by_secretariat
+            #    0 -> created by party, accessed by party
+            #    1 -> created by party, accessed by secretariat
+            #    2 -> created by secretariat, accessed by party
+            #    3 -> created by secretariat, accessed by secretariat
+            if self.user.is_secretariat and created_by_secretariat:
+                position = 3
+            elif self.user.party and created_by_secretariat:
+                position = 2
+            elif self.user.is_secretariat and not created_by_secretariat:
+                position = 1
+            elif self.user.party and not created_by_secretariat:
+                position = 0
+
+        permissions_dict = {}
+
+        for key, permission_type_map in self.state.workflow.permissions.items():
+            permission_list = permission_type_map.get(self.state.name, [])
+            if permission_list and position is not None:
+                permission = permission_list[position]
+            else:
+                # default for non-secretariat & non-party users (or unknown
+                # states) is True, which means read-only.
+                permission = True
+
+            permissions_dict[key] = permission
+
+        return permissions_dict

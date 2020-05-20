@@ -12,7 +12,7 @@ export default {
   data() {
     return {
       currentFormName: this.$route.name,
-      submission: this.$route.query.submission,
+      submission: this.$route.query.submission.toString(),
       prefilled: false,
       preventMessage: this.$gettext('Do you really want to leave this page? You have unsaved changes!')
     }
@@ -205,7 +205,6 @@ export default {
         return resolve()
       })
     }
-
   },
   watch: {
     '$language.current': {

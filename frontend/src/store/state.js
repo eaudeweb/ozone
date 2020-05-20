@@ -43,7 +43,8 @@ const state = {
     title: null,
     description: null,
     okCallback: () => {},
-    cancelCallback: () => {}
+    cancelCallback: () => {},
+    hideCallBack: () => {}
   },
   current_submission: null,
   route: '',
@@ -78,7 +79,9 @@ const state = {
       criticalUseCategoryList: null
     }
   },
-  alertData: []
+  alertData: [],
+  filesUploadInProgress: false,
+  recordDataObligations: ['art9', 'transfer', 'procagent']
 }
 
 export default state

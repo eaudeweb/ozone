@@ -242,16 +242,19 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         slug_field='iso'
     )
     party_name = serializers.StringRelatedField(source='party', read_only=True)
+    related_parties = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'is_secretariat', 'is_read_only', 'party', 'party_name',
+            'id', 'username',
+            'is_secretariat', 'is_read_only', 'is_cap', 'is_mobile_app',
+            'party', 'party_name', 'related_parties',
             'first_name', 'last_name', 'email', 'language', 'role',
-            'impersonated_by',
+            'impersonated_by'
         )
         read_only_fields = (
-            'id', 'username', 'is_secretariat', 'is_read_only', 'party', 'role'
+            'id', 'username', 'is_secretariat', 'is_read_only', 'party', 'role', 'related_parties',
         )
 
     def get_impersonated_by(self, obj):
@@ -260,11 +263,14 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             return None
         return User.objects.get(pk=session['_auth_user_id']).username
 
-    def get_impersonated_by(self, obj):
-        session = self.context['request'].session
-        if '_impersonate' not in session:
-            return None
-        return User.objects.get(pk=session['_auth_user_id']).username
+    def get_related_parties(self, obj):
+        if obj.is_secretariat:
+            return [party.pk for party in Party.get_main_parties()]
+        elif obj.party_group:
+            return [party.pk for party in obj.party_group.parties.all()]
+        elif obj.party:
+            return [obj.party.pk]
+        return []
 
 
 class BaseBlendCompositionSerializer(serializers.ModelSerializer):
@@ -464,13 +470,13 @@ class CreateBlendSerializer(BlendSerializer):
                 else:
                     # No substance, but component name in validated_data
                     component_data = validated_mapping.pop(c.component_name)
-                    c.percentage=component_data.get('percentage')
+                    c.percentage = component_data.get('percentage')
                     c.save()
             else:
                 # Substance in validated_data
                 component_data = validated_mapping.pop(c.substance)
-                c.component_name=component_data.get('component_name', "")
-                c.percentage=component_data.get('percentage')
+                c.component_name = component_data.get('component_name', "")
+                c.percentage = component_data.get('percentage')
                 c.save()
 
         # And now create the new ones
@@ -1250,6 +1256,8 @@ class SubmissionFlagsSerializer(
         # User should always be on the request due to our permission classes
         user = self.context['request'].user
         instance.check_flags(user, validated_data)
+        # If checks were successful, also inject user into validated data
+        validated_data['last_edited_by'] = self.context['request'].user
         return super().update(instance, validated_data)
 
 
@@ -1303,6 +1311,8 @@ class SubmissionRemarksSerializer(
         # User should always be on the request due to our permission classes
         user = self.context['request'].user
         instance.check_remarks(user, validated_data)
+        # If checks were successful, also inject user into validated data
+        validated_data['last_edited_by'] = self.context['request'].user
         return super().update(instance, validated_data)
 
 
@@ -1413,6 +1423,8 @@ class SubmissionSerializer(
     obligation = serializers.StringRelatedField(
         many=False, read_only=True
     )
+    # Frontend needs obligation type, as well
+    obligation_type = serializers.SerializerMethodField()
 
     # At most one questionnaire per submission, but multiple other data
     article7questionnaire_url = serializers.HyperlinkedIdentityField(
@@ -1535,6 +1547,8 @@ class SubmissionSerializer(
 
     is_cloneable = serializers.SerializerMethodField()
 
+    permission_matrix = serializers.SerializerMethodField()
+
     changeable_flags = serializers.SerializerMethodField()
 
     can_change_remarks_party = serializers.SerializerMethodField()
@@ -1560,7 +1574,7 @@ class SubmissionSerializer(
         model = Submission
 
         base_fields = (
-            'id', 'party', 'reporting_period', 'obligation', 'version',
+            'id', 'party', 'reporting_period', 'obligation', 'obligation_type', 'version',
             'reporting_period_id', 'reporting_period_description',
             'files', 'files_url',
             'sub_info_url', 'sub_info',
@@ -1576,6 +1590,7 @@ class SubmissionSerializer(
             # Permission-related fields; value is dependent on user
             'available_transitions', 'available_transitions_url',
             'is_cloneable', 'is_versionable',
+            'permission_matrix',
             'changeable_flags',
             'can_change_remarks_party',
             'can_change_remarks_secretariat',
@@ -1632,6 +1647,9 @@ class SubmissionSerializer(
     def get_reporting_period_description(self, obj):
         return obj.reporting_period.description
 
+    def get_obligation_type(self, obj):
+        return obj.obligation.obligation_type
+
     def get_in_initial_state(self, obj):
         return obj.in_initial_state
 
@@ -1642,6 +1660,10 @@ class SubmissionSerializer(
     def get_is_cloneable(self, obj):
         user = self.context['request'].user
         return obj.is_cloneable(user)
+
+    def get_permission_matrix(self, obj):
+        user = self.context['request'].user
+        return obj.permissions_matrix(user)
 
     def get_changeable_flags(self, obj):
         user = self.context['request'].user
@@ -1858,7 +1880,8 @@ def generate_report(report, submission):
 
     report = cls.for_submission(submission)
     data = report.render()
-    with open(f'/vagrant/tmp/{filename}', 'wb') as f: f.write(data.getvalue())
+    with open(f'/tmp/{filename}', 'wb') as f:
+        f.write(data.getvalue())
     return {
         'title': cls.display_name,
         'filename': filename,

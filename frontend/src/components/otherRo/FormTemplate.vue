@@ -81,7 +81,7 @@
         <!-- addComment(state, { data, tab, field }) { -->
         <textarea
           @change="$store.commit('addComment', {data: $event.target.value, tab:tabName, field: comment_key})"
-          :disabled="getCommentFieldPermission(comment_key)"
+          :disabled="isRemarkReadOnly(comment_key)"
           class="form-control"
           :value="comment.selected"
         ></textarea>

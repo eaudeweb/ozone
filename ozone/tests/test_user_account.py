@@ -85,6 +85,9 @@ class UserAccountTests(BaseTests):
         expected_data['party_name'] = self.reporter.party.name
         expected_data['language'] = self.reporter.language.iso
         expected_data['impersonated_by'] = None
+        expected_data['related_parties'] = [self.reporter.party.pk]
+        expected_data['is_cap'] = False
+        expected_data['is_mobile_app'] = False
         self.assertEqual(result.json(), expected_data)
 
     def test_get_user_account_secretariat(self):

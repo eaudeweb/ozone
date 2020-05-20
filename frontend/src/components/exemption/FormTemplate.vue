@@ -44,7 +44,7 @@
           </template>
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="$store.getters.can_edit_data && !readOnly"
+              v-show="canEditSubstanceData"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -58,7 +58,7 @@
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
               :field="cell.item.originalObj[inputField]"
-              :disabled="!$store.getters.can_edit_data || readOnly"
+              :disabled="!canEditSubstanceData"
               @icon-clicked="createModalData(cell.item.originalObj, cell.item.index)"
             />
           </template>
@@ -66,10 +66,18 @@
           <template v-slot:cell(validation)="cell">
             <b-btn-group class="row-controls">
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
-               <i :class="{'fa-pencil-square-o': $store.getters.can_edit_data && !readOnly, 'fa-eye': !$store.getters.can_edit_data || readOnly}" class="fa fa-lg"  v-b-tooltip :title="!$store.getters.can_edit_data || readOnly ? $gettext('View') : $gettext('Edit')"></i>
+                <i
+                  :class="{
+                    'fa-pencil-square-o': !isActionReadOnly('edit', 'substance_data'),
+                    'fa-eye': !isActionReadOnly('view', 'substance_data'),
+                    'fa fa-lg': true
+                  }"
+                  :title="!isActionReadOnly('edit', 'substance_data') ? $gettext('Edit') : $gettext('View')"
+                  v-b-tooltip
+                ></i>
               </span>
               <span
-                v-if="$store.getters.can_edit_data && !readOnly"
+                v-if="!isActionReadOnly('delete', 'substance_data')"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -96,7 +104,7 @@
         </label>
         <textarea
           @change="$store.commit('addComment', {data: $event.target.value, tab:tabName, field: comment_key})"
-          :disabled="getCommentFieldPermission(comment_key)"
+          :disabled="isRemarkReadOnly(comment_key)"
           class="form-control"
           :value="comment.selected"
         ></textarea>
@@ -104,11 +112,12 @@
     </div>
     <hr>
     <AppAside
-      v-if="($store.getters.can_edit_data || validationLength) && !readOnly"
+      v-if="canEditSubstanceData || validationLength > 0"
       fixed
     >
       <DefaultAside
         v-on:fillSearch="fillTableSearch($event)"
+        :canEditSubstanceData="canEditSubstanceData"
         :parentTabIndex.sync="sidebarTabIndex"
         :hovered="hovered"
         :tabName="tabName"
@@ -141,8 +150,8 @@
               class="mb-2"
               @input="updateFormField($event, {index:modal_data.index,tabName: tabName, field:'substance'})"
               trackBy="value"
-              :disabled="!$store.getters.can_edit_data || readOnly"
-              :hide-selected="true"
+              :disabled="!canEditSubstanceData"
+              :hide-selected="false"
               label="text"
               :placeholder="$gettext('Select substance')"
               :value="parseInt(modal_data.field.substance.selected)"
@@ -158,7 +167,7 @@
             <b-col>
               <fieldGenerator
                 :fieldInfo="{index:modal_data.index, tabName: tabName, field:modalField}"
-                :disabled="!$store.getters.can_edit_data || readOnly"
+                :disabled="!canEditSubstanceData"
                 :field="modal_data.field[modalField]"
               />
             </b-col>
@@ -171,7 +180,7 @@
               <addCategories
                 :index="modal_data.index"
                 :tabName="tabName"
-                v-if="$store.getters.can_edit_data"
+                v-if="canEditSubstanceData"
               ></addCategories>
             </b-col>
           </b-row>
@@ -185,11 +194,11 @@
                 <fieldGenerator
                   :fieldInfo="{ index:modal_data.index,tabName: tabName, field: category, category: category.critical_use_category }"
                   :field="category"
-                  :disabled="!$store.getters.can_edit_data"
+                  :disabled="!canEditSubstanceData"
                 />
               </b-col>
-              <b-col cols="1" v-if="$store.getters.can_edit_data" class="d-flex align-items-center">
-                  <i class="fa fa-trash fa-lg cursor-pointer d-flex align-items-center" @click="$store.commit('removeFormField', { index: modal_data.index, tabName: tabName, fieldName: 'approved_uses', fieldIndex: modal_data.field.approved_uses.indexOf(category)})"></i>
+              <b-col cols="1" v-if="!isActionReadOnly('delete', 'substance_data')" class="d-flex align-items-center">
+                <i class="fa fa-trash fa-lg cursor-pointer d-flex align-items-center" @click="$store.commit('removeFormField', { index: modal_data.index, tabName: tabName, fieldName: 'approved_uses', fieldIndex: modal_data.field.approved_uses.indexOf(category)})"></i>
               </b-col>
             </b-row>
           <hr>
@@ -258,10 +267,6 @@ export default {
       })
       return tableFields
     }
-  },
-
-  props: {
-    readOnly: Boolean
   },
 
   created() {

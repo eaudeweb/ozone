@@ -1,10 +1,11 @@
+import PermissionsMixin from './PermissionsMixin'
+
 const ALLOWED_FILE_EXTENSIONS = 'pdf,doc,docx,xls,xlsx,zip,rar,txt,htm,html,odt,ods,eml,ppt,pptx,mdb,png,jpg,jpeg,gif'
 
 export default {
+  mixins: [PermissionsMixin],
   data() {
-    return {
-      isFilesUploadInProgress: false
-    }
+    return {}
   },
   computed: {
     files() {
@@ -38,13 +39,13 @@ export default {
       if (!files.length) {
         return
       }
-      this.isFilesUploadInProgress = true
+      this.$store.commit('updateFilesUploadInProgress', true)
       return new Promise(async (resolve, reject) => {
         try {
           await this.$store.dispatch('uploadFiles', { files, onProgressCallback: this.onProgressCallback })
           const checkFilesUploadedSuccessfullyInterval = setInterval(async () => {
             if (this.getWereAllFilesUploadedSuccessfully()) {
-              this.isFilesUploadInProgress = false
+              this.$store.commit('updateFilesUploadInProgress', false)
               clearInterval(checkFilesUploadedSuccessfullyInterval)
               resolve()
               return
@@ -52,7 +53,7 @@ export default {
             await this.$store.dispatch('setJustUploadedFilesState')
           }, 1500)
         } catch (error) {
-          this.isFilesUploadInProgress = false
+          this.$store.commit('updateFilesUploadInProgress', false)
           console.log('error upload', error)
           reject(error)
         }

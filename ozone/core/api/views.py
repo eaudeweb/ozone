@@ -110,6 +110,7 @@ from ..permissions import (
     IsSecretariatOrSamePartySubmissionRelatedRO,
     IsSecretariat,
     IsSecretariatOrSameParty,
+    IsMobileApp,
 )
 from ..serializers import (
     CurrentUserSerializer,
@@ -242,19 +243,30 @@ class IsOwnerFilterBackend(BaseFilterBackend):
         elif request.user.is_secretariat:
             # Secretariat user
             return queryset
-        else:
-            # Party user
+        elif request.user.party is not None or request.user.is_cap:
+            # Party or CAP user
+            if request.user.party is not None:
+                parties_list = [request.user.party]
+            else:
+                party_group = request.user.party_group
+                if party_group is None:
+                    return queryset.none()
+                parties_list = request.user.party_group.parties.all()
+
             if queryset is not None and queryset.model in (Submission, ProdCons, Limit):
-                return queryset.filter(party=request.user.party)
+                return queryset.filter(party__in=parties_list)
             elif queryset is not None and queryset.model in (Transfer,):
                 return queryset.filter(
-                    Q(destination_party=request.user.party) |
-                    Q(source_party=request.user.party)
+                    Q(destination_party__in=parties_list) |
+                    Q(source_party__in=parties_list)
                 )
             elif queryset is not None:
-                return queryset.filter(submission__party=request.user.party)
+                return queryset.filter(submission__party__in=parties_list)
             else:
                 return queryset
+        else:
+            # For all other types of users return nothing
+            return queryset.none()
 
 
 class SerializerRequestContextMixIn(object):
@@ -422,7 +434,7 @@ class GroupSubstanceViewSet(ReadOnlyMixin, viewsets.ModelViewSet):
 
     queryset = Group.objects.all()
     serializer_class = GroupSubstanceSerializer
-    # Allows unauthenticatd GET requests
+    # Allows unauthenticated GET requests
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
@@ -753,7 +765,8 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
     )
     ordering = ("-reporting_period__start_date", "party", "group")
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartyAggregation,
+        IsAuthenticated
+        & (IsSecretariatOrSamePartyAggregation | IsMobileApp),
     )
     pagination_class = AggregationPaginator
 
@@ -1352,9 +1365,18 @@ class IsHistoryOwnerFilterBackend(BaseFilterBackend):
         elif request.user.is_secretariat:
             # Secretariat user
             return queryset
-        else:
+        elif request.user.party is not None:
             # Party user
             return queryset.filter(party=request.user.party)
+        elif request.user.is_cap:
+            # CAP user
+            party_group = request.user.party_group
+            if party_group is None:
+                return queryset.none()
+            return queryset.filter(party__in=party_group.parties.all())
+        else:
+            # For all other types of users return nothing
+            return queryset.none()
 
 
 class SubmissionChangeFilterSet(filters.FilterSet):
@@ -1490,7 +1512,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         "-reporting_period__start_date", "obligation__sort_order",
         "party__name", "-updated_at",
     )
-    permission_classes = (IsAuthenticated, IsSecretariatOrSamePartySubmission, )
+    permission_classes = (IsAuthenticated, IsSecretariatOrSamePartySubmission,)
     pagination_class = SubmissionPaginator
 
     def get_queryset(self):
@@ -1535,7 +1557,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=["post"],
-        permission_classes=[IsSecretariatOrSamePartySubmissionClone]
+        permission_classes=(IsSecretariatOrSamePartySubmissionClone,)
     )
     def clone(self, request, pk=None):
         submission = Submission.objects.get(pk=pk)
@@ -1546,7 +1568,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                     'core:submission-detail',
                     request=request,
                     kwargs={'pk': clone.id}
-                )
+                ),
+                "id": clone.id,
             }
         )
 
@@ -1554,7 +1577,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         detail=True,
         methods=["post"],
         url_path="call-transition",
-        permission_classes = [IsSecretariatOrSamePartySubmissionTransition]
+        permission_classes=(IsSecretariatOrSamePartySubmissionTransition,)
     )
     def call_transition(self, request, pk=None):
         """
@@ -1606,6 +1629,23 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return report.render_to_response()
 
     @action(detail=True, methods=["get"])
+    def export_diff_pdf(self, request, pk=None):
+        """
+        Returns a PDF containing a diff between current version and the previous
+        one.
+        """
+        submission = Submission.objects.get(pk=pk)
+        obligation = submission.obligation._obligation_type
+
+        if obligation == ObligationTypes.ART7.value:
+            cls = reports.Art7RawdataDiffReport
+        else:
+            raise RuntimeError(f"Unknown obligation {obligation!r}")
+
+        report = cls.for_submission(submission)
+        return report.render_to_response()
+
+    @action(detail=True, methods=["get"])
     def export_prodcons_pdf(self, request, pk=None):
         submission = Submission.objects.get(pk=pk)
         report = reports.ProdConsReport.for_submission(submission)
@@ -1636,7 +1676,8 @@ class SubmissionTransitionsViewSet(viewsets.ModelViewSet):
     obligation_types = None
     serializer_class = SubmissionTransitionsSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1652,7 +1693,8 @@ class SubmissionInfoViewSet(viewsets.ModelViewSet):
     obligation_types = None
     serializer_class = SubmissionInfoSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1699,7 +1741,7 @@ class GetSubmissionStatesViewSet(ReadOnlyMixin, views.APIView):
         return Response({
             state.name: state.title
             for wfclass in Submission.WORKFLOW_MAPPING.values()
-            if wfclass
+            if wfclass is not None
             for state in wfclass.state.workflow.states
         })
 
@@ -1733,7 +1775,8 @@ class SubmissionFlagsViewSet(
     obligation_types = None
     serializer_class = SubmissionFlagsSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionFlags,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionFlags,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1772,7 +1815,8 @@ class SubmissionRemarksViewSet(
     obligation_types = None
     serializer_class = SubmissionRemarksSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRemarks,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRemarks,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1798,7 +1842,8 @@ class Article7QuestionnaireViewSet(viewsets.ModelViewSet):
     obligation_types = ("art7",)
     serializer_class = Article7QuestionnaireSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1830,7 +1875,8 @@ class Article7DestructionViewSet(
     obligation_types = ("art7",)
     serializer_class = Article7DestructionSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1855,7 +1901,8 @@ class Article7ProductionViewSet(
     obligation_types = ("art7",)
     serializer_class = Article7ProductionSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1877,7 +1924,8 @@ class Article7ExportViewSet(
     obligation_types = ("art7",)
     serializer_class = Article7ExportSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1901,7 +1949,8 @@ class Article7ImportViewSet(
     obligation_types = ("art7",)
     serializer_class = Article7ImportSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1925,7 +1974,8 @@ class Article7NonPartyTradeViewSet(
     obligation_types = ("art7",)
     serializer_class = Article7NonPartyTradeSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1949,7 +1999,8 @@ class Article7EmissionViewSet(
     obligation_types = ("art7",)
     serializer_class = Article7EmissionSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1969,7 +2020,8 @@ class HighAmbientTemperatureImportViewSet(
     obligation_types = ("hat",)
     serializer_class = HighAmbientTemperatureImportSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -1989,7 +2041,8 @@ class HighAmbientTemperatureProductionViewSet(
     obligation_types = ("hat",)
     serializer_class = HighAmbientTemperatureProductionSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -2007,7 +2060,8 @@ class DataOtherViewSet(SerializerDataContextMixIn, viewsets.ModelViewSet):
     obligation_types = ("other",)
     serializer_class = DataOtherSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -2065,7 +2119,8 @@ class RAFViewSet(
     obligation_types = ("essencrit",)
     serializer_class = RAFSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
     filter_backends = (IsOwnerFilterBackend,)
@@ -2120,7 +2175,8 @@ class SubmissionFileViewSet(BulkCreateUpdateMixin, viewsets.ModelViewSet):
     obligation_types = None
     serializer_class = SubmissionFileSerializer
     permission_classes = (
-        IsAuthenticated, IsSecretariatOrSamePartySubmissionRelated,
+        IsAuthenticated,
+        IsSecretariatOrSamePartySubmissionRelated,
         IsCorrectObligation,
     )
 
@@ -3066,7 +3122,7 @@ class EssentialCriticalMTViewSet(EssentialCriticalViewSet):
 
 
 class GetCurrentTimeView(ReadOnlyMixin, views.APIView):
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get(self, request, *args, **kwargs):
         return Response(datetime.now().strftime('%d %B %Y %H:%M:%S'))

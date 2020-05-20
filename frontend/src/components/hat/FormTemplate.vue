@@ -64,7 +64,7 @@
           </template>
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="$store.getters.can_edit_data"
+              v-show="canEditSubstanceData"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -79,17 +79,25 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.can_edit_data"
+              :disabled="isSubstanceDataReadOnly(inputField)"
               :field="cell.item.originalObj[inputField]"
             ></fieldGenerator>
           </template>
           <template v-slot:cell(validation)="cell">
             <b-btn-group class="row-controls">
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
-               <i :class="{'fa-pencil-square-o': $store.getters.can_edit_data, 'fa-eye': !$store.getters.can_edit_data}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
+               <i
+                  :class="{
+                    'fa-pencil-square-o': !isActionReadOnly('edit', 'substance_data'),
+                    'fa-eye': !isActionReadOnly('view', 'substance_data'),
+                    'fa fa-lg': true
+                  }"
+                  :title="!isActionReadOnly('edit', 'substance_data') ? $gettext('Edit') : $gettext('View')"
+                  v-b-tooltip
+                ></i>
               </span>
               <span
-                v-if="$store.getters.can_edit_data"
+                v-if="!isActionReadOnly('delete', 'substance_data')"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -176,7 +184,7 @@
           </template>
           <template v-slot:cell(checkForDelete)="cell">
             <fieldGenerator
-              v-show="$store.getters.can_edit_data"
+              v-show="canEditSubstanceData"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:'checkForDelete'}"
               :field="cell.item.originalObj.checkForDelete"
             />
@@ -197,7 +205,7 @@
             <fieldGenerator
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
-              :disabled="['remarks_os', 'remarks_party'].includes(inputField) ? getCommentFieldPermission(inputField) : !$store.getters.can_edit_data"
+              :disabled="isSubstanceDataReadOnly(inputField)"
               :field="cell.item.originalObj[inputField]"
             ></fieldGenerator>
           </template>
@@ -205,10 +213,18 @@
           <template v-slot:cell(validation)="cell">
             <b-btn-group class="row-controls">
               <span  @click="createModalData(cell.item.originalObj, cell.item.index)">
-               <i :class="{'fa-pencil-square-o': $store.getters.can_edit_data, 'fa-eye': !$store.getters.can_edit_data}" class="fa fa-lg"  v-b-tooltip :title="$gettext('Edit')"></i>
+                <i
+                    :class="{
+                      'fa-pencil-square-o': !isActionReadOnly('edit', 'substance_data'),
+                      'fa-eye': !isActionReadOnly('view', 'substance_data'),
+                      'fa fa-lg': true
+                    }"
+                    :title="!isActionReadOnly('edit', 'substance_data') ? $gettext('Edit') : $gettext('View')"
+                    v-b-tooltip
+                  ></i>
               </span>
               <span
-                v-if="$store.getters.can_edit_data"
+                v-if="!isActionReadOnly('delete', 'substance_data')"
                 @click="remove_field(cell.item.index)"
                 class="table-btn"
               >
@@ -269,7 +285,7 @@
         <!-- addComment(state, { data, tab, field }) { -->
         <textarea
           @change="$store.commit('addComment', {data: $event.target.value, tab:tabName, field: comment_key})"
-          :disabled="getCommentFieldPermission(comment_key)"
+          :disabled="isRemarkReadOnly(comment_key)"
           class="form-control"
           :value="comment.selected"
         ></textarea>
@@ -285,11 +301,12 @@
     </div>
 
     <AppAside
-      v-if="$store.getters.can_edit_data || validationLength"
+      v-if="canEditSubstanceData || validationLength"
       fixed
     >
       <DefaultAside
         v-on:fillSearch="fillTableSearch($event)"
+        :canEditSubstanceData="canEditSubstanceData"
         :parentTabIndex.sync="sidebarTabIndex"
         :hovered="hovered"
         :tabName="tabName"

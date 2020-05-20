@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager as DefaultUserManager
 from django.db import models
 from django.db.models import Q, F
 from django.utils.translation import gettext_lazy as _
@@ -7,11 +7,22 @@ from django.utils.translation import gettext_lazy as _
 from guardian.mixins import GuardianUserMixin
 from rest_framework.authtoken.models import Token
 
-from .party import Party, Language
+from .party import Party, PartyGroup, Language
+
+
+class UserManager(DefaultUserManager):
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'party',
+        )
 
 
 class User(GuardianUserMixin, AbstractUser):
 
+    objects = UserManager()
+
+    # Not null for Party users; all other user types do not have a specific
+    # party assigned.
     party = models.ForeignKey(
         Party, related_name='users',
         null=True,
@@ -32,6 +43,24 @@ class User(GuardianUserMixin, AbstractUser):
 
     # Both Party and Secretariat users can be read-only
     is_read_only = models.BooleanField(default=True)
+
+    # UNEP CAP users support the counties in submitting their data correctly;
+    # they have read-only access to all (including draft) data for certain
+    # groups of countries.
+    is_cap = models.BooleanField(default=False)
+    # Only relevant for UNEP CAP users
+    party_group = models.ForeignKey(
+        PartyGroup,
+        related_name='users',
+        default=None,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT
+    )
+
+    # Special type of user used by mobile app to retrieve specific data
+    # (generally only aggregations)
+    is_mobile_app = models.BooleanField(default=False)
 
     language = models.ForeignKey(
         Language,
@@ -54,11 +83,20 @@ class User(GuardianUserMixin, AbstractUser):
                 return 'Secretariat Edit'
             else:
                 return 'Secretariat Read-Only'
-        else:
+        elif self.party:
             if not self.is_read_only:
                 return 'Party Reporter'
             else:
                 return 'Party Read-Only'
+        elif self.is_cap:
+            if self.is_read_only:
+                return 'UNEP CAP Read-only'
+            else:
+                return 'UNEP CAP'
+        elif self.is_mobile_app:
+            return 'Mobile App'
+        else:
+            return 'Unknown role'
 
     def has_edit_rights(self, user):
         if self == user:
@@ -71,16 +109,40 @@ class User(GuardianUserMixin, AbstractUser):
         return False
 
     def clean(self):
-        # Superusers can be allowed to be neither of party & OS
-        if not self.is_superuser:
-            if self.is_secretariat and self.party is not None:
-                raise ValidationError(
-                    _('Secretariat users cannot belong to a Party')
+        # Users have to be either:
+        # - OS
+        # - CAP
+        # - Party
+        # - Mobile app
+        user_types = [
+            self.is_secretariat,
+            self.is_cap,
+            self.party is not None,
+            self.is_mobile_app,
+        ]
+        if user_types.count(True) != 1:
+            raise ValidationError(
+                _(
+                    'User needs to be either Secretariat, CAP, Party or '
+                    'Mobile app.'
                 )
-            if not self.is_secretariat and self.party is None:
-                raise ValidationError(
-                    _('User needs to be either Secretariat or Party')
+            )
+
+        # CAP or mobile app users cannot have access to the admin interface
+        if (self.is_cap or self.is_mobile_app) and self.is_staff:
+            raise ValidationError(
+                _(
+                    'CAP or mobile app users cannot have access to the admin '
+                    'interface.'
                 )
+            )
+
+        # Mobile app user does not receive notification emails
+        if self.is_mobile_app and self.is_notified:
+            raise ValidationError(
+                _('Mobile app user cannot receive email notifications.')
+            )
+
         super().clean()
 
     def save(self, *args, **kwargs):

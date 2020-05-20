@@ -43,6 +43,7 @@ from .models import (
     Subregion,
     MDGRegion,
     Party,
+    PartyGroup,
     PartyHistory,
     ReportingPeriod,
     Obligation,
@@ -356,6 +357,43 @@ class PartyAdmin(admin.ModelAdmin):
         return form
 
 
+@admin.register(PartyGroup)
+class PartyGroupAdmin(admin.ModelAdmin):
+    class Media:
+        # bigger width for select2 widgets
+        css = {
+            'all': ('css/admin.css',),
+        }
+
+    def get_parties(self, obj):
+        return ', '.join(x.name for x in obj.parties.all())
+    get_parties.short_description = 'Parties'
+
+    def get_party_count(self, obj):
+        return obj.parties.count()
+        # return len(obj.parties.all())
+    get_party_count.short_description = '# of parties'
+
+    list_display = ('name', 'get_party_count', 'get_parties', )
+    list_filter = ('name',)
+    search_fields = ['name', 'parties__name',]
+
+    # Autocomplete is nicer, but difficult to filter only main parties
+    # because get_search_results for Party model is used in many places
+    # maybe include django-admin-autocomplete-all when stable
+    autocomplete_fields = ('parties',)
+
+
+    # def get_form(self, request, obj=None, **kwargs):
+    #     form = super().get_form(request, obj, **kwargs)
+    #     main_parties_queryset = Party.objects.filter(
+    #         is_active=True,
+    #         parent_party__id=F('id'),
+    #     ).order_by('name')
+    #     form.base_fields['parties'].queryset = main_parties_queryset
+    #     return form
+
+
 @admin.register(PartyHistory)
 class PartyHistoryAdmin(admin.ModelAdmin):
     list_display = ('party', 'reporting_period', 'party_type')
@@ -433,20 +471,21 @@ class ObligationAdmin(admin.ModelAdmin):
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     base_list_display = (
-        "username", "first_name", "last_name", "email", "is_secretariat", "is_read_only", "party",
-        "is_active", "activated", "last_login",
+        "username", "first_name", "last_name", "email",
+        "is_secretariat", "is_read_only", "is_cap", "is_mobile_app",
+        "party", "is_active", "activated", "last_login",
     )
     superuser_list_display = (
         "login_as",
     )
-    search_fields = ["username", "first_name", "last_name"]
+    search_fields = ["username", "first_name", "last_name", "party__name"]
     actions = ["reset_password"]
     exclude = ["password", "user_permissions"]
     readonly_fields = ["last_login", "date_joined", "created_by", "activated"]
     list_filter = (
         ("party", MainPartyFilter),
-        "is_secretariat", "is_read_only", "is_staff", "is_superuser",
-        "is_active", "activated",
+        "is_secretariat", "is_read_only", "is_cap", "is_mobile_app",
+        "is_staff", "is_superuser", "is_active", "activated",
     )
 
     def reset_password(self, request, queryset, template="password_reset"):
@@ -461,16 +500,24 @@ class UserAdmin(admin.ModelAdmin):
             form = PasswordResetForm({'email': user.email})
             form.full_clean()
             form.save(
-                domain_override=domain_override, use_https=use_https, email_template_name=body,
+                domain_override=domain_override,
+                use_https=use_https,
+                email_template_name=body,
                 subject_template_name=subject,
             )
             users.append(user.username)
         if len(users) > 10:
-            self.message_user(request, _("Email sent to %d users for password reset") % len(users),
-                              level=messages.SUCCESS)
+            self.message_user(
+                request,
+                _("Email sent to %d users for password reset") % len(users),
+                level=messages.SUCCESS
+            )
         else:
-            self.message_user(request, _("Email sent to %s for password reset") % ", ".join(users),
-                              level=messages.SUCCESS)
+            self.message_user(
+                request,
+                _("Email sent to %s for password reset") % ", ".join(users),
+                level=messages.SUCCESS
+            )
     reset_password.short_description = _("Reset user password")
 
     def login_as(self, obj):
@@ -1461,7 +1508,9 @@ class OtherCountryProfileDataAdmin(BaseCountryPofileAdmin, admin.ModelAdmin):
                 # Theoretically the submission allows several file uploads; we
                 # copy the first one and allow the OS user to make changes if
                 # needed.
-                form.base_fields['file'].initial = submission.files.all().first().file
+                fileobj = submission.files.all().first()
+                if fileobj:
+                    form.base_fields['file'].initial = fileobj.file
 
                 # Now just return pre-filled form
                 return form
@@ -1518,9 +1567,12 @@ class OtherCountryProfileDataAdmin(BaseCountryPofileAdmin, admin.ModelAdmin):
     )
     search_fields = ('party__name', )
     list_filter = (
-        ('party', MainPartyFilter),
+        ('party', party_dropdown_filter(OtherCountryProfileData)),
         ('obligation', OtherCountryProfileDataObligationFilter),
-        ('reporting_period__name', custom_title_dropdown_filter('period')),
+        (
+            'reporting_period',
+            reporting_period_dropdown_filter(OtherCountryProfileData)
+        ),
     )
     ordering = ('party__name', 'reporting_period__name')
 

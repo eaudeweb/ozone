@@ -58,13 +58,13 @@
     </div>
     <div class="mt-2">
       <span v-translate>Created by</span>&#8239;
-      <em>{{$store.state.current_submission.filled_by_secretariat ? $gettext('secretariat'): $gettext('party')}}</em>&#8239;
+      <em>{{$store.state.current_submission.created_by + ' (' + ($store.state.current_submission.filled_by_secretariat ? $gettext('secretariat'): $gettext('party')) + ')'}}</em>&#8239;
       <span v-translate>at</span>&#8239;
       <em>{{dateFormat($store.state.current_submission.created_at)}}</em>
     </div>
     <div class="mt-2">
       <span v-translate>Last changed by</span>&#8239;
-      <em>{{$store.state.current_submission.filled_by_secretariat ? $gettext('secretariat'): $gettext('party')}}</em>&#8239;
+      <em>{{$store.state.current_submission.last_edited_by + ' (' + ($store.state.current_submission.filled_by_secretariat ? $gettext('secretariat'): $gettext('party')) + ')'}}</em>&#8239;
       <span v-translate>at</span>&#8239;
       <em>{{dateFormat($store.state.current_submission.updated_at)}}</em>
     </div>

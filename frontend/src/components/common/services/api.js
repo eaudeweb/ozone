@@ -23,6 +23,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const api = axios.create({
+  apiBase,
   baseURL: apiURL,
   withCredentials: true
 })
@@ -156,7 +157,7 @@ const createSubmission = (submisson_data) => {
 
 const createBlend = (blend) => post('blends/', blend)
 
-const cloneSubmission = (url) => post(`${url}clone/`)
+const cloneSubmission = (submissionId) => post(`submissions/${submissionId}/clone/`)
 
 const getCustomBlends = (party) => fetch('blends/', {
   params: {
@@ -196,19 +197,19 @@ const getSubmissions = (tableOptions) => {
   })
 }
 
-const getSubmissionHistory = (url) => fetch(`${url}versions/`)
+const getSubmissionHistory = (submissionId) => fetch(`submissions/${submissionId}/versions/`)
 
 const getSubmissionsVersions = () => fetch('submission-versions/')
 
-const getSubmission = (url) => fetch(url)
+const getSubmission = (submissionId) => fetch(`submissions/${submissionId}/`)
 
-const getSubmissionAggregations = (url) => fetch(`${url}aggregations/`)
+const getSubmissionAggregations = (submissionId) => fetch(`submissions/${submissionId}/aggregations/`)
 
 const getSubmissionFiles = (submissionId) => fetch(`submissions/${submissionId}/files/`, {
   hideLoader: true
 })
 
-const deleteSubmission = (url) => remove(url)
+const deleteSubmission = (submissionId) => remove(`submissions/${submissionId}/`)
 
 const getEssenCritTypes = () => fetch('get-essen-crit-types/')
 
@@ -217,7 +218,7 @@ const deleteSubmissionFile = ({
   submissionId
 }) => remove(`submissions/${submissionId}/files/${file.id}/`)
 
-const callTransition = (url, transition) => post(`${url}call-transition/`, {
+const callTransition = (submissionId, transition) => post(`submissions/${submissionId}/call-transition/`, {
   transition
 })
 

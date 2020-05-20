@@ -11,14 +11,14 @@ from ozone.core.models import ReportingPeriod
 from ozone.core.models import Submission
 from ozone.core.models import Substance
 
-from .section_info import export_info
-from .section_impexp import export_imports
-from .section_impexp import export_exports
-from .section_production import export_production
-from .section_destruction import export_destruction
-from .section_nonparty import export_nonparty
-from .section_emission import export_emission
-from .section_labuses import export_labuses
+from .section_info import export_info, export_info_diff
+from .section_impexp import export_imports, export_imports_diff
+from .section_impexp import export_exports, export_exports_diff
+from .section_production import export_production, export_production_diff
+from .section_destruction import export_destruction, export_destruction_diff
+from .section_nonparty import export_nonparty, export_nonparty_diff
+from .section_emission import export_emission, export_emission_diff
+from .section_labuses import export_labuses, export_labuses_diff
 from .labuse_report import export_labuse_report
 
 from ..util import exclude_blend_items
@@ -91,13 +91,99 @@ class Art7RawdataReport(ReportForSubmission):
         if self.submission:
             submissions = [self.submission]
         else:
-            art7 = Obligation.objects.get(_obligation_type=ObligationTypes.ART7.value)
+            art7 = Obligation.objects.get(
+                _obligation_type=ObligationTypes.ART7.value
+            )
             submissions = get_submissions(art7, self.periods, self.parties)
 
         if not submissions:
             yield Paragraph('No data', left_paragraph_style)
         else:
             yield from export_submissions(submissions)
+
+
+def export_submission_diff(submission):
+    previous_submission = submission.get_previous_version()
+    if previous_submission is None:
+        yield Paragraph(
+            'No previous submission to compare to', left_paragraph_style
+        )
+    else:
+        yield from export_info_diff(submission, previous_submission)
+
+        yield from export_imports_diff(
+            submission,
+            previous_submission,
+            exclude_blend_items(submission.article7imports),
+            exclude_blend_items(previous_submission.article7imports),
+        )
+
+        yield from export_exports_diff(
+            submission,
+            previous_submission,
+            exclude_blend_items(submission.article7exports),
+            exclude_blend_items(previous_submission.article7exports),
+        )
+
+        yield from export_production_diff(
+            submission,
+            previous_submission,
+            submission.article7productions.all(),
+            previous_submission.article7productions.all()
+        )
+
+        yield from export_destruction_diff(
+            submission,
+            previous_submission,
+            exclude_blend_items(submission.article7destructions),
+            exclude_blend_items(previous_submission.article7destructions)
+        )
+
+        yield from export_nonparty_diff(
+            submission,
+            previous_submission,
+            exclude_blend_items(submission.article7nonpartytrades),
+            exclude_blend_items(previous_submission.article7nonpartytrades),
+        )
+
+        yield from export_emission_diff(
+            submission,
+            previous_submission,
+            submission.article7emissions.all(),
+            previous_submission.article7emissions.all()
+        )
+
+        # For lab uses, consumption is actually data from imports
+        # Apparently there aren't any lab uses in exports (?)
+        yield from export_labuses_diff(
+            filter_lab_uses(exclude_blend_items(submission.article7imports)),
+            filter_lab_uses(submission.article7productions),
+            filter_lab_uses(
+                exclude_blend_items(previous_submission.article7imports)
+            ),
+            filter_lab_uses(previous_submission.article7productions),
+        )
+
+        yield PageBreak()
+
+
+class Art7RawdataDiffReport(ReportForSubmission):
+    name = "art7_raw_diff"
+    has_party_param = True
+    has_period_param = True
+    display_name = "Raw data reported - changes from previous version - Article 7"
+    landscape = True
+
+    def get_flowables(self):
+        if self.submission:
+            submissions = [self.submission]
+        else:
+            art7 = Obligation.objects.get(
+                _obligation_type=ObligationTypes.ART7.value
+            )
+            submissions = get_submissions(art7, self.periods, self.parties)
+        for submission in submissions:
+            yield from export_submission_diff(submission)
 
 
 class SubstanceFilter:
@@ -206,6 +292,7 @@ class BaselineHfcRawReport(Report):
 
     name = "baseline_hfc_raw"
     has_party_param = True
+    landscape = True
     display_name = "HFC baseline - raw data reported"
     description = _("Select one or more parties")
 

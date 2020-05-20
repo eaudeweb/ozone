@@ -57,6 +57,12 @@ const actions = {
         cancelCallback: () => {
           commit('resetConfirmModal')
           resolve(false)
+        },
+        hideCallBack: (event) => {
+          if (event.trigger === 'esc') {
+            commit('resetConfirmModal')
+            resolve(false)
+          }
         }
       })
     })
@@ -241,11 +247,15 @@ const actions = {
       return
     }
 
-    const parties_temp = response.data
-      .filter(country => country.id === country.parent_party)
-      .map(country => ({ value: country.id, text: country.name, iso: country.abbr }))
-    context.commit('setDashboardParties', parties_temp)
-    return parties_temp
+    context.commit('setAllParties', response.data)
+
+    const filtered_parties = response.data.filter(
+      country => context.state.currentUser.related_parties.includes(country.id)
+    ).map(
+      country => ({ value: country.id, text: country.name, iso: country.abbr })
+    )
+    context.commit('setDashboardParties', filtered_parties)
+    return filtered_parties
   },
 
   async getPeriods(context) {
@@ -300,6 +310,8 @@ const actions = {
       let message = data.message[key]
       if (Array.isArray(message)) {
         message = message.map(text => escapeHTML(text)).join('<br>')
+      } else if (typeof message === 'object' && message !== null) {
+        message = Object.keys(message).map(messageKey => escapeHTML(`[${messageKey}] ${message[messageKey]}`)).join('<br>')
       } else if (typeof message === 'string') {
         message = escapeHTML(message)
       }
@@ -313,7 +325,6 @@ const actions = {
   },
 
   async doSubmissionTransition({ dispatch }, { source, submission, transition, $gettext, noModal, backToDashboard = true }) {
-    // console.log('doing transition')
     if (!noModal) {
       const confirmed = await dispatch('openConfirmModal', { $gettext })
       if (!confirmed) {
@@ -362,12 +373,12 @@ const actions = {
     commit('removeBulkFields', { tab, indexList })
   },
 
-  async removeSubmission({ dispatch }, { submissionUrl, $gettext }) {
+  async removeSubmission({ dispatch }, { submissionId, $gettext }) {
     const confirmed = await dispatch('openConfirmModal', { title: 'Please confirm', description: 'Are you sure you want to delete the submission? All data will be deleted irreversibly.', $gettext })
     if (!confirmed) {
       return confirmed
     }
-    deleteSubmission(submissionUrl).then(() => {
+    deleteSubmission(submissionId).then(() => {
       dispatch('getCurrentSubmissions')
       dispatch('setAlert', {
         $gettext,
@@ -463,11 +474,8 @@ const actions = {
         await context.commit('setFlagsPermissions', response.data.changeable_flags)
         await context.dispatch('getCurrentSubmissionHistory', { submission, $gettext })
         await context.commit('setFormPermissions', {
-          can_change_remarks_party: response.data.can_change_remarks_party,
-          can_change_remarks_secretariat: response.data.can_change_remarks_secretariat,
-          can_change_reporting_channel: response.data.can_change_reporting_channel,
-          can_upload_files: response.data.can_upload_files,
-          can_edit_data: response.data.can_edit_data
+          permission_matrix: response.data.permission_matrix,
+          edit_mode: router.app.$route.query.edit_mode === 'true' || router.app.$route.query.edit_mode === true || false
         })
         resolve(response.data.reporting_period)
       })

@@ -92,10 +92,10 @@
     <Footer style="display:inline">
       <Save
         class="actions mt-2 mb-2"
-        v-if="$store.getters.can_save_form"
         :data="$store.state.form"
         :submission="submission"
       ></Save>
+      <Edit :submission="submission" class="actions mt-2 mb-2" />
       <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
       <b-button-group class="pull-right actions mt-2 mb-2">
         <AggregationsModal :submission="submission"></AggregationsModal>
@@ -134,7 +134,7 @@
         <b-btn
           @click="removeSubmission"
           id="delete-button"
-          v-if="$store.getters.can_edit_data"
+          v-if="$store.state.current_submission.can_delete_data"
           variant="outline-danger"
         >
           <span v-translate>Delete Submission</span>
@@ -151,6 +151,7 @@
       <SubmissionHistory
         :history="$store.state.currentSubmissionHistory"
         :currentVersion="$store.state.current_submission.version"
+        :has_diff=true
       ></SubmissionHistory>
       <div slot="modal-footer">
         <b-btn @click="$refs.history_modal.hide()" variant="success">
@@ -172,6 +173,7 @@ import Questionnaire from '@/components/art7/Questionnaire.vue'
 import FormTemplate from '@/components/art7/FormTemplate.vue'
 import EmissionsTemplate from '@/components/art7/EmissionsTemplate.vue'
 import SubmissionInfo from '@/components/common/SubmissionInfo.vue'
+import Edit from '@/components/common/Edit'
 import Files from '@/components/common/Files'
 import { getInstructions, cloneSubmission } from '@/components/common/services/api'
 import Save from '@/components/art7/Save'
@@ -190,6 +192,7 @@ export default {
     FormTemplate,
     EmissionsTemplate,
     SubmissionInfo,
+    Edit,
     Files,
     Footer,
     Save,
@@ -238,13 +241,16 @@ export default {
     }
   },
   methods: {
-    async clone(url) {
+    async clone(submissionId) {
       const confirmed = await this.$store.dispatch('openConfirmModal', { title: 'Please confirm', description: 'You are about to create a new version for data entry. The current version will be superseded once the new version is submitted.', $gettext: this.$gettext })
       if (!confirmed) {
         return
       }
-      cloneSubmission(url).then((response) => {
-        this.$router.push({ name: this.$route.name, query: { submission: response.data.url } })
+      cloneSubmission(submissionId).then((response) => {
+        this.$router.push({
+          name: this.$route.name,
+          query: { submission: response.data.id, edit_mode: true }
+        })
         this.$router.go(this.$router.currentRoute)
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,
@@ -296,7 +302,7 @@ export default {
     removeSubmission() {
       this.$store.dispatch('removeSubmission', {
         $gettext: this.$gettext,
-        submissionUrl: this.submission
+        submissionId: this.submission
       }).then((result) => {
         if (result) {
           this.$router.push({ name: 'Dashboard' })
@@ -316,7 +322,7 @@ export default {
     },
     async exportPDF() {
       this.$store.dispatch('downloadStuff', {
-        url: `${this.submission}export_pdf/`,
+        url: `submissions/${this.submission}/export_pdf/`,
         fileName: `${this.$store.state.current_submission.obligation} - ${this.$store.state.initialData.display.countries[this.$store.state.current_submission.party]} - ${this.$store.state.current_submission.reporting_period}.pdf`
       })
     }

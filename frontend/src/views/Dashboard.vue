@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-page animated fadeIn">
     <b-row>
-      <b-col v-if="basicDataReady && !currentUser.is_read_only" sm="12" xl="6">
+      <b-col v-if="basicDataReady && !currentUser.is_read_only" sm="12" :xl="currentUser.is_secretariat ? '12' : '6'">
         <b-card>
           <div slot="header">
             <strong>
@@ -20,7 +20,7 @@
                 trackBy="value"
                 label="text"
                 v-model="submissionNew.obligation"
-                :hide-selected="true"
+                :hide-selected="false"
                 :options="obligationsOptions"
               />
             </b-input-group>
@@ -32,7 +32,7 @@
                 label="description"
                 customTemplateText="<i class='fa fa-clock-o fa-lg'></i>"
                 customTemplate="is_reporting_open"
-                :hide-selected="true"
+                :hide-selected="false"
                 v-model="submissionNew.reporting_period"
                 :options="periods"
               />
@@ -45,7 +45,7 @@
                 label="text"
                 :disabled="Boolean(currentUser.party)"
                 v-model="submissionNew.party"
-                :hide-selected="true"
+                :hide-selected="false"
                 :options="parties"
               />
             </b-input-group>
@@ -62,7 +62,7 @@
         </b-card>
       </b-col>
 
-      <b-col sm="12" xl="6">
+      <b-col sm="12" xl="6" v-if="!currentUser.is_secretariat">
         <b-card v-if="basicDataReady">
           <div slot="header">
             <strong>
@@ -70,45 +70,6 @@
                 v-translate="{totalRows: dataEntryTable.totalRows}"
               >Data entry in progress submissions (%{totalRows} records)</span>
             </strong>
-          </div>
-          <div v-if="currentUser.is_secretariat" class="mt-2 mb-2">
-            <div class="filter-group mb-2">
-              <b-input-group :prepend="$gettext('Search')">
-                <b-form-input v-model="dataEntryTable.search"/>
-              </b-input-group>
-              <b-input-group :prepend="$gettext('Obligation')">
-                <b-form-select
-                  v-model="dataEntryTable.filters.obligation"
-                  :options="sortOptionsObligation"
-                ></b-form-select>
-              </b-input-group>
-            </div>
-            <div class="filter-group">
-              <b-input-group :prepend="$gettext('Party')">
-                <b-form-select
-                  :disabled="Boolean(currentUser.party)"
-                  v-model="dataEntryTable.filters.party"
-                  :options="sortOptionsParties"
-                ></b-form-select>
-              </b-input-group>
-              <b-input-group class="w120" :prepend="$gettext('From')">
-                <b-form-select
-                  v-model="dataEntryTable.filters.period_start"
-                  :options="sortOptionsPeriodFromDataEntry"
-                ></b-form-select>
-              </b-input-group>
-              <b-input-group class="w120" :prepend="$gettext('To')">
-                <b-form-select
-                  v-model="dataEntryTable.filters.period_end"
-                  :options="sortOptionsPeriodToDataEntry"
-                ></b-form-select>
-              </b-input-group>
-              <b-btn
-                @click="Object.keys(dataEntryTable.filters).forEach(key => dataEntryTable.filters[key] = null)"
-              >
-                <span v-translate>Clear</span>
-              </b-btn>
-            </div>
           </div>
           <b-table
             id="data-entry-submissions-table"
@@ -133,31 +94,13 @@
             <template v-slot:cell(actions)="row">
               <router-link
                 class="btn btn-light btn-sm"
-                :to="{ name: getFormName(row.item.details.obligation), query: {submission: row.item.details.url}}"
+                :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id, edit_mode: !!row.item.details.can_edit_data }}"
               >
                 <span v-if="row.item.details.can_edit_data">{{labels['edit']}}</span>
                 <span v-else>{{labels['view']}}</span>
               </router-link>
             </template>
           </b-table>
-          <b-row v-if="currentUser.is_secretariat">
-            <b-col md="9" class="my-1">
-              <b-pagination
-                :total-rows="dataEntryTable.totalRows"
-                :per-page="dataEntryTable.perPage"
-                v-model="dataEntryTable.currentPage"
-                class="my-0"
-              />
-            </b-col>
-            <b-col md="3">
-              <b-input-group horizontal :prepend="$gettext('Per page')" class="mb-0">
-                <b-form-select
-                  :options="dataEntryTable.pageOptions"
-                  v-model="dataEntryTable.perPage"
-                />
-              </b-input-group>
-            </b-col>
-          </b-row>
         </b-card>
       </b-col>
     </b-row>
@@ -243,7 +186,7 @@
                 <b-button-group>
                   <router-link
                     class="btn btn-light btn-sm"
-                    :to="{ name: getFormName(row.item.details.obligation), query: {submission: row.item.details.url}}"
+                    :to="{ name: getFormName(row.item.details.obligation), query: { submission: row.item.details.id, edit_mode: row.item.details.can_edit_data && !currentUser.is_read_only }}"
                   >
                     <span
                       v-if="row.item.details.can_edit_data && !currentUser.is_read_only"
@@ -255,7 +198,7 @@
             </b-table>
 
             <b-row>
-              <b-col md="10" class="my-1">
+              <b-col md="10" class="mt-1 mb-3">
                 <b-pagination
                   :total-rows="tableOptions.totalRows"
                   :per-page="tableOptions.perPage"
@@ -321,8 +264,8 @@ export default {
   },
 
   async created() {
-    if (this.currentUser.party) {
-      this.$store.commit('setCurrentUserPartyInDashboard', this.currentUser.party)
+    if (!this.$store.state.currentUser) {
+      await this.$store.dispatch('getMyCurrentUser')
     }
     document.querySelector('body').classList.remove('aside-menu-lg-show')
     this.$store.dispatch('getDashboardParties')
@@ -521,17 +464,18 @@ export default {
     },
 
     sortOptionsStatus() {
-      // return this.statuses
-      const data = [
-        { text: 'Any', value: null },
-        ...Object.keys(this.submissionStates).map(state => ({
-          // TODO: use backend names instead of getCommonLabels?
-          // text: this.submissionStates[state],
-          text: getCommonLabels(this.$gettext)[state],
-          value: state
-        }))
-      ]
-      return data
+      if (this.submissionStates) {
+        return [
+          { text: 'Any', value: null },
+          ...Object.keys(this.submissionStates).map(state => ({
+            // TODO: use backend names instead of getCommonLabels?
+            // text: this.submissionStates[state],
+            text: getCommonLabels(this.$gettext)[state],
+            value: state
+          }))
+        ]
+      }
+      return []
     },
 
     sortOptionsParties() {
@@ -645,7 +589,7 @@ export default {
       }).then(r => {
         this.$store.dispatch('getMyCurrentSubmissions').then(() => {
           const currentSubmission = this.mySubmissions.find(sub => sub.id === r.id)
-          this.$router.push({ name: this.getFormName(r.obligation), query: { submission: currentSubmission.url } })
+          this.$router.push({ name: this.getFormName(r.obligation), query: { submission: currentSubmission.id, edit_mode: true } })
         })
       })
     },
@@ -657,9 +601,9 @@ export default {
         this.tableOptions.filters[key] = null
       })
     },
-    clone(url, obligation) {
-      cloneSubmission(url).then((response) => {
-        this.$router.push({ name: this.getFormName(obligation), query: { submission: response.data.url } })
+    clone(submissionId, obligation) {
+      cloneSubmission(submissionId).then((response) => {
+        this.$router.push({ name: this.getFormName(obligation), query: { submission: response.data.id } })
         this.$store.dispatch('setAlert', {
           $gettext: this.$gettext,
           message: { __all__: [this.alerts.new_version_created] },
@@ -691,10 +635,10 @@ export default {
       return false
     },
 
-    removeSubmission(url) {
+    removeSubmission(id) {
       this.$store.dispatch('removeSubmission', {
         $gettext: this.$gettext,
-        submissionUrl: url
+        submissionId: id
       })
     },
     getFormName(obligation) {

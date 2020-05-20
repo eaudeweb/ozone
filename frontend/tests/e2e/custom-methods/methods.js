@@ -238,6 +238,16 @@ const deleteSubmission = (browser) => {
 
 const saveSubmission = (browser, tabs = []) => {
   logMessage(browser, 'Saving submission')
+  /* Enable edit mode if disabled */
+  browser
+    .useXpath()
+    .element('xpath', '//footer[@class=\'app-footer\']//button[@id=\'edit-button\']', (result) => {
+      if (result.status !== -1) {
+        browser
+          .click("//footer[@class='app-footer']//button[@id='edit-button']")
+          .pause(eventDelay)
+      }
+    })
   browser
     .useXpath()
     /* Click Save and continue button */
@@ -252,6 +262,7 @@ const saveSubmission = (browser, tabs = []) => {
     browser
       .waitForElementVisible(`//div[contains(@class,'form-wrapper')]//div[contains(@class, 'card-header')]//ul//li//div[contains(text(), '${tab}')]//i[contains(@class, 'fa-check-circle')]`, elementVisibleTimeout)
   })
+  browser.waitForElementNotPresent('//div[@class="api-action-display"]', 2 * elementVisibleTimeout)
 }
 
 const selectTab = (browser, tab) => {
@@ -286,9 +297,17 @@ const fillSubmissionInfo = (browser, submissionInfo = {}, autocomplet = true) =>
   const fields = ['reporting_officer', 'designation', 'organization', 'postal_address', 'phone', 'email']
   /* Open Submission Info tab */
   selectTab(browser, 'Submission Information')
-  hideFixedElements(browser)
   browser
     .useXpath()
+    .element('xpath', '//footer[@class=\'app-footer\']//button[@id=\'edit-button\']', (result) => {
+      if (result.status !== -1) {
+        browser
+          .click("//footer[@class='app-footer']//button[@id='edit-button']")
+          .pause(eventDelay)
+      }
+    })
+  hideFixedElements(browser)
+  browser
     .execute('window.scrollTo(0,document.body.scrollHeight);')
     .pause(transitionDelay)
     .waitForElementVisible("//input[@id='reporting_officer']", elementVisibleTimeout)
@@ -557,7 +576,15 @@ const filterEntity = (browser, tab, filters) => {
 
 const checkSumbissionInfoFlags = (browser) => {
   logMessage(browser, 'Checking submission info flags')
-
+  browser
+    .useXpath()
+    .element('xpath', '//footer[@class=\'app-footer\']//button[@id=\'edit-button\']', (result) => {
+      if (result.status !== -1) {
+        browser
+          .click("//footer[@class='app-footer']//button[@id='edit-button']")
+          .pause(eventDelay)
+      }
+    })
   const flags = [
     'flag_has_reported_a1', 'flag_has_reported_a2',
     'flag_has_reported_b1', 'flag_has_reported_b2', 'flag_has_reported_b3',
@@ -604,6 +631,15 @@ const clickQuestionnaireRadios = (browser, fields = [], allow_all = true) => {
   restrictedFields = restrictedFields.filter((e) => fields.indexOf(e) === -1)
 
   browser.useXpath()
+  /* Enable edit mode if disabled */
+  browser
+    .element('xpath', '//footer[@class=\'app-footer\']//button[@id=\'edit-button\']', (result) => {
+      if (result.status !== -1) {
+        browser
+          .click("//footer[@class='app-footer']//button[@id='edit-button']")
+          .pause(eventDelay)
+      }
+    })
   /* Check if all tabs are disabled */
   for (const tab in tabs) {
     browser
@@ -653,7 +689,7 @@ const addEntity = (browser, tab, entity, type, options, order = undefined, check
   }
   /* Special case */
   // TODO: find a dynamic way
-  if (type === 'F I/II Hydrofluorocarbons (HFCs)') {
+  if (type === 'F Hydrofluorocarbons (HFCs)') {
     entities.substance.pop()
     entities.substance.push('fii-table')
   }
@@ -674,6 +710,16 @@ const addEntity = (browser, tab, entity, type, options, order = undefined, check
   const add_entity_button = `${aside_menu}//div[@class='tabs']//button[@id='${entities[entity][3]}']`
   /* Open desired tab */
   selectTab(browser, tabs_header[tab].name)
+  /* Enable edit mode if disabled */
+  browser
+    .useXpath()
+    .element('xpath', '//footer[@class=\'app-footer\']//button[@id=\'edit-button\']', (result) => {
+      if (result.status !== -1) {
+        browser
+          .click("//footer[@class='app-footer']//button[@id='edit-button']")
+          .pause(eventDelay)
+      }
+    })
   /* Open aside menu if clossed */
   openAsideMenu(browser, tab)
   browser
@@ -742,6 +788,16 @@ const addEntity = (browser, tab, entity, type, options, order = undefined, check
 const addFacility = (browser, table, tab, row, row_values, check = false) => {
   /* Open desired tab */
   selectTab(browser, 'Emissions')
+  /* Enable edit mode if disabled */
+  browser
+    .useXpath()
+    .element('xpath', '//footer[@class=\'app-footer\']//button[@id=\'edit-button\']', (result) => {
+      if (result.status !== -1) {
+        browser
+          .click("//footer[@class='app-footer']//button[@id='edit-button']")
+          .pause(eventDelay)
+      }
+    })
   hideFixedElements(browser)
   browser
     .useCss()
@@ -777,6 +833,16 @@ const addFacility = (browser, table, tab, row, row_values, check = false) => {
 
 const addValues = (browser, table, tab, row, row_values, modal_values) => {
   logMessage(browser, 'Adding values to entity')
+  /* Enable edit mode if disabled */
+  browser
+    .useXpath()
+    .element('xpath', '//footer[@class=\'app-footer\']//button[@id=\'edit-button\']', (result) => {
+      if (result.status !== -1) {
+        browser
+          .click("//footer[@class='app-footer']//button[@id='edit-button']")
+          .pause(eventDelay)
+      }
+    })
   hideFixedElements(browser)
   if (Object.entries(row_values).length > 0) {
     browser
@@ -831,7 +897,16 @@ const addValues = (browser, table, tab, row, row_values, modal_values) => {
 
 const addComment = (browser, tab, comment) => {
   logMessage(browser, 'Adding comment')
-
+  /* Enable edit mode if disabled */
+  browser
+    .useXpath()
+    .element('xpath', '//footer[@class=\'app-footer\']//button[@id=\'edit-button\']', (result) => {
+      if (result.status !== -1) {
+        browser
+          .click("//footer[@class='app-footer']//button[@id='edit-button']")
+          .pause(eventDelay)
+      }
+    })
   browser
     .useCss()
     .setValue(`#${tab} .comments-input textarea`, comment)

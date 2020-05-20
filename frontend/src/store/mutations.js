@@ -33,7 +33,8 @@ const mutations = {
       title: null,
       description: null,
       okCallback: () => {},
-      cancelCallback: () => {}
+      cancelCallback: () => {},
+      hideCallBack: () => {}
     }
   },
   updateBreadcrumbs(state, data) {
@@ -205,7 +206,9 @@ const mutations = {
     state.initialData.submissionFormats = data
   },
   // dashboard
-
+  setAllParties(state, data) {
+    state.dashboard.all_parties = data
+  },
   setDashboardParties(state, data) {
     state.dashboard.parties = data
   },
@@ -328,10 +331,14 @@ const mutations = {
     data.forEach(channel => {
       if ((state.currentUser.is_secretariat && channel.is_secretariat)
       || (state.currentUser.is_party && channel.is_party)
-      || !state.current_submission.can_change_reporting_channel) {
+      || !state.current_submission.permission_matrix['reporting_channel']) {
         state.initialData.reportingChannel.push(channel)
       }
     })
+  },
+
+  updateEditMode(state, data) {
+    state.permissions.form.edit_mode = data
   },
 
   setBlendComponentRowVariant(state, data) {
@@ -507,6 +514,9 @@ const mutations = {
   deleteAllTabFiles(state) {
     const { form_fields } = state.form.tabs.files
     form_fields.files = []
+  },
+  updateFilesUploadInProgress(state, data) {
+    state.filesUploadInProgress = data
   }
 }
 

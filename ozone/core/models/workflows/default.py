@@ -1,6 +1,6 @@
-from django.utils.translation import gettext_lazy as _
-
 import xworkflows
+
+from django.utils.translation import gettext_lazy as _
 
 from .base import BaseStateDescription, BaseWorkflow
 from ...exceptions import TransitionFailed
@@ -35,6 +35,124 @@ class DefaultArticle7WorkflowStateDescription(BaseStateDescription):
     )
 
     initial_state = 'data_entry'
+
+    # Mapping for the permissions in this workflow, according to state
+    #    0 -> created by party, accessed by party
+    #    1 -> created by party, accessed by secretariat
+    #    2 -> created by secretariat, accessed by party
+    #    3 -> created by secretariat, accessed by secretariat
+    #
+    #    True  -> read-only
+    #    False -> not(read-only)
+    #
+    # Is used by the permissions_matrix() method to return relevant
+    # permissions.
+    permissions = {
+        'reporting_channel': {
+            'data_entry': [True, True, True, False],
+            'submitted':  [True, True, True, True],
+            'processing': [True, True, True, True],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'submission_format': {
+            'data_entry': [True, True, True, False],
+            'submitted':  [True, True, True, True],
+            'processing': [True, True, True, True],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'reporting_officer': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, True, True, True],
+            'processing': [True, True, True, True],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'submitted_at': {
+            'data_entry': [True, True, True, False],
+            'submitted':  [True, True, True, True],
+            'processing': [True, True, True, True],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'other_submission_info_data': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, True, True, True],
+            'processing': [True, True, True, True],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'flag_provisional': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, False, True, False],
+            'processing': [True, False, True, False],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'flag_blank': {
+            'data_entry': [True, True, True, False],
+            'submitted':  [True, True, True, True],
+            'processing': [True, False, True, False],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'flag_annex_group': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, True, True, True],
+            'processing': [True, True, True, True],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'files': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, False, True, True],
+            'processing': [True, False, True, False],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'questionnaire': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, True, True, True],
+            'processing': [True, True, True, True],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'substance_data': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [True, True, True, True],
+            'processing': [True, True, True, True],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'remarks_party': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [False, True, True, True],
+            'processing': [False, True, True, True],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        },
+        'remarks_secretariat': {
+            'data_entry': [False, True, True, False],
+            'submitted':  [False, True, True, False],
+            'processing': [False, True, True, False],
+            'finalized':  [True, True, True, True],
+            'recalled':   [True, True, True, True],
+            'superseded': [True, True, True, True],
+        }
+    }
 
 
 class DefaultArticle7Workflow(BaseWorkflow):
@@ -131,6 +249,7 @@ class DefaultArticle7Workflow(BaseWorkflow):
         # Validate imports and exports data (will raise a validation error
         # if data is not consistent).
         self.model_instance.check_imports_exports()
+        self.model_instance.check_emissions()
 
     @xworkflows.transition('submit')
     def submit(self):

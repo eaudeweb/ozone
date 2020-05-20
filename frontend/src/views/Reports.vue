@@ -19,7 +19,7 @@
               <multiselect
                 :placeholder="$gettext('Select option')"
                 trackBy="value"
-                :hide-selected="true"
+                :hide-selected="false"
                 label="text"
                 v-model="selected.reports"
                 :options="reports"
@@ -33,7 +33,7 @@
                 trackBy="value"
                 :clear-on-select="true"
                 :close-on-select="false"
-                :hide-selected="true"
+                :hide-selected="false"
                 :multiple="true"
                 label="text"
                 v-model="selected.periods"
@@ -49,7 +49,7 @@
                 :close-on-select="false"
                 label="text"
                 :multiple="true"
-                :hide-selected="true"
+                :hide-selected="false"
                 v-model="selected.parties"
                 :options="parties"
               />
@@ -88,12 +88,10 @@ export default {
   },
   async created() {
     this.updateBreadcrumbs()
-    const currentUser = await this.$store.dispatch('getMyCurrentUser')
+    await this.$store.dispatch('getMyCurrentUser')
     const parties = await this.$store.dispatch('getDashboardParties')
-    if (currentUser[0].is_secretariat) {
-      this.parties = parties
-    } else {
-      this.parties = parties.filter(p => p.value === currentUser[0].party)
+    this.parties = parties
+    if (parties.length === 1) {
       this.selected.parties = this.parties
     }
     this.periods = await this.$store.dispatch('getDashboardPeriods')
