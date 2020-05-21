@@ -219,6 +219,24 @@ class ReportingPeriodFilter(admin.SimpleListFilter):
             return queryset
 
 
+class SubregionFilter(admin.SimpleListFilter):
+    title = 'Subregion'
+    parameter_name = 'subregion_name'
+
+    def lookups(self, request, model_admin):
+        return Subregion.objects.distinct().order_by(
+            'name'
+        ).values_list(
+            'name', 'name'
+        )
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(subregion__name=self.value())
+        else:
+            return queryset
+
+
 def reporting_period_range_filter(
     model_class, related_field='reporting_period', is_after=True
 ):
@@ -313,6 +331,17 @@ def decision_dropdown_filter(model_class, related_field='decision'):
     )
 
 
+def subregion_dropdown_filter(model_class, related_field='subregion'):
+    return related_dropdown_filter(
+        model_class=model_class,
+        title='subregion',
+        related_field=related_field,
+        display_field='name',
+        sort_field='name',
+        sort_asc=True,
+    )
+
+
 # Meeting-related models
 @admin.register(Meeting)
 class MeetingAdmin(admin.ModelAdmin):
@@ -375,9 +404,22 @@ class ParentPartyFilter(RelatedDropdownFilter):
 
 @admin.register(Party)
 class PartyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'abbr', 'subregion', 'parent_party')
+
+    def get_region(self, obj):
+        return obj.subregion.region
+    get_region.short_description = 'Region'
+    get_region.admin_order_field = 'subregion'
+
+    def get_subregion(self, obj):
+        return obj.subregion.name
+    get_subregion.short_description = 'Subregion'
+    get_subregion.admin_order_field = 'subregion'
+
+    list_display = ('name', 'abbr', 'get_region', 'get_subregion', 'parent_party')
     list_filter = (
-        'subregion__region', 'subregion',
+        'subregion__region',
+        # ('subregion', subregion_dropdown_filter(Party)),
+        SubregionFilter,
         ('parent_party', ParentPartyFilter)
     )
     search_fields = ['name', 'abbr']
