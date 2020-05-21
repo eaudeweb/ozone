@@ -415,14 +415,14 @@ def _export_diff(
         for key in keys:
             diff = False
             previous_item = None
-            if not previous_dictionary:
-                item = dictionary[key]
-            elif not dictionary:
-                item = previous_dictionary[key]
-            else:
+            if dictionary and previous_dictionary:
                 diff = True
                 item = dictionary[key]
                 previous_item = previous_dictionary[key]
+            elif not previous_dictionary:
+                item = dictionary[key]
+            elif not dictionary:
+                item = previous_dictionary[key]
 
             (_rows, _styles) = to_row(
                 item,

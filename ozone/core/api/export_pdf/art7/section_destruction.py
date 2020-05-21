@@ -123,23 +123,27 @@ def export_destruction_diff(
         (_('Changed'), changed_keys, data_dict, previous_data_dict),
         (_('Removed'), removed_keys, {}, previous_data_dict),
     )
+
     for sub_subtitle, keys, dictionary, previous_dictionary in all_data:
         if not keys:
             # Do not add anything if there are no keys for this sub-section
             continue
 
-        if not previous_dictionary:
-            data = tuple(map(table_row, dictionary.values()))
-        elif not dictionary:
-            data = tuple(map(table_row, previous_dictionary.values()))
-        else:
+        if dictionary and previous_dictionary:
+            # Changed
             data = tuple(
-                map(
-                    lambda x: table_row_diff(*x),
-                    zip_longest(
-                        dictionary.values(), previous_dictionary.values()
-                    )
-                )
+                table_row_diff(dictionary[key], previous_dictionary[key])
+                for key in keys
+            )
+        elif not previous_dictionary:
+            # Added
+            data = tuple(
+                table_row(dictionary[key]) for key in keys
+            )
+        elif not dictionary:
+            # Removed
+            data = tuple(
+                table_row(previous_dictionary[key]) for key in keys
             )
 
         table = rows_to_table(
