@@ -704,7 +704,7 @@ class ProdCons(BaseProdCons):
 class ProdConsMTManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().select_related(
-            'party', 'reporting_period', 'substance'
+            'party', 'reporting_period', 'substance', 'substance__group'
         )
 
 
