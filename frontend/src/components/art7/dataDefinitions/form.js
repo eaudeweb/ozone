@@ -90,7 +90,7 @@ const getFormArt7 = ($gettext) => {
         isInvalid: false,
         section_subheaders: [
           {
-            label: `(1a) <br> ${$gettext('Annex/Group')}`,
+            label: `(1a) ${$gettext('Annex <br> Group')}`,
             name: 'group',
             width: 72
           },
@@ -100,7 +100,7 @@ const getFormArt7 = ($gettext) => {
             width: 95
           },
           {
-            label: `(2) <br> ${$gettext('Destination country/region/territory')}`,
+            label: `(2) ${$gettext('Destination country/<br>region/territory')}`,
             name: 'destination_party',
             width: 190
           },
@@ -109,7 +109,7 @@ const getFormArt7 = ($gettext) => {
             name: 'quantity_total_new'
           },
           {
-            label: `(4) <br> ${$gettext('Recovered and reclaimed')}`,
+            label: `(4) ${$gettext('Recovered <br> and reclaimed')}`,
             name: 'quantity_total_recovered'
           },
           {
@@ -229,7 +229,7 @@ const getFormArt7 = ($gettext) => {
         blend_substance_headers: ['substance', 'percent', 'quantity_total_new', 'quantity_total_recovered', 'quantity_feedstock', 'quantity_exempted'],
         section_subheaders: [{
           name: 'group',
-          label: `(1) ${$gettext('Annex/Group')}`,
+          label: `(1) ${$gettext('Annex <br> Group')}`,
           width: 72
         },
         {
@@ -239,7 +239,7 @@ const getFormArt7 = ($gettext) => {
         },
         {
           name: 'source_party',
-          label: `(2b) <br> ${$gettext('Exporting country/region/territory')}`,
+          label: `(2b) ${$gettext('Exporting country<br>/region/territory')}`,
           width: 180
         },
         {
@@ -351,7 +351,7 @@ const getFormArt7 = ($gettext) => {
         section_subheaders: [
           {
             name: 'group',
-            label: `(1) <br> ${$gettext('Annex/Group')}`,
+            label: `(1) ${$gettext('Annex<br>Group')}`,
             width: 72
           },
           {
@@ -528,7 +528,7 @@ const getFormArt7 = ($gettext) => {
         isInvalid: false,
         form_fields: [],
         section_subheaders: [{
-          label: `(1a) ${$gettext('Annex/Group')}`,
+          label: `(1a) ${$gettext('Annex <br> Group')}`,
           name: 'group'
         },
         {
@@ -588,7 +588,7 @@ const getFormArt7 = ($gettext) => {
         blend_substance_headers: ['substance', 'percent', 'quantity_import_new', 'quantity_import_recovered', 'quantity_export_new', 'quantity_export_recovered'],
         form_fields: [],
         section_subheaders: [{
-          label: `(1) <br> ${$gettext('Annex/Group')}`,
+          label: `(1) ${$gettext('Annex <br> Group')}`,
           name: 'group'
         },
         {
@@ -596,7 +596,7 @@ const getFormArt7 = ($gettext) => {
           name: 'substance'
         },
         {
-          label: `(3) <br> ${$gettext('Exporting or destination country/region/territory')}`,
+          label: `(3) ${$gettext('Exporting or destination <br> country/region/territory')}`,
           name: 'trade_party'
         },
         {
@@ -604,7 +604,7 @@ const getFormArt7 = ($gettext) => {
           name: 'quantity_import_new'
         },
         {
-          label: `(5) <br> ${$gettext('Recovered and reclaimed imports')}`,
+          label: `(5) ${$gettext('Recovered and <br> reclaimed imports')}`,
           name: 'quantity_import_recovered'
         },
         {
@@ -612,7 +612,7 @@ const getFormArt7 = ($gettext) => {
           name: 'quantity_export_new'
         },
         {
-          label: `(7) <br> ${$gettext('Recovered and reclaimed exports')}`,
+          label: `(7) <br> ${$gettext('Recovered and <br> reclaimed exports')}`,
           name: 'quantity_export_recovered'
         },
         {

@@ -392,12 +392,12 @@ def filter_lab_uses(data):
 
 def get_remarks(item):
     if not item.remarks_party:
-        return escape(item.remarks_os) or ''
+        return escape('OzSec:' + item.remarks_os) if item.remarks_os else ''
     else:
         if not item.remarks_os:
             return escape(item.remarks_party)
         else:
-            return '%s<br/>%s' % (
+            return '%s<br/>OzSec:%s' % (
                 escape(item.remarks_party), escape(item.remarks_os)
             )
 
