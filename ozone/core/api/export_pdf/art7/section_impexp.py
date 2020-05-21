@@ -116,7 +116,8 @@ def to_row(
         styles.extend([
             ('SPAN', (0, current_row), (1, current_row)),
         ])
-    if is_subtotal:
+    # Subtotal rows are not displayed in diffs.
+    if is_subtotal and not diff:
         base_row[0] = smb_l(
             '%s %s (%s)' % (_('Subtotal'), substance_name, _('excluding polyols'))
             if field_dict['quantity_polyols']
@@ -204,7 +205,8 @@ def to_row(
     if field_dict['quantity_polyols']:
         # Add another row for polyols
         current_row = row_index + len(rows)
-        if is_subtotal:
+        # Subtotal rows are not displayed in diffs.
+        if is_subtotal and not diff:
             rows.extend([
                 (
                     smb_l('%s %s' % (_('Subtotal polyols containing'), obj.substance.name)),
@@ -218,7 +220,7 @@ def to_row(
                 ('SPAN', (8, row_index), (8, current_row)),  # Remarks
                 ('SPAN', (0, current_row), (2, current_row)),
             ])
-        else:
+        elif not is_subtotal:
             decision = get_decision(obj, 'polyols') if not diff else \
                 get_decision_diff(obj, previous_obj, 'polyols')
             rows.extend([
