@@ -17,11 +17,11 @@ from .prodcons import ProdConsArt5PartiesReport
 from .prodcons import ProdConsNonArt5PartiesReport
 
 registry = [
+    ProdConsReport,
     Art7RawdataReport,
     Art7RawdataDiffReport,
     LabUseReport,
     RafReport,
-    ProdConsReport,
     ProdConsNonArt5PartiesReport,
     ProdConsArt5PartiesReport,
     ProdConsArt5SummaryReport,

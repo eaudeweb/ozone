@@ -135,7 +135,7 @@ def export_destruction_diff(
         else:
             data = tuple(
                 map(
-                    table_row_diff,
+                    lambda x: table_row_diff(*x),
                     zip_longest(
                         dictionary.values(), previous_dictionary.values()
                     )
