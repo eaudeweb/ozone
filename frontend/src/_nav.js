@@ -4,6 +4,11 @@ const getNav = ($gettext) => [{
   icon: 'icon-screen-desktop'
 },
 {
+  name: $gettext('Reports'),
+  icon: 'icon-chart',
+  url: '/reports'
+},
+{
   name: $gettext('Controlled substances'),
   url: '/lookup-tables/controlled-substances',
   icon: 'icon-chemistry'
@@ -20,11 +25,6 @@ const getNav = ($gettext) => [{
   name: $gettext('Consumption / production'),
   icon: 'icon-graph',
   url: '/production-consumption'
-},
-{
-  name: $gettext('Reports'),
-  icon: 'icon-chart',
-  url: '/reports'
 }
 ]
 
