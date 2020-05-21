@@ -367,9 +367,6 @@ def _export_diff(
     subtitle = Paragraph(texts['section_title'], h2_style)
     header = _get_header(texts)
 
-    data = preprocess_subtotals(data)
-    previous_data = preprocess_subtotals(previous_data)
-
     data_dict = dict()
     for item in data:
         key = (item.substance, item.blend, getattr(item, party_field))
