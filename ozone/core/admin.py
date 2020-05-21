@@ -5,6 +5,7 @@ from pathlib import Path
 
 import adminactions.actions as actions
 
+from datetime import datetime
 from django_admin_listfilter_dropdown.filters import (
     DropdownFilter, RelatedDropdownFilter, RelatedOnlyDropdownFilter
 )
@@ -218,6 +219,40 @@ class ReportingPeriodFilter(admin.SimpleListFilter):
             return queryset
 
 
+def reporting_period_range_filter(
+    model_class, related_field='reporting_period', is_after=True
+):
+    ref_field = 'start_date' if is_after else 'end_date'
+    filter_type = 'after' if is_after else 'before'
+
+    class Wrapper(admin.SimpleListFilter):
+        parameter_name = f'reporting_period_{filter_type}'
+        title = f'period {filter_type}'
+        template = 'admin/dropdown_filter.html'
+
+        def lookups(self, request, model_admin):
+            return model_class.objects.distinct().order_by(
+                f'-{related_field}__{ref_field}'
+            ).values_list(
+                f'{related_field}__{ref_field}', f'{related_field}__name'
+            )
+
+        def queryset(self, request, queryset):
+            if self.value():
+                try:
+                    ref_date = datetime.strptime(self.value(), '%Y-%m-%d').date()
+                    if is_after:
+                        q = Q(**{f'{related_field}__start_date__gte': ref_date})
+                    else:
+                        q = Q(**{f'{related_field}__end_date__lte': ref_date})
+                    return queryset.filter(q)
+                except ValueError:
+                    pass
+            return queryset
+
+    return Wrapper
+
+
 def related_dropdown_filter(
     model_class, title, related_field, display_field, sort_field, sort_asc=True
 ):
@@ -376,13 +411,12 @@ class PartyGroupAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'get_party_count', 'get_parties', )
     list_filter = ('name',)
-    search_fields = ['name', 'parties__name',]
+    search_fields = ['name', 'parties__name']
 
     # Autocomplete is nicer, but difficult to filter only main parties
     # because get_search_results for Party model is used in many places
     # maybe include django-admin-autocomplete-all when stable
     autocomplete_fields = ('parties',)
-
 
     # def get_form(self, request, obj=None, **kwargs):
     #     form = super().get_form(request, obj, **kwargs)
@@ -1363,6 +1397,8 @@ class ProdConsAdmin(admin.ModelAdmin):
     )
     list_filter = (
         ('reporting_period', reporting_period_dropdown_filter(ProdCons)),
+        reporting_period_range_filter(ProdCons, is_after=True),
+        reporting_period_range_filter(ProdCons, is_after=False),
         ('party', MainPartyFilter),
         'group'
     )
@@ -1380,6 +1416,8 @@ class ProdConsMTAdmin(admin.ModelAdmin):
     )
     list_filter = (
         ('reporting_period', reporting_period_dropdown_filter(ProdConsMT)),
+        reporting_period_range_filter(ProdCons, is_after=True),
+        reporting_period_range_filter(ProdCons, is_after=False),
         ('party', MainPartyFilter),
         ('substance__name', custom_title_dropdown_filter('substance')),
         'substance__group'
