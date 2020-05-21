@@ -83,9 +83,9 @@ def to_row(obj, row_index, diff=False, previous_obj=None):
     # quantity_quarantine_pre_shipment
     if field_dict['quantity_quarantine_pre_shipment']:
         decision = get_decision(
-            obj, 'quantity_quarantine_pre_shipment'
+            obj, 'quarantine_pre_shipment'
         ) if not diff else get_decision_diff(
-            obj, previous_obj, 'quantity_quarantine_pre_shipment'
+            obj, previous_obj, 'quarantine_pre_shipment'
         )
         # Add two rows for QPS
         rows.extend([
@@ -129,7 +129,7 @@ subtitle = Paragraph(
     h2_style
 )
 
-styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
+base_styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
     ('SPAN', (0, 0), (0, 1)),  # Annex/Group
     ('SPAN', (1, 0), (1, 1)),  # Substance
     ('SPAN', (2, 0), (2, 1)),  # Total production
@@ -186,6 +186,7 @@ def export_production(submission, queryset):
 
     captured_items = list()
     rows = list()
+    styles = list(base_styles)
 
     for p in data:
         if p.substance.is_captured:
@@ -286,6 +287,7 @@ def export_production_diff(
 
         captured_items = list()
         rows = list()
+        styles = list(base_styles)
 
         for key in keys:
             diff = False
