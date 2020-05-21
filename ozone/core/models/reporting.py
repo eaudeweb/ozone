@@ -853,8 +853,18 @@ class Submission(models.Model):
             return 1, 0
         # Get current major and minor revisions
         revisions = submissions.values_list('revision_major', 'revision_minor')
-        revision_major = max([r[0] for r in revisions])
-        revision_minor = max([r[1] for r in revisions])
+        revision_major = max(
+            [
+                r[0] if r[0] is not None else 0
+                for r in revisions
+            ]
+        )
+        revision_minor = max(
+            [
+                r[1] if r[1] is not None else 0
+                for r in revisions
+            ]
+        )
         if not self.filled_by_secretariat and user.party is not None:
             # Party user, party-filled submission
             return revision_major + 1, 0
