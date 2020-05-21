@@ -73,10 +73,10 @@ def notify_workflow_transitioned(workflow, transition):
         is_secretariat=True,
         is_notified=True,
     ))
-    cc_emails = set(u.email for u in submission.party.users.filter(
+    cc_emails = set(u.email.lower() for u in submission.party.users.filter(
         is_notified=True,
     ))
-    cc_emails.add(submission.info.email)
+    cc_emails.add(submission.info.email.lower())
 
     send_mail_from_template(
         "registration/workflow_transitioned_subject.txt",
