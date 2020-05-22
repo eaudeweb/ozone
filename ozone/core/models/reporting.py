@@ -815,7 +815,11 @@ class Submission(models.Model):
                 )
             )
 
-        # Call the transition; this should work (bar exceptions in pre-post
+        # Set the `increment_minor` attribute on the transition,
+        # since there are no other good ways of sending it parameters
+        setattr(transition, 'increment_minor', increment_minor)
+
+        # Call the transition; this should work (bar exceptions in pre/post
         # transition hooks, which will get caught later down the line if they
         # occur)
         transition()
@@ -826,14 +830,7 @@ class Submission(models.Model):
 
         # This field will be automatically added to update_fields in save()
         self.last_edited_by = user
-
-        update_fields = ('_previous_state', '_current_state',)
-        if trans_name == 'submit':
-            self.revision_major, self.revision_minor = self.get_next_revision(
-                user, increment_minor
-            )
-            update_fields += ('revision_major', 'revision_minor',)
-        self.save(update_fields=update_fields)
+        self.save(update_fields=('_previous_state', '_current_state',))
 
     def get_next_revision(self, user, increment_minor=None):
         # Only take into account submitted peers of this submission.
@@ -847,7 +844,7 @@ class Submission(models.Model):
             revision_major__isnull=True,
             revision_minor__isnull=True
         )
-        # TODO; should I also exclude recalled submissions?
+        # TODO: should I also exclude recalled submissions?
         if not submissions:
             # First submitted revision will always be 1.0
             return 1, 0
@@ -874,6 +871,12 @@ class Submission(models.Model):
                 return revision_major + 1, 0
             if increment_minor is True:
                 return revision_major, revision_minor + 1
+
+    def set_revision(self, user, increment_minor):
+        self.revision_major, self.revision_minor = self.get_next_revision(
+            user, increment_minor
+        )
+        self.save(update_fields=('revision_major', 'revision_minor',))
 
     def is_submittable(self):
         """
