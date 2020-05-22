@@ -1451,6 +1451,7 @@ class Submission(models.Model):
         if self.version == 1:
             return None
         return Submission.objects.filter(
+            obligation=self.obligation,
             party=self.party,
             reporting_period=self.reporting_period,
             version=(self.version - 1)
