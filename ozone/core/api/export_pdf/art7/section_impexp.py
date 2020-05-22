@@ -208,9 +208,9 @@ def to_row(
             rows.extend([
                 (
                     smb_l('%s %s' % (_('Subtotal polyols containing'), obj.substance.name)),
-                    '', '', '', '', '',
-                    smb_r(field_dict['quantity_polyols']),
                     '', '',
+                    smb_r(field_dict['quantity_polyols']),
+                    '', '', '',
                 )
             ])
             styles.extend([
@@ -226,8 +226,8 @@ def to_row(
                     sm_r('%s %s' % (_('Polyols containing'), obj.substance.name)),
                     '',
                     sm_l(party.name if party else ''),
-                    '', '', '',
                     sm_r(field_dict['quantity_polyols']),
+                    '', '', '',
                     sm_l(decision),
                     '',
                 )
