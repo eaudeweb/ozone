@@ -29,6 +29,7 @@
       v-model="currentTyping"
       :highlighted="{dates:[new Date()]}"
       :disabled-dates="disabledDates"
+      :typeable=true
       format="d MMMM yyyy"
       v-else-if="field.type === 'date'"
     ></Datepicker>
