@@ -11,7 +11,7 @@
           <multiselect
             :max-height="250"
             :multiple="true"
-            :clear-on-select="false"
+            :clear-on-select="true"
             :hide-selected="false"
             :close-on-select="true"
             label="text"
