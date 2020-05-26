@@ -663,13 +663,15 @@ class SubmissionAdmin(admin.ModelAdmin):
         'flag_has_reported_f'
     )
     search_fields = ['party__name']
-
-    def get_readonly_fields(self, request, obj=None):
-        self.readonly_fields = []
-        for field in self.model._meta.fields:
-            if 'flag' not in field.name and 'state' not in field.name:
-                self.readonly_fields.append(field.name)
-        return self.readonly_fields
+    readonly_fields = [
+        'id', 'obligation', 'party', 'reporting_period',
+        '_workflow_class', 'schema_version', 'version', 'cloned_from',
+        'created_by', 'last_edited_by', 'created_at', 'updated_at',
+    ]
+    formfield_overrides = {
+        CharField: {'widget': TextInput(attrs={'size': '120'})},
+        TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 120})},
+    }
 
     def get_deleted_objects(self, objs, request):
         deletable_objects, model_count, perms_needed, protected = super(
