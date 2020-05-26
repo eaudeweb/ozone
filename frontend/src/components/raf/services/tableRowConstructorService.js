@@ -122,7 +122,6 @@ export default {
       },
       set quantity_use_categories(val) {
         const self = this
-        console.log('lalalala', critical)
         if (!this.use_categories.length && has_critical_uses) {
           this.use_categories = [{
             code: 'OTHER',
