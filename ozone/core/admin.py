@@ -564,6 +564,11 @@ class UserAdmin(admin.ModelAdmin):
         "is_staff", "is_superuser", "is_active", "activated",
     )
 
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_superuser:
+            return self.readonly_fields + ['is_superuser']
+        return self.readonly_fields
+
     def reset_password(self, request, queryset, template="password_reset"):
         domain_override = request.META.get("HTTP_HOST")
         use_https = request.environ.get("wsgi.url_scheme", "https").lower() == "https"
