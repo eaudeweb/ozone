@@ -16,6 +16,8 @@ from .utils.cache import (
     invalidate_impcom_topics_cache,
     invalidate_licensing_system_cache,
     invalidate_focal_points_cache,
+    invalidate_substances_cache,
+    invalidate_blends_cache,
 )
 
 from ozone.core.models import (
@@ -39,6 +41,10 @@ from ozone.core.models import (
     ImpComBody,
     ImpComTopic,
     ImpComRecommendation,
+
+    Substance,
+    Blend,
+    BlendComponent,
 )
 
 logger = logging.getLogger(__name__)
@@ -56,6 +62,9 @@ clear_status_of_ratification_cache_signal = django.dispatch.Signal()
 clear_impcom_recommendations_cache_signal = django.dispatch.Signal()
 clear_impcom_bodies_cache_signal = django.dispatch.Signal()
 clear_impcom_topics_cache_signal = django.dispatch.Signal()
+
+clear_substances_cache_signal = django.dispatch.Signal()
+clear_blends_cache_signal = django.dispatch.Signal()
 
 
 @receiver(clear_aggregation_cache_signal)
@@ -114,6 +123,14 @@ def clear_focal_points_cache(sender, instance, **kwargs):
     return invalidate_focal_points_cache()
 
 
+def clear_substances_cache(sender, instance, **kwargs):
+    return invalidate_substances_cache()
+
+
+def clear_blends_cache(sender, instance, **kwargs):
+    return invalidate_blends_cache()
+
+
 models_handlers_mapping = [
     # Country profile models/signal handlers
     (FocalPoint, (clear_country_profile_cache, clear_focal_points_cache, )),
@@ -148,6 +165,10 @@ models_handlers_mapping = [
         ImpComTopic,
         (clear_impcom_topics_cache, clear_impcom_recommendations_cache, )
     ),
+    # Substances/Blends signal handlers
+    (Blend, (clear_blends_cache, )),
+    (BlendComponent, (clear_blends_cache, )),
+    (Substance, (clear_substances_cache, )),
 ]
 for model, signal_handlers in models_handlers_mapping:
     for handler in signal_handlers:
