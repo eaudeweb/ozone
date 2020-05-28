@@ -255,9 +255,9 @@ class DefaultArticle7Workflow(BaseWorkflow):
     def submit(self):
         # Make submission current
         self.model_instance.make_current()
-        # Increment version; uses `increment_minor` attribute set on this
-        # transition when called. Default is False.
-        increment_minor = getattr(self, 'increment_minor', False)
+        # Increment version; uses `increment_minor` attribute set on the
+        # model instance (i.e. submission) when called. Default is False.
+        increment_minor = getattr(self.model_instance, 'increment_minor', False)
         self.model_instance.set_revision(self.user, increment_minor)
         # Set submitted_at flag
         if self.model_instance.is_submitted_at_automatically_filled(self.user):

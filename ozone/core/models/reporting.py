@@ -815,9 +815,10 @@ class Submission(models.Model):
                 )
             )
 
-        # Set the `increment_minor` attribute on the transition,
-        # since there are no other good ways of sending it parameters
-        setattr(transition, 'increment_minor', increment_minor)
+        # Set the `increment_minor` attribute on the submission,
+        # since there are no other good ways of sending parameters to the
+        # transition.
+        setattr(self, 'increment_minor', increment_minor)
 
         # Call the transition; this should work (bar exceptions in pre/post
         # transition hooks, which will get caught later down the line if they
@@ -866,11 +867,12 @@ class Submission(models.Model):
             # Party user, party-filled submission
             return revision_major + 1, 0
         if self.filled_by_secretariat and user.is_secretariat:
-            if increment_minor is None or increment_minor is False:
-                # If increment_minor was not specified, increment major version
-                return revision_major + 1, 0
-            else:
+            if increment_minor is True:
                 return revision_major, revision_minor + 1
+            else:
+                # If increment_minor was not specified or is False,
+                # increment major version
+                return revision_major + 1, 0
 
     def set_revision(self, user, increment_minor):
         if not self.is_versionable:
