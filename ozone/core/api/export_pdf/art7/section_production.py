@@ -1,5 +1,5 @@
 from django.utils.translation import gettext_lazy as _
-from reportlab.platypus import Paragraph
+from reportlab.platypus import Paragraph, KeepTogether
 
 from ..util import (
     format_decimal, format_decimal_diff,
@@ -124,10 +124,10 @@ def to_row(obj, row_index, diff=False, previous_obj=None):
 
 
 # These will be used for
-subtitle = Paragraph(
+subtitle = KeepTogether(Paragraph(
     "%s (%s)" % (_('Production'), _('metric tonnes')),
     h2_style
-)
+))
 
 base_styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
     ('SPAN', (0, 0), (0, 1)),  # Annex/Group
