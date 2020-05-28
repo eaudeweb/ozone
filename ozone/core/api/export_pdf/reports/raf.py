@@ -24,6 +24,7 @@ from ..util import (
     col_widths,
     format_decimal,
     get_remarks,
+    get_date_of_reporting,
 )
 from ..util import ReportForSubmission
 from ..util import get_submissions
@@ -471,9 +472,16 @@ def get_flowables(party_name, submissions):
         crit_categories_table,
     ] if crit_categories_table else []
 
+    date_of_reporting_flowables = list()
+    for submission in submissions:
+        date_of_reporting_flowables.extend(
+            get_date_of_reporting(submission)
+        )
+
     flowables = [
         Paragraph(party_name.upper(), style=h1_style),
         Paragraph('', style=h1_style),
+        *date_of_reporting_flowables,
         *essen_flowables,
         *crit_flowables,
         Paragraph('', style=h1_style),

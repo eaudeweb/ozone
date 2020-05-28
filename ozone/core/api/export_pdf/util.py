@@ -10,6 +10,7 @@ from xml.sax.saxutils import escape
 from django.utils.translation import gettext_lazy as _
 from django.http import HttpResponse
 from django.db import models
+from django.db.models import F
 
 from reportlab.platypus import SimpleDocTemplate
 from reportlab.platypus import ListFlowable
@@ -536,7 +537,7 @@ def get_submission_dates(submission):
             )
             .exclude(_current_state__in=submission.editable_states)
             .exclude(_current_state__in=submission.incorrect_states)
-            .order_by('submitted_at')
+            .order_by(F('submitted_at').asc(nulls_first=True))
         )
         first = versions.first()
         if len(versions) == 0:
@@ -545,7 +546,8 @@ def get_submission_dates(submission):
             revised_date = None
         elif len(versions) == 1:
             # This is the only submission.
-            first_date = first.submitted_at
+            first_date = first.submitted_at or submission.info.date
+            # not all submissions have submitted_at (e.g. legacy RAF)
             revised_date = None
         else:
             first_date = first.submitted_at
@@ -581,7 +583,7 @@ def get_date_of_reporting(submission):
         return (
             Paragraph('%s: %s, %s: %s%s' % (
                 _('Date first received'),
-                format_date(date_received),
+                format_date(date_received) if date_received else '-',
                 _('Date revised'),
                 format_date(date_revised),
                 extra_text,
