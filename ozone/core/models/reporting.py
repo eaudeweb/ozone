@@ -859,6 +859,7 @@ class Submission(models.Model):
             [
                 r[1] if r[1] is not None else 0
                 for r in revisions
+                if r[0] == revision_major
             ]
         )
         if not self.filled_by_secretariat and user.party is not None:
@@ -868,7 +869,7 @@ class Submission(models.Model):
             if increment_minor is None or increment_minor is False:
                 # If increment_minor was not specified, increment major version
                 return revision_major + 1, 0
-            if increment_minor is True:
+            else:
                 return revision_major, revision_minor + 1
 
     def set_revision(self, user, increment_minor):
