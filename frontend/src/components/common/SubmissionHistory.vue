@@ -34,7 +34,7 @@
 <script>
 import { getObligations } from '@/components/common/services/api'
 import { getCommonLabels } from '@/components/common/dataDefinitions/labels'
-import { dateFormatToDisplay } from '@/components/common/services/languageService.js'
+import { dateFormatToDisplay, dateFormatToYYYYMMDD } from '@/components/common/services/languageService.js'
 
 export default {
   props: {
@@ -110,6 +110,7 @@ export default {
           version: element.version,
           created_by: element.filled_by_secretariat ? 'Secretariat' : 'Party',
           updated_at: dateFormatToDisplay(element.updated_at),
+          submitted_at: dateFormatToYYYYMMDD(element.submitted_at),
           current_state: `${this.labels[element.current_state]} ${this.getStatus(element)}`,
           actions: element.id,
           details: element,
@@ -128,6 +129,9 @@ export default {
         },
         {
           key: 'updated_at', label: this.$gettext('Last Modified'), sortable: true, class: 'text-center'
+        },
+        {
+          key: 'submitted_at', label: this.$gettext('Submitted at'), sortable: true, class: 'text-center'
         },
         {
           key: 'current_state', label: this.$gettext('Current State'), sortable: true, sortDirection: 'desc', class: 'text-center'
