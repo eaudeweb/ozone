@@ -844,7 +844,6 @@ class Submission(models.Model):
             revision_major__isnull=True,
             revision_minor__isnull=True
         )
-        # TODO: should I also exclude recalled submissions?
         if not submissions:
             # First submitted revision will always be 1.0
             return 1, 0
@@ -873,6 +872,8 @@ class Submission(models.Model):
                 return revision_major, revision_minor + 1
 
     def set_revision(self, user, increment_minor):
+        if not self.is_versionable:
+            return
         self.revision_major, self.revision_minor = self.get_next_revision(
             user, increment_minor
         )
