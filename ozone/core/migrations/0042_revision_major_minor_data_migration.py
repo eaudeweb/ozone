@@ -13,6 +13,15 @@ def populate_revision_major_minor(apps, schema_editor):
     )
 
 
+def clear_revision_major_minor(apps, schema_editor):
+    Submission = apps.get_model('core', 'Submission')
+
+    Submission.objects.update(
+        revision_major=None,
+        revision_minor=None,
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -20,5 +29,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(populate_revision_major_minor),
+        migrations.RunPython(
+            populate_revision_major_minor,
+            reverse_code=clear_revision_major_minor
+        ),
     ]
