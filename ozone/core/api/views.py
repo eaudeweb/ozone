@@ -295,6 +295,8 @@ class CurrentUserViewSet(
     mixins.ListModelMixin, GenericViewSet
 ):
     queryset = User.objects.all()
+    # Serializer class keeps permission-related fields read-only
+    # (e.g. is_secretariat, is_cap etc).
     serializer_class = CurrentUserSerializer
     permission_classes = (IsAuthenticated, IsSecretariatOrSamePartyUser)
 
