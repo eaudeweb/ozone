@@ -1,0 +1,17 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}Profile update for {{username}}:{% endblocktrans %}
+
+{% if new_user.first_name != old_user.first_name %}
+	{% trans "First name:" %} {{ new_user.first_name }} (was: {{ old_user.first_name }})
+{% endif %}
+{% if new_user.last_name != old_user.last_name %}
+	{% trans "Last name:" %} {{ new_user.last_name }} (was: {{ old_user.last_name }})
+{% endif %}
+{% if new_user.email != old_user.email %}
+	{% trans "Email:" %} {{ new_user.email }} (was: {{ old_user.email }})
+{% endif %}
+{% if new_user.language != old_user.language %}
+	{% trans "Language:" %} {{ new_user.language }} (was: {{ old_user.language }})
+{% endif %}
+
+{% endautoescape %}
