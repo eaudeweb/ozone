@@ -65,7 +65,7 @@ def get_date_of_reporting(submission):
     if date_revised:
         return (
             Paragraph('%s: %s, %s: %s %s' % (
-                _('Date received'),
+                _('Date first received'),
                 format_date(date_received),
                 _('Date revised'),
                 format_date(date_revised),

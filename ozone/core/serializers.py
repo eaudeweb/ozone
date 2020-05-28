@@ -254,7 +254,10 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             'impersonated_by'
         )
         read_only_fields = (
-            'id', 'username', 'is_secretariat', 'is_read_only', 'party', 'role', 'related_parties',
+            'id', 'username',
+            'is_secretariat', 'is_read_only', 'is_cap', 'is_mobile_app',
+            'party', 'role',
+            'related_parties',
         )
 
     def get_impersonated_by(self, obj):

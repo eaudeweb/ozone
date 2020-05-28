@@ -5,6 +5,8 @@ from pathlib import Path
 from decimal import Decimal
 from functools import partial
 from datetime import datetime
+
+import copy
 import logging
 import urllib.parse
 import os
@@ -187,6 +189,9 @@ from ..serializers import (
 
 from ..models.utils import round_decimal_half_up
 
+from ozone.core.email import send_mail_from_template
+
+
 from ozone.core.api.export_pdf import reports
 
 User = get_user_model()
@@ -295,8 +300,29 @@ class CurrentUserViewSet(
     mixins.ListModelMixin, GenericViewSet
 ):
     queryset = User.objects.all()
+    # Serializer class keeps permission-related fields read-only
+    # (e.g. is_secretariat, is_cap etc).
     serializer_class = CurrentUserSerializer
     permission_classes = (IsAuthenticated, IsSecretariatOrSamePartyUser)
+
+    def perform_update(self, serializer):
+        user = copy.deepcopy(self.request.user)
+        instance = serializer.save()
+        # send notification to secretariat users on profile change
+        to_emails = set(u.email for u in User.objects.filter(
+            is_secretariat=True,
+            is_notified=True,
+        ))
+        send_mail_from_template(
+            "registration/account_updated_subject.txt",
+            "registration/account_updated_email.html",
+            context={
+                "username": user.username,
+                "old_user": user,
+                "new_user": instance,
+            },
+            to_emails=to_emails,
+        )
 
     def get_queryset(self):
         if self.kwargs.get('pk'):

@@ -7,6 +7,7 @@ from reportlab.platypus import PageBreak
 
 from ozone.core.models import Obligation
 from ozone.core.models import ObligationTypes
+from ozone.core.models import ApprovedCriticalUse
 from ozone.core.models.utils import sum_decimals, subtract_decimals
 
 from ..util import (
@@ -39,7 +40,7 @@ TABLE_CUSTOM_STYLES = (
     ('ALIGN', (0, 0), (-1, 2), 'CENTER'),
     ('ALIGN', (2, 3), (4, -1), 'RIGHT'),
     ('ALIGN', (6, 3), (13, -1), 'RIGHT'),
-    ('SPAN', (4, 0), (5, 0)),  # E hspan
+    ('SPAN', (4, 0), (5, 0)),  # D hspan
     ('SPAN', (4, 1), (5, 1)),  # Imported hspan
     ('SPAN', (0, 1), (0, 2)),  # Year
     ('SPAN', (1, 1), (1, 2)),  # Substance
@@ -183,11 +184,25 @@ def get_table_header_crit():
     ]
 
 
+def get_table_header_crit_categories():
+    return [
+        (
+            sm_c(_('Year')),
+            sm_c(_('Critical use category')),
+            sm_c(_('Amount exempted')),
+            sm_c(_('Decision')),
+            sm_c(_('Amount used')),
+        ),
+    ]
+
+
 def get_table_data_essen_crit(data, reporting_period, base_row_index, on_hand_func):
     rows = list()
     styles = list()
     for item in data:
-        imports = list(item.imports.order_by('party__name').all())
+        imports = list(item.imports.filter(
+            quantity__gt=0  # filter the default Unspecified=0 rows persisted
+        ).order_by('party__name').all())
         total_imported = Decimal(0.0)
         for imp in imports:
             total_imported = sum_decimals(
@@ -282,6 +297,66 @@ def get_table_data_crit(submission, base_row_index):
     )
 
 
+def get_table_data_crit_categories(submission, base_row_index):
+    data = submission.rafreports.filter(substance__has_critical_uses=True)
+    rows = list()
+    styles = list()
+    for item in data:
+        approved_uses = ApprovedCriticalUse.objects.filter(
+            exemption__substance=item.substance,
+            exemption__submission__party=submission.party,
+            exemption__submission__reporting_period=submission.reporting_period,
+        )
+        # sometimes there can be multple exemptions for the same substance, period and category
+        # see Australia, 2011
+        all_approved_categories = collections.defaultdict(list)
+        for approved_use in approved_uses:
+            all_approved_categories[approved_use.critical_use_category.name].append(approved_use)
+
+        use_categories = list(item.use_categories.all())
+        for use_category in use_categories:
+            category_name = use_category.critical_use_category.name
+            if not use_category.quantity:
+                continue
+            approved_uses = all_approved_categories.pop(category_name, None)
+            appr = approved_uses.pop() if approved_uses else None
+            rows.append((
+                sm_c(submission.reporting_period.name),
+                sm_l(category_name),
+                sm_r(format_decimal(appr.quantity if appr else None)),
+                sm_c(appr.exemption.decision_approved) if appr else '',
+                sm_r(format_decimal(use_category.quantity)),
+            ))
+            if approved_uses:
+                # multiple amounts approved, append rows and merge cells
+                row_index = base_row_index + len(rows)
+                for appr in approved_uses:
+                    rows.append((
+                        '', '',
+                        sm_r(format_decimal(appr.quantity if appr else None)),
+                        sm_c(appr.exemption.decision_approved) if appr else '',
+                        '',
+                    ))
+                span_columns = (0, 1, 4,)
+                styles.extend([
+                    #  Vertical span of common columns
+                    ('SPAN', (col, row_index), (col, row_index + len(approved_uses)))
+                    for col in span_columns
+                ])
+        # check for unused approvals
+        for unused_approval in all_approved_categories.values():
+            for appr in unused_approval:
+                rows.append((
+                    sm_c(appr.exemption.submission.reporting_period.name),
+                    sm_l(appr.critical_use_category.name),
+                    sm_r(format_decimal(appr.quantity)),
+                    sm_c(appr.exemption.decision_approved),
+                    sm_r('-'),
+                ))
+
+    return rows, styles
+
+
 def get_table_essen(submissions):
     styles = list(TABLE_STYLES + TABLE_CUSTOM_STYLES)
     rows = get_table_header_essen()
@@ -305,6 +380,20 @@ def get_table_crit(submissions):
         rows += row_data
         styles += row_styles
     widths = col_widths([0.9, 0, 1.5, 1.5, 1.3, 2.5, 1.5, 1.5, 1.5, 1.5, 1.8, 1.5, 1.3, 1.2, 0.8, 6.5])
+    if len(rows) == num_header_rows:
+        return None
+    return Table(rows, colWidths=widths, style=styles, hAlign='LEFT', repeatRows=3)
+
+
+def get_table_crit_categories(submissions):
+    styles = list(TABLE_STYLES)
+    rows = get_table_header_crit_categories()
+    num_header_rows = len(rows)
+    for submission in submissions:
+        row_data, row_styles = get_table_data_crit_categories(submission, len(rows) - 1)
+        rows += row_data
+        styles += row_styles
+    widths = col_widths([3, 8, 5, 6, 5])
     if len(rows) == num_header_rows:
         return None
     return Table(rows, colWidths=widths, style=styles, hAlign='LEFT', repeatRows=3)
@@ -365,11 +454,22 @@ def get_flowables(party_name, submissions):
     )
     # crit_title.keepWithNext = True
     crit_table = get_table_crit(submissions)
+
     crit_flowables = [
         crit_title,
         crit_table,
         *get_footer_crit(),
     ] if crit_table else []
+
+    crit_categories_title = Paragraph(
+        _("Details of consumption by individual critical use exemption"),
+        style=h2_style
+    )
+    crit_categories_table = get_table_crit_categories(submissions)
+    crit_flowables += [
+        crit_categories_title,
+        crit_categories_table,
+    ] if crit_categories_table else []
 
     flowables = [
         Paragraph(party_name.upper(), style=h1_style),

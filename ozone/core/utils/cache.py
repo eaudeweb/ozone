@@ -105,5 +105,14 @@ def invalidate_impcom_topics_cache():
 def invalidate_licensing_system_cache():
     return invalidate_global_cache('licensing_system')
 
+
 def invalidate_focal_points_cache():
     return invalidate_global_cache('focal_points')
+
+
+def invalidate_substances_cache():
+    return invalidate_global_cache('group_substances')
+
+
+def invalidate_blends_cache():
+    return invalidate_global_cache('blends')
