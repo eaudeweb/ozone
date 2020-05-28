@@ -665,9 +665,16 @@ class SubmissionAdmin(admin.ModelAdmin):
     search_fields = ['party__name']
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        Only flags, states and revision major/minor are editable in admin.
+        """
         self.readonly_fields = []
         for field in self.model._meta.fields:
-            if 'flag' not in field.name and 'state' not in field.name:
+            if (
+                'flag' not in field.name
+                and 'state' not in field.name
+                and 'revision' not in field.name
+            ):
                 self.readonly_fields.append(field.name)
         return self.readonly_fields
 
