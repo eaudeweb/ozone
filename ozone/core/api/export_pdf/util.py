@@ -526,7 +526,7 @@ def get_submission_dates(submission):
         - date received is the date of the current submission
         - date revised is None
     """
-    if submission.version > 1 and submission.obligation.has_versions:
+    if submission.obligation.has_versions:
         # This is not the first version, must check history
         versions = (
             Submission.objects.filter(
@@ -534,10 +534,9 @@ def get_submission_dates(submission):
                 party=submission.party,
                 reporting_period=submission.reporting_period,
             )
-            .exclude(pk=submission.pk)
             .exclude(_current_state__in=submission.editable_states)
             .exclude(_current_state__in=submission.incorrect_states)
-            .order_by('version')
+            .order_by('submitted_at')
         )
         first = versions.first()
         if first:
