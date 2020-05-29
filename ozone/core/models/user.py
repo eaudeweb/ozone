@@ -156,5 +156,11 @@ class User(GuardianUserMixin, AbstractUser):
         if first_save:
             Token.objects.create(user=self)
 
+    def __str__(self):
+        full_name = self.get_full_name()
+        if full_name:
+            return f'{full_name} - {self.username}'
+        return self.username
+
     class Meta:
         verbose_name = 'user'
