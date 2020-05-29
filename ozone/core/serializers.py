@@ -1658,7 +1658,8 @@ class SubmissionSerializer(
         return obj.obligation.obligation_type
 
     def get_revision(self, obj):
-        return f'{obj.revision_major}.{obj.revision_minor}'
+        return '-' if obj.revision_major is None else \
+            f'{obj.revision_major}.{obj.revision_minor}'
 
     def get_in_initial_state(self, obj):
         return obj.in_initial_state
@@ -1765,7 +1766,8 @@ class ListSubmissionSerializer(CreateSubmissionSerializer):
         extra_kwargs = {'url': {'view_name': 'core:submission-detail'}}
 
     def get_revision(self, obj):
-        return f'{obj.revision_major}.{obj.revision_minor}'
+        return '-' if obj.revision_major is None else \
+            f'{obj.revision_major}.{obj.revision_minor}'
 
     def get_available_transitions(self, obj):
         user = self.context['request'].user
@@ -1785,6 +1787,7 @@ class ListSubmissionSerializer(CreateSubmissionSerializer):
 
 
 class SubmissionHistorySerializer(serializers.ModelSerializer):
+    revision = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
     current_state = serializers.SerializerMethodField()
@@ -1792,7 +1795,7 @@ class SubmissionHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = HistoricalSubmission
         fields = (
-            'party', 'reporting_period', 'obligation', 'version',
+            'party', 'reporting_period', 'obligation', 'version', 'revision',
             'user', 'date', 'current_state',
             'flag_provisional', 'flag_valid', 'flag_superseded',
             'flag_checked_blanks', 'flag_has_blanks', 'flag_confirmed_blanks',
@@ -1803,6 +1806,10 @@ class SubmissionHistorySerializer(serializers.ModelSerializer):
             'flag_has_reported_e', 'flag_has_reported_f',
         )
         read_only_fields = fields
+
+    def get_revision(self, obj):
+        return '-' if obj.revision_major is None else \
+            f'{obj.revision_major}.{obj.revision_minor}'
 
     def get_date(self, obj):
         return obj.history_date.strftime('%Y-%m-%d')
