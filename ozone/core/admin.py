@@ -668,6 +668,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         'flag_has_reported_f'
     )
     search_fields = ['party__name']
+
     readonly_fields = [
         'id', 'obligation', 'party', 'reporting_period',
         '_workflow_class', 'schema_version', 'version', 'cloned_from',

@@ -324,14 +324,14 @@ const actions = {
     })
   },
 
-  async doSubmissionTransition({ dispatch }, { source, submission, transition, $gettext, noModal, backToDashboard = true }) {
+  async doSubmissionTransition({ dispatch }, { source, submission, transition, $gettext, noModal, backToDashboard = true, increment_minor = false }) {
     if (!noModal) {
       const confirmed = await dispatch('openConfirmModal', { $gettext })
       if (!confirmed) {
         return
       }
     }
-    callTransition(submission, transition).then(() => {
+    callTransition(submission, transition, increment_minor).then(() => {
       if (source === 'dashboard') {
         dispatch('getCurrentSubmissions')
       } else {

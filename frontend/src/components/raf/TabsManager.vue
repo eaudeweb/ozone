@@ -42,6 +42,7 @@
               :flags_info="$store.state.form.tabs.flags"
               :info="$store.state.form.tabs.sub_info"
               :tabId="0"
+              :hasVersions="true"
             />
           </b-tab>
           <b-tab>
@@ -84,7 +85,7 @@
         <b-btn
           v-if="$store.state.current_submission.available_transitions.includes('submit')"
           @click="checkBeforeSubmitting"
-          variant="outline-success"
+          variant="outline-primary"
         >
           <span v-translate>Submit</span>
         </b-btn>
@@ -136,6 +137,7 @@
       :submission="submission"
       :transition="currentTransition"
       :skipArt7Specific="true"
+      :hasVersions="true"
     ></TransitionQuestions>
   </div>
 </template>

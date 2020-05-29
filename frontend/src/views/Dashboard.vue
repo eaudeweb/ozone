@@ -331,7 +331,7 @@ export default {
             reporting_period: this.getSubmissionInfo(element).period_description(),
             party: this.getSubmissionInfo(element).party(),
             current_state: element.flag_superseded ? `${this.labels[element.current_state]} (${this.labels.flags.flag_superseded})` : this.labels[element.current_state],
-            version: element.version,
+            revision: element.revision,
             updated_at: dateFormatToDisplay(element.updated_at),
             created_by: element.filled_by_secretariat ? this.$gettext('Secretariat') : this.$gettext('Party'),
             details: element
@@ -351,7 +351,7 @@ export default {
       }, {
         key: 'party', label: this.$gettext('Party'), sortable: true, sortDirection: 'desc'
       }, {
-        key: 'version', label: this.$gettext('Version'), sortable: true, sortDirection: 'desc'
+        key: 'revision', label: this.$gettext('Version'), sortable: true, sortDirection: 'desc'
       }, {
         key: 'current_state', label: this.$gettext('Status'), sortable: true
       }, {
@@ -375,7 +375,7 @@ export default {
             obligation: this.getSubmissionInfo(element).obligation(),
             reporting_period: this.getSubmissionInfo(element).period_description(),
             party: this.getSubmissionInfo(element).party(),
-            version: element.version,
+            revision: element.revision,
             updated_at: dateFormatToDisplay(element.updated_at),
             created_by: element.filled_by_secretariat ? this.$gettext('Secretariat') : this.$gettext('Party'),
             details: element
@@ -394,7 +394,7 @@ export default {
       }, {
         key: 'party', label: this.$gettext('Party'), sortable: true, sortDirection: 'desc'
       }, {
-        key: 'version', label: this.$gettext('Version'), sortable: true, sortDirection: 'desc'
+        key: 'revision', label: this.$gettext('Version'), sortable: true, sortDirection: 'desc'
       }, {
         key: 'updated_at', label: this.$gettext('Last modified'), sortable: true, sortDirection: 'desc'
       }, {

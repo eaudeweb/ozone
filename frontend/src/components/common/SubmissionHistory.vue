@@ -21,7 +21,7 @@
         >
           <span v-translate>View</span>
         </a>
-        <b-btn v-if="has_diff"
+        <b-btn v-if="has_diff && cell.item.version > 1"
           variant="outline-dark"
           size="sm" class="mx-1"
           @click="showDiffReport(cell.item.actions)"
@@ -108,6 +108,7 @@ export default {
       this.history.forEach((element) => {
         tableFields.push({
           version: element.version,
+          revision: element.revision,
           created_by: element.filled_by_secretariat ? 'Secretariat' : 'Party',
           updated_at: dateFormatToDisplay(element.updated_at),
           submitted_at: dateFormatToYYYYMMDD(element.submitted_at),
@@ -122,7 +123,7 @@ export default {
     tableFields() {
       return [
         {
-          key: 'version', label: this.$gettext('Version'), sortable: true, sortDirection: 'desc', class: 'text-center'
+          key: 'revision', label: this.$gettext('Version'), sortable: true, sortDirection: 'desc', class: 'text-center'
         },
         {
           key: 'created_by', label: this.$gettext('Created by'), sortable: true, class: 'text-center'

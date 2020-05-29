@@ -32,7 +32,12 @@
             <template slot="title">
               <tab-title-with-loader :tab="$store.state.form.tabs.sub_info"/>
             </template>
-            <SubmissionInfo ref="sub_info" :info="$store.state.form.tabs.sub_info" :tabId="0"/>
+            <SubmissionInfo
+              ref="sub_info"
+              :info="$store.state.form.tabs.sub_info"
+              :tabId="0"
+              :hasVersions="false"
+            />
           </b-tab>
           <b-tab>
             <template slot="title">
@@ -65,7 +70,7 @@
         <b-btn
           v-if="$store.state.current_submission.available_transitions.includes('submit')"
           @click="checkBeforeSubmitting"
-          variant="outline-success"
+          variant="outline-primary"
         >
           <span v-translate>Submit</span>
         </b-btn>
@@ -77,10 +82,6 @@
         >
           <span>{{labels[transition]}}</span>
         </b-btn>
-        <!-- <b-btn @click="$refs.history_modal.show()" variant="outline-info">
-					<span>{{labels['versions']}}</span>
-        </b-btn>-->
-        <!-- <a class="btn btn-outline-primary" :href="`${submission}export_pdf`">Export as PDF</a> -->
         <b-btn
           @click="removeSubmission"
           v-if="$store.state.current_submission.can_delete_data"
@@ -90,22 +91,11 @@
         </b-btn>
       </b-button-group>
     </Footer>
-
-    <b-modal
-      size="lg"
-      ref="history_modal"
-      id="history_modal"
-      :title="$gettext('Submission versions')"
-    >
-      <SubmissionHistory
-        :history="$store.state.currentSubmissionHistory"
-        :currentVersion="$store.state.current_submission.version"
-      ></SubmissionHistory>
-    </b-modal>
     <TransitionQuestions
       v-on:removeTransition="currentTransition = null"
       :submission="submission"
       :transition="currentTransition"
+      :hasVersions="false"
     ></TransitionQuestions>
   </div>
 </template>
@@ -117,7 +107,6 @@ import Edit from '@/components/common/Edit'
 import Files from '@/components/common/Files'
 import { getInstructions } from '@/components/common/services/api'
 import Save from '@/components/exemption/Save'
-import SubmissionHistory from '@/components/common/SubmissionHistory.vue'
 import { getLabels } from '@/components/art7/dataDefinitions/labels'
 import TabTitleWithLoader from '@/components/common/TabTitleWithLoader'
 import FormTemplate from '@/components/exemption/FormTemplate.vue'
@@ -131,7 +120,6 @@ export default {
     Files,
     Footer,
     Save,
-    SubmissionHistory,
     TabTitleWithLoader,
     FormTemplate,
     TransitionQuestions

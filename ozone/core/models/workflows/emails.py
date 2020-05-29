@@ -66,7 +66,8 @@ def notify_workflow_transitioned(workflow, transition):
         'submission': str(submission),
         'obligation': submission.obligation.name,
         'reporting_period': submission.reporting_period.name,
-        'version': str(submission.version),
+        'revision_major': str(submission.revision_major),
+        'revision_minor': str(submission.revision_minor),
         'site_name': get_site_name(),
     }
     to_emails = set(u.email for u in User.objects.filter(
