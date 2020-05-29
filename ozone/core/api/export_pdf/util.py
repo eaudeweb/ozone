@@ -600,7 +600,7 @@ def get_date_of_reporting(submission):
             p_l(''),
         )
     else:
-        return (None,)
+        return ()
 
 
 class TableBuilder:
