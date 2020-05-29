@@ -7,7 +7,12 @@ from django.db.models import F
 def populate_revision_major_minor(apps, schema_editor):
     Submission = apps.get_model('core', 'Submission')
 
-    Submission.objects.update(
+    # Data entry submissions will not have a revision set
+    Submission.objects.filter(
+        obligation__has_versions=True
+    ).exclude(
+        _current_state='data_entry'
+    ).update(
         revision_major=F('version'),
         revision_minor=0,
     )
@@ -16,9 +21,13 @@ def populate_revision_major_minor(apps, schema_editor):
 def clear_revision_major_minor(apps, schema_editor):
     Submission = apps.get_model('core', 'Submission')
 
-    Submission.objects.update(
+    Submission.objects.filter(
+        obligation__has_versions=True
+    ).exclude(
+        _current_state='data_entry'
+    ).update(
         revision_major=None,
-        revision_minor=None,
+        revision_minor=None
     )
 
 
