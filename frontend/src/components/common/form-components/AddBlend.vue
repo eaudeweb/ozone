@@ -58,7 +58,7 @@
             :key="substance_index"
           >
             <b-col>{{substance.component_name}}</b-col>
-            <b-col>{{substance.percentage.toLocaleString("en", {style: "percent"})}}</b-col>
+            <b-col>{{substance.percentage.toLocaleString("en", {style: "percent", maximumSignificantDigits: 3})}}</b-col>
           </b-row>
         </div>
       </div>
@@ -177,7 +177,7 @@ export default {
     },
 
     blendIsValid() {
-      return !this.$store.getters.checkIfBlendAlreadyEists(this.new_blend.text) && this.new_blend.composition.every((substance) => substance.name && substance.percent)
+      return this.new_blend && !this.$store.getters.checkIfBlendAlreadyEists(this.new_blend.text) && this.new_blend.composition.every((substance) => substance.name && substance.percent)
     },
 
     filteredBlends() {
@@ -352,9 +352,9 @@ export default {
         this.submit_blend.party = this.$store.state.current_submission.party
         this.new_blend.composition.forEach(substance => {
           if (typeof (substance.name) === 'string') {
-            this.submit_blend.components.push({ component_name: substance.name, substance: null, percentage: substance.percent / 100 })
+            this.submit_blend.components.push({ component_name: substance.name, substance: null, percentage: (substance.percent / 100).toFixed(5) })
           } else {
-            this.submit_blend.components.push({ component_name: '', substance: substance.name, percentage: substance.percent / 100 })
+            this.submit_blend.components.push({ component_name: '', substance: substance.name, percentage: (substance.percent / 100).toFixed(5) })
           }
         })
         createBlend(this.submit_blend).then(response => {
