@@ -218,8 +218,9 @@ const deleteSubmissionFile = ({
   submissionId
 }) => remove(`submissions/${submissionId}/files/${file.id}/`)
 
-const callTransition = (submissionId, transition) => post(`submissions/${submissionId}/call-transition/`, {
-  transition
+const callTransition = (submissionId, transition, increment_minor) => post(`submissions/${submissionId}/call-transition/`, {
+  transition,
+  increment_minor
 })
 
 const getNonParties = (reporting_period) => fetch(`get-non-parties/?reporting_period=${reporting_period}`)

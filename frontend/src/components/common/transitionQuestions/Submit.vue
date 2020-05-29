@@ -41,7 +41,19 @@
         </b-col>
       </b-row>
     </div>
-    <p>Press OK to continue with the submission. Press Cancel to make further changes or corrections.</p>
+
+    <div v-if="$store.state.currentUser.is_secretariat && hasVersions">
+      <p><b-form-checkbox
+          id="minor_transition"
+          v-model="increment_minor"
+          name="minor_transition"
+        >This is a minor revision.
+      </b-form-checkbox></p>
+    </div>
+    <p>TODO: remove me: {{ increment_minor }}</p>
+    <div>
+      <p>Press OK to continue with the submission. Press Cancel to make further changes or corrections.</p>
+    </div>
   </div>
 </template>
 
@@ -54,11 +66,13 @@ export default {
   data() {
     return {
       labels: null,
-      flagMapping
+      flagMapping,
+      increment_minor: this.$store.state.currentUser.is_secretariat
     }
   },
   props: {
-    skipArt7Specific: Boolean
+    skipArt7Specific: Boolean,
+    hasVersions: Boolean
   },
   created() {
     this.labels = getCommonLabels(this.$gettext)

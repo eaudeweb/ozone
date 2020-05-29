@@ -132,6 +132,7 @@
       :submission="submission"
       :transition="currentTransition"
       :skipArt7Specific="true"
+      :hasVersions="false"
     ></TransitionQuestions>
   </div>
 </template>

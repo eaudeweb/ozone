@@ -163,6 +163,7 @@
       v-on:removeTransition="currentTransition = null"
       :submission="submission"
       :transition="currentTransition"
+      :hasVersions="true"
     ></TransitionQuestions>
   </div>
 </template>

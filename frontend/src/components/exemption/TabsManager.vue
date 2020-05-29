@@ -65,7 +65,7 @@
         <b-btn
           v-if="$store.state.current_submission.available_transitions.includes('submit')"
           @click="checkBeforeSubmitting"
-          variant="outline-success"
+          variant="outline-primary"
         >
           <span v-translate>Submit</span>
         </b-btn>
@@ -106,6 +106,7 @@
       v-on:removeTransition="currentTransition = null"
       :submission="submission"
       :transition="currentTransition"
+      :hasVersions="false"
     ></TransitionQuestions>
   </div>
 </template>

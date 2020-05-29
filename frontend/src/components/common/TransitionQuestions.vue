@@ -2,7 +2,7 @@
   <div>
     <b-modal size="lg" ref="transition_modal" id="transition_modal">
       <div slot="modal-title"><i class="fa fa-exclamation-circle"></i>&nbsp; <span v-translate>Please confirm</span></div>
-      <Submit :skipArt7Specific="skipArt7Specific" v-if="transition === 'submit'"/>
+      <Submit :skipArt7Specific="skipArt7Specific" :hasVersions="hasVersions" v-if="transition === 'submit'"/>
       <Process v-else-if="transition === 'process'"/>
       <Recall v-else-if="transition === 'recall'"/>
       <Finalize v-else-if="transition === 'finalize'"/>
@@ -32,7 +32,8 @@ export default {
   props: {
     transition: String,
     submission: String,
-    skipArt7Specific: Boolean
+    skipArt7Specific: Boolean,
+    hasVersions: Boolean
   },
   components: {
     Submit,
@@ -71,7 +72,18 @@ export default {
       if (this.transition === 'finalize' && this.$store.state.form.tabs.flags) {
         this.$store.commit('setTabStatus', { tab: 'flags', value: 'edited' })
       }
-      this.$store.dispatch('triggerSave', { action: 'doSubmissionTransition', data: { $gettext: this.$gettext, submission: this.submission, transition: this.transition, noModal: true, backToDashboard: !this.noForwardToDashboard.includes(this.transition) } })
+      this.$store.dispatch('triggerSave', {
+        action: 'doSubmissionTransition',
+        data: {
+          $gettext: this.$gettext,
+          submission: this.submission,
+          transition: this.transition,
+          // TODO
+          increment_minor: false,
+          noModal: true,
+          backToDashboard: !this.noForwardToDashboard.includes(this.transition)
+        }
+      })
       this.$refs.transition_modal.hide()
     }
   },

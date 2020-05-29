@@ -551,11 +551,45 @@ def get_submission_dates(submission):
     return first_date, revised_date
 
 
-def get_date_of_reporting_str(submission):
-    date_of_reporting = submission.submitted_at or submission.info.date
-    if date_of_reporting:
-        date_of_reporting = date_of_reporting.strftime('%d %B %Y')
-    return date_of_reporting
+def get_date_of_reporting(submission):
+    date_received, date_revised = get_submission_dates(submission)
+    extra_text = ''
+    version_date = format_date(submission.submitted_at or submission.info.date or submission.created_at)
+    if submission.in_initial_state:
+        extra_text = _(
+            '. This version from %s was not yet submitted.' % (version_date,)
+        )
+    elif submission.in_incorrect_state:
+        extra_text = _(
+            '. This version from %s has been recalled.' % (version_date,)
+        )
+    elif submission.flag_superseded:
+        extra_text = _(
+            '. This version from %s has been superseded.' % (version_date,)
+        )
+
+    if date_revised:
+        return (
+            Paragraph('%s: %s, %s: %s%s' % (
+                _('Date first received'),
+                format_date(date_received) if date_received else '-',
+                _('Date revised'),
+                format_date(date_revised),
+                extra_text,
+            ), style=no_spacing_style),
+            p_l(''),
+        )
+    elif date_received:
+        return (
+            Paragraph('%s: %s%s' % (
+                _('Date received'),
+                format_date(date_received),
+                extra_text,
+            ), style=no_spacing_style),
+            p_l(''),
+        )
+    else:
+        return ()
 
 
 class TableBuilder:

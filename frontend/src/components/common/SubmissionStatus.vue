@@ -49,12 +49,12 @@
       </span>
     </div> -->
     <div class="mt-2">
-      <span v-translate>Status</span>&#8239;
+      <span v-translate>Status</span>:&#8239;
       <em>{{ labels[$store.state.current_submission.current_state] }}</em>
     </div>
     <div class="mt-2">
-      <span v-translate>Version</span>&#8239;
-      <em>{{$store.state.current_submission.version}}</em>
+      <span v-translate>Version</span>:&#8239;
+      <em>{{$store.state.current_submission.revision}}</em>
     </div>
     <div class="mt-2">
       <span v-translate>Created by</span>&#8239;
