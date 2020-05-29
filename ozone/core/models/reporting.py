@@ -511,6 +511,7 @@ class Submission(models.Model):
 
     date_reported_f = models.DateField(
         null=True,
+        blank=True,
         help_text="Date at which substances under Annex F were reported."
     )
 
