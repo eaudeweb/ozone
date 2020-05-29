@@ -41,7 +41,18 @@
         </b-col>
       </b-row>
     </div>
-    <p>Press OK to continue with the submission. Press Cancel to make further changes or corrections.</p>
+    <div>
+      <p>Press OK to continue with the submission. Press Cancel to make further changes or corrections.</p>
+    </div>
+    <div v-if="$store.state.currentUser.is_secretariat && hasVersions">
+      <p><b-form-checkbox
+          id="minor_transition"
+          name="minor_transition"
+          :checked="increment_minor"
+          @change="update_minor"
+        >This is a minor revision.
+      </b-form-checkbox></p>
+    </div>
   </div>
 </template>
 
@@ -58,7 +69,9 @@ export default {
     }
   },
   props: {
-    skipArt7Specific: Boolean
+    skipArt7Specific: Boolean,
+    hasVersions: Boolean,
+    increment_minor: Boolean
   },
   created() {
     this.labels = getCommonLabels(this.$gettext)
@@ -99,6 +112,10 @@ export default {
     }
   },
   methods: {
+    update_minor(data) {
+      // emit signal for TransitionQuestions
+      this.$emit('update:increment_minor', data)
+    }
   },
   watch: {
 

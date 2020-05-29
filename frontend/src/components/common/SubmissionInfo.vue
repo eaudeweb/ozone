@@ -189,7 +189,7 @@
             <span v-translate>Submission status</span>
           </h5>
           <b-card>
-            <SubmissionStatus/>
+            <SubmissionStatus :hasVersions="hasVersions"/>
           </b-card>
         </b-col>
       </b-row>
@@ -209,7 +209,8 @@ export default {
 
   props: {
     info: Object,
-    flags_info: Object
+    flags_info: Object,
+    hasVersions: Boolean
   },
 
   created() {

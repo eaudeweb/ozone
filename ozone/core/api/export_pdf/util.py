@@ -10,6 +10,7 @@ from xml.sax.saxutils import escape
 from django.utils.translation import gettext_lazy as _
 from django.http import HttpResponse
 from django.db import models
+from django.db.models import F
 
 from reportlab.platypus import SimpleDocTemplate
 from reportlab.platypus import ListFlowable
@@ -526,37 +527,80 @@ def get_submission_dates(submission):
         - date received is the date of the current submission
         - date revised is None
     """
-    if submission.version > 1 and submission.obligation.has_versions:
-        # This is not the first version, must check history
+    if submission.obligation.has_versions:
+        # Check version history. Note that the queryset includes superseded versions.
         versions = (
             Submission.objects.filter(
                 obligation=submission.obligation,
                 party=submission.party,
                 reporting_period=submission.reporting_period,
             )
-            .exclude(pk=submission.pk)
             .exclude(_current_state__in=submission.editable_states)
             .exclude(_current_state__in=submission.incorrect_states)
-            .order_by('version')
+            .order_by(F('submitted_at').asc(nulls_first=True))
         )
         first = versions.first()
-        if first:
-            first_date = first.submitted_at
-            revised_date = submission.submitted_at or submission.info.date
-        else:
+        if len(versions) == 0:
+            # There is only one submission in data entry or recalled
             first_date = submission.submitted_at or submission.info.date
             revised_date = None
+        elif len(versions) == 1:
+            # This is the only submission.
+            first_date = first.submitted_at or submission.info.date
+            # not all submissions have submitted_at (e.g. legacy RAF)
+            revised_date = None
+        else:
+            first_date = first.submitted_at
+            revised_date = first_date
+            for version in versions:
+                # list of versions is ordered by submitted_at
+                if not version.flag_superseded:
+                    revised_date = version.submitted_at
     else:
         first_date = submission.submitted_at or submission.info.date
         revised_date = None
     return first_date, revised_date
 
 
-def get_date_of_reporting_str(submission):
-    date_of_reporting = submission.submitted_at or submission.info.date
-    if date_of_reporting:
-        date_of_reporting = date_of_reporting.strftime('%d %B %Y')
-    return date_of_reporting
+def get_date_of_reporting(submission):
+    date_received, date_revised = get_submission_dates(submission)
+    extra_text = ''
+    version_date = format_date(submission.submitted_at or submission.info.date or submission.created_at)
+    if submission.in_initial_state:
+        extra_text = _(
+            '. This version from %s was not yet submitted.' % (version_date,)
+        )
+    elif submission.in_incorrect_state:
+        extra_text = _(
+            '. This version from %s has been recalled.' % (version_date,)
+        )
+    elif submission.flag_superseded:
+        extra_text = _(
+            '. This version from %s has been superseded.' % (version_date,)
+        )
+
+    if date_revised:
+        return (
+            Paragraph('%s: %s, %s: %s%s' % (
+                _('Date first received'),
+                format_date(date_received) if date_received else '-',
+                _('Date revised'),
+                format_date(date_revised),
+                extra_text,
+            ), style=no_spacing_style),
+            p_l(''),
+        )
+    elif date_received:
+        return (
+            Paragraph('%s: %s%s' % (
+                _('Date received'),
+                format_date(date_received),
+                extra_text,
+            ), style=no_spacing_style),
+            p_l(''),
+        )
+    else:
+        return ()
 
 
 class TableBuilder:

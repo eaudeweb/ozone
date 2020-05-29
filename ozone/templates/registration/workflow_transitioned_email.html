@@ -1,5 +1,5 @@
 {% load i18n %}{% autoescape off %}
-{% blocktrans %}{{ intro_text }} {{ obligation }} for {{ reporting_period }} - this being submission number {{ version }}.{% endblocktrans %}
+{% blocktrans %}{{ intro_text }} {{ obligation }} for {{ reporting_period }} - this being submission number {{ revision_major }} (version {{ revision_major }}.{{ revision_minor }}).{% endblocktrans %}
 
 {% blocktrans %}{{new_state_verb}} by {{ user }} {{ data_entry_by }}.{% endblocktrans %}
 

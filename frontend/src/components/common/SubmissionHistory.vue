@@ -21,7 +21,7 @@
         >
           <span v-translate>View</span>
         </a>
-        <b-btn v-if="has_diff"
+        <b-btn v-if="has_diff && cell.item.version > 1"
           variant="outline-dark"
           size="sm" class="mx-1"
           @click="showDiffReport(cell.item.actions)"
@@ -34,7 +34,7 @@
 <script>
 import { getObligations } from '@/components/common/services/api'
 import { getCommonLabels } from '@/components/common/dataDefinitions/labels'
-import { dateFormatToDisplay } from '@/components/common/services/languageService.js'
+import { dateFormatToDisplay, dateFormatToYYYYMMDD } from '@/components/common/services/languageService.js'
 
 export default {
   props: {
@@ -108,8 +108,10 @@ export default {
       this.history.forEach((element) => {
         tableFields.push({
           version: element.version,
+          revision: element.revision,
           created_by: element.filled_by_secretariat ? 'Secretariat' : 'Party',
           updated_at: dateFormatToDisplay(element.updated_at),
+          submitted_at: dateFormatToYYYYMMDD(element.submitted_at),
           current_state: `${this.labels[element.current_state]} ${this.getStatus(element)}`,
           actions: element.id,
           details: element,
@@ -121,13 +123,16 @@ export default {
     tableFields() {
       return [
         {
-          key: 'version', label: this.$gettext('Version'), sortable: true, sortDirection: 'desc', class: 'text-center'
+          key: 'revision', label: this.$gettext('Version'), sortable: true, sortDirection: 'desc', class: 'text-center'
         },
         {
           key: 'created_by', label: this.$gettext('Created by'), sortable: true, class: 'text-center'
         },
         {
           key: 'updated_at', label: this.$gettext('Last Modified'), sortable: true, class: 'text-center'
+        },
+        {
+          key: 'submitted_at', label: this.$gettext('Submitted at'), sortable: true, class: 'text-center'
         },
         {
           key: 'current_state', label: this.$gettext('Current State'), sortable: true, sortDirection: 'desc', class: 'text-center'

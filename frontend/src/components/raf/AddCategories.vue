@@ -9,7 +9,7 @@
         >
           <multiselect
             :placeholder="$gettext('Select option')"
-            :clear-on-select="false"
+            :clear-on-select="true"
             :hide-selected="false"
             :close-on-select="false"
             label="text"

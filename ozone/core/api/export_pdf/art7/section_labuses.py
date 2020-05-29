@@ -1,6 +1,5 @@
 from decimal import Decimal
 from reportlab.platypus import Paragraph
-from itertools import zip_longest
 
 from django.utils.translation import gettext_lazy as _
 

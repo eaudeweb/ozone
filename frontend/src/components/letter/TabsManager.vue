@@ -32,7 +32,12 @@
             <template slot="title">
               <tab-title-with-loader :tab="$store.state.form.tabs.sub_info"/>
             </template>
-            <SubmissionInfo ref="sub_info" :info="$store.state.form.tabs.sub_info" :tabId="0"/>
+            <SubmissionInfo
+              ref="sub_info"
+              :info="$store.state.form.tabs.sub_info"
+              :tabId="0"
+              :hasVersions="false"
+            />
           </b-tab>
 
           <b-tab :title="$gettext('Files')">
@@ -116,6 +121,7 @@
       v-on:removeTransition="currentTransition = null"
       :submission="submission"
       :transition="currentTransition"
+      :hasVersions="false"
     ></TransitionQuestions>
   </div>
 </template>

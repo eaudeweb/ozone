@@ -1,4 +1,3 @@
-from itertools import zip_longest
 from reportlab.platypus import Paragraph
 
 from django.utils.translation import gettext_lazy as _

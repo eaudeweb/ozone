@@ -42,6 +42,7 @@
               :flags_info="$store.state.form.tabs.flags"
               :info="$store.state.form.tabs.sub_info"
               :tabId="0"
+              :hasVersions="true"
             />
           </b-tab>
           <b-tab>
@@ -132,6 +133,7 @@
       :submission="submission"
       :transition="currentTransition"
       :skipArt7Specific="true"
+      :hasVersions="false"
     ></TransitionQuestions>
   </div>
 </template>

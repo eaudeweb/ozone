@@ -3,9 +3,8 @@ from datetime import datetime
 
 from ..util import (
     get_comments_section,
-    get_submission_dates,
-    format_date,
-    p_l, p_c, p_c_g, b_c,
+    get_date_of_reporting,
+    p_l, p_c, b_c,
     h1_style, no_spacing_style,
     col_widths,
     FONTSIZE_TABLE
@@ -50,40 +49,6 @@ TABLE_INFO_STYLE = (
     ('SPAN', (0, 0), (5, 0)),
     ('SPAN', (6, 0), (15, 0)),
 )
-
-
-def get_date_of_reporting(submission):
-    date_received, date_revised = get_submission_dates(submission)
-    extra_text = ''
-    if submission.in_initial_state:
-        extra_text = '(%s)' % (_('Not yet submitted'),)
-    elif submission.in_incorrect_state:
-        extra_text = '(%s)' % (_('Recalled'),)
-    elif submission.flag_superseded:
-        extra_text = '(%s)' % (_('Superseded'),)
-
-    if date_revised:
-        return (
-            Paragraph('%s: %s, %s: %s %s' % (
-                _('Date received'),
-                format_date(date_received),
-                _('Date revised'),
-                format_date(date_revised),
-                extra_text,
-            ), style=no_spacing_style),
-            p_l(''),
-        )
-    elif date_received:
-        return (
-            Paragraph('%s: %s %s' % (
-                _('Date received'),
-                format_date(date_received),
-                extra_text,
-            ), style=no_spacing_style),
-            p_l(''),
-        )
-    else:
-        return (None,)
 
 
 def _kv(obj, label, prop):

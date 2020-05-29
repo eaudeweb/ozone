@@ -42,6 +42,7 @@
               :flags_info="$store.state.form.tabs.flags"
               :info="$store.state.form.tabs.sub_info"
               :tabId="0"
+              :hasVersions="true"
             />
           </b-tab>
 
@@ -163,6 +164,7 @@
       v-on:removeTransition="currentTransition = null"
       :submission="submission"
       :transition="currentTransition"
+      :hasVersions="true"
     ></TransitionQuestions>
   </div>
 </template>
