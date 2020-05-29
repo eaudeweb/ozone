@@ -840,9 +840,10 @@ class Submission(models.Model):
             party=self.party,
             reporting_period=self.reporting_period
         ).exclude(
-            _current_state__in=self.editable_states,
-            pk=self.pk,
-            revision_major__isnull=True,
+            _current_state__in=self.editable_states
+        ).exclude(
+            revision_major__isnull=True
+        ).exclude(
             revision_minor__isnull=True
         )
         if not submissions:
@@ -856,6 +857,8 @@ class Submission(models.Model):
                 for r in revisions
             ]
         )
+        if revision_major == 0:
+            return 1, 0
         revision_minor = max(
             [
                 r[1] if r[1] is not None else 0
