@@ -1,6 +1,6 @@
 <template>
-    <div v-if="templates && sender">
-      <b-btn class="square-right square-left" @click="getMail()" variant="outline-dark" v-translate>E-mail</b-btn>
+    <b-btn v-if="templates && sender" @click="getMail()" variant="outline-dark" v-translate>
+      E-mail
       <b-modal title="E-mail" id="ozoneMail" size="xl" ref="ozoneMailModal">
         <b-tabs no-key-nav v-model="tabIndex">
           <b-tab :title="$gettext('Send a message')">
@@ -80,7 +80,7 @@
           <b-btn @click="$refs.ozoneMailModal.hide()" variant="outline-danger" v-translate>Close</b-btn>
         </div>
       </b-modal>
-    </div>
+    </b-btn>
 </template>
 <script>
 import { getEmails, sendEmail } from '@/components/common/services/api'

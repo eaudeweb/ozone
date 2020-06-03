@@ -65,23 +65,30 @@
       </b-card>
     </div>
     <Footer style="display:inline">
-      <Save
-        class="actions mt-2 mb-2"
-        :data="$store.state.form"
-        :submission="submission"
-      ></Save>
-      <Edit :submission="submission" class="actions mt-2 mb-2" />
-      <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
-      <b-button-group class="pull-right actions mt-2 mb-2">
+     <b-button-group class="pull-left actions my-md-3 my-2">
+        <Save
+          class="actions"
+          :data="$store.state.form"
+          :submission="submission"
+        ></Save>
+        <Edit :submission="submission" class="actions" />
+        <router-link class="btn btn-light ml-0 ml-md-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
+      </b-button-group>
+
+      <b-button-group class="pull-right actions my-0 my-md-3 ml-md-5">
         <b-btn
           variant="outline-dark"
           @click="checkIfSaved('exportPDF')"
         >Export as PDF</b-btn>
-        <b-btn v-if="$store.state.current_submission.is_versionable" @click="$refs.history_modal.show()" variant="outline-dark">
+          <b-btn
+          v-if="$store.state.current_submission.is_versionable"
+          @click="$refs.history_modal.show()" variant="outline-dark"
+        >
           <span v-translate>Versions</span>
         </b-btn>
       </b-button-group>
-      <b-button-group class="pull-right actions mt-2 mb-2 mr-5">
+
+      <b-button-group class="pull-right actions my-md-3 my-2 ml-md-2">
         <b-btn
           v-if="$store.state.current_submission.available_transitions.includes('submit')"
           @click="checkBeforeSubmitting"
@@ -97,14 +104,12 @@
         >
           <span>{{labels[transition]}}</span>
         </b-btn>
-
         <b-btn
           variant="outline-primary"
           @click="clone($route.query.submission)"
           v-if="$store.state.current_submission.is_cloneable"
           :disabled="$store.state.currentUser.is_read_only"
-        >Revise
-        </b-btn>
+        >Revise</b-btn>
         <b-btn
           @click="removeSubmission"
           id="delete-button"

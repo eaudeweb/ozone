@@ -1,8 +1,8 @@
 <template>
-  <div class="col-8 files-upload-wrapper">
+  <div class="col-12 col-md-8 files-upload-wrapper">
     <div>
       <div class="row">
-        <div class="col-7 mb-2">
+        <div class="col-12 col-sm-7 mb-2">
           <b-form-file
             id="choose-files-button"
             :disabled="!canUploadFiles || loadingInitialFiles"

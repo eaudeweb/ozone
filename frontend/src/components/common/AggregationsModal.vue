@@ -1,20 +1,20 @@
 <template>
-  <div>
-    <b-btn class="square-right" @click="checkIfSaved('getAggregations')" variant="outline-dark" v-translate>Calculated amounts</b-btn>
-    <b-modal id="aggregationModal" size="xl" ref="aggregationModal">
-      <div slot="modal-title">
-        <span v-translate>Calculated production and consumption</span> - {{ $store.state.initialData.display.countries[$store.state.current_submission.party] }} - {{ $store.state.current_submission.reporting_period }}
-      </div>
-      <AggregationsTable :standalone="false" :aggregations="aggregations"></AggregationsTable>
-      <div slot="modal-footer">
-        <b-btn
-          variant="outline-dark mr-2"
-          @click="exportPDF"
-         v-translate>Export PDF</b-btn>
-        <b-btn @click="$refs.aggregationModal.hide()" variant="outline-danger" v-translate>Close</b-btn>
-      </div>
-    </b-modal>
-  </div>
+    <b-btn @click="checkIfSaved('getAggregations')" variant="outline-dark" v-translate>
+      Calculated amounts
+      <b-modal id="aggregationModal" size="xl" ref="aggregationModal">
+        <div slot="modal-title">
+          <span v-translate>Calculated production and consumption</span> - {{ $store.state.initialData.display.countries[$store.state.current_submission.party] }} - {{ $store.state.current_submission.reporting_period }}
+        </div>
+        <AggregationsTable :standalone="false" :aggregations="aggregations"></AggregationsTable>
+        <div slot="modal-footer">
+          <b-btn
+            variant="outline-dark mr-2"
+            @click="exportPDF"
+          v-translate>Export PDF</b-btn>
+          <b-btn @click="$refs.aggregationModal.hide()" variant="outline-danger" v-translate>Close</b-btn>
+        </div>
+      </b-modal>
+    </b-btn>
 </template>
 <script>
 

@@ -91,11 +91,11 @@ export default {
         const tableRow = {}
         Object.keys(form_field).forEach(key => {
           if (form_field.substance.selected) {
-            tableRow[key] = this.typeOfDisplayObj[key]
-              ? this.$store.state.initialData.display[
-                this.typeOfDisplayObj[key]
-              ][form_field[key].selected]
-              : (tableRow[key] = form_field[key].selected)
+            if (this.typeOfDisplayObj[key] && this.$store.state.initialData.display[this.typeOfDisplayObj[key]]) {
+              tableRow[key] = this.$store.state.initialData.display[this.typeOfDisplayObj[key]][form_field[key].selected]
+            } else {
+              tableRow[key] = form_field[key].selected
+            }
           }
         })
         if (Object.keys(tableRow).length) {

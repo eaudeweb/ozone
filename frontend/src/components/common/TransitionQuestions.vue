@@ -77,7 +77,10 @@ export default {
   },
   methods: {
     doTransition() {
-      if (this.transition === 'finalize' && this.$store.state.form.tabs.flags) {
+      if (
+        (this.transition === 'submit' || this.transition === 'finalize')
+        && this.$store.state.form.tabs.flags
+      ) {
         this.$store.commit('setTabStatus', { tab: 'flags', value: 'edited' })
       }
       this.$store.dispatch('triggerSave', {

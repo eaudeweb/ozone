@@ -10,7 +10,7 @@
       >{{field.selected}}</span>
       <input
         v-else
-        :id="fieldInfo ? fieldInfo.field : ''"
+        :id="id ? id : fieldInfo ? fieldInfo.field : ''"
         @keyup="validateInput"
         @change="updateFormField"
         autocomplete="off"
@@ -64,6 +64,7 @@
       :id="id"
       @change="updateFormFieldWithTabs"
       :disabled="field.disabled || disabled"
+      :name="id"
       v-else-if="field.type === 'checkbox'"
       v-model="currentTyping"
     ></b-form-checkbox>

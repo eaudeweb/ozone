@@ -149,9 +149,9 @@ export default {
       this.updateEditMode(false)
       Object.values(this.form.tabs).filter(tab => tab.hasOwnProperty('form_fields') && tab.hasOwnProperty('endpoint_url')).forEach(async tab => {
         if (this.form.tabs.questionaire_questions && this.form.tabs.questionaire_questions.form_fields) {
-          if ( //  Tabs that are in questionaire_questions and are set to YES
+          if ( //  Tabs that are in questionaire_questions and are set to YES OR NO
             this.form.tabs.questionaire_questions.form_fields[tab.name]
-            && this.form.tabs.questionaire_questions.form_fields[tab.name].selected
+            && this.form.tabs.questionaire_questions.form_fields[tab.name].selected !== null
             && (tab.status === 'edited' || tab.status === false)
           ) {
             this.tabsToSave.push(tab.name)

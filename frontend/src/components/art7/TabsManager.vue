@@ -31,7 +31,7 @@
     </b-modal>
 
     <div class="form-wrapper" style="position: relative">
-      <b-card style="margin-bottom: 5rem;" no-body>
+      <b-card no-body>
         <b-tabs no-key-nav v-model="tabIndex" card>
           <b-tab active>
             <template slot="title">
@@ -91,16 +91,24 @@
       </b-card>
     </div>
     <Footer style="display:inline">
-      <Save
-        class="actions mt-2 mb-2"
-        :data="$store.state.form"
-        :submission="submission"
-      ></Save>
-      <Edit :submission="submission" class="actions mt-2 mb-2" />
-      <router-link class="btn btn-light ml-2 mt-2 mb-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
-      <b-button-group class="pull-right actions mt-2 mb-2">
-        <AggregationsModal :submission="submission"></AggregationsModal>
-        <OzoneMail v-if="$store.state.currentUser.is_secretariat" :submission="submission"></OzoneMail>
+      <b-button-group class="pull-left actions my-md-3 my-2">
+        <Save
+          class="actions"
+          :data="$store.state.form"
+          :submission="submission"
+        ></Save>
+        <Edit :submission="submission" class="actions" />
+        <router-link class="btn btn-light ml-0 ml-md-2" :to="{name: 'Dashboard'}" v-translate>Close</router-link>
+      </b-button-group>
+
+      <b-button-group class="pull-right actions my-0 my-md-3 ml-md-5">
+        <AggregationsModal
+          :submission="submission"
+        ></AggregationsModal>
+        <OzoneMail
+          v-if="$store.state.currentUser.is_secretariat"
+          :submission="submission"
+        ></OzoneMail>
         <b-btn
           variant="outline-dark"
           @click="checkIfSaved('exportPDF')"
@@ -109,7 +117,8 @@
           <span v-translate>Versions</span>
         </b-btn>
       </b-button-group>
-      <b-button-group class="pull-right actions mt-2 mb-2 mr-5">
+
+      <b-button-group class="pull-right actions my-md-3 my-2 ml-md-2">
         <b-btn
           v-if="$store.state.current_submission.available_transitions.includes('submit')"
           @click="checkBeforeSubmitting"
@@ -125,7 +134,6 @@
         >
           <span>{{labels[transition]}}</span>
         </b-btn>
-
         <b-btn
           variant="outline-primary"
           @click="clone($route.query.submission)"

@@ -85,6 +85,7 @@
 
           <template v-for="inputField in getTabInputFields"  v-slot:[`cell(${inputField})`]="cell">
             <fieldGenerator
+              :id="`${cell.item.index}_${inputField}_${tabName}`"
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
               :disabled="isSubstanceDataReadOnly(inputField)"
@@ -168,6 +169,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_quantity_quarantine_pre_shipment_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
@@ -180,6 +182,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_decision_quarantine_pre_shipment_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
@@ -208,6 +211,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_quantity_polyols_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_polyols'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_polyols"
@@ -220,6 +224,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_decision_polyols_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_polyols'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_polyols"
@@ -309,6 +314,7 @@
             v-slot:[`cell(${inputField})`]="cell"
           >
             <fieldGenerator
+              :id="`${cell.item.index}_${inputField}_${tabName}`"
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
               :disabled="!canEditSubstanceData"
@@ -384,6 +390,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_quantity_quarantine_pre_shipment_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
@@ -396,6 +403,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_decision_quarantine_pre_shipment_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
@@ -424,6 +432,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_quantity_polyols_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_polyols'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_polyols"
@@ -436,6 +445,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_decision_polyols_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_polyols'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_polyols"
@@ -536,6 +546,7 @@
 
           <template v-for="inputField in getTabInputFields" v-slot:[`cell(${inputField})`]="cell">
             <fieldGenerator
+              :id="`${cell.item.index}_${inputField}_${tabName}`"
               :key="`${cell.item.index}_${inputField}_${tabName}`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
               :disabled="isSubstanceDataReadOnly(inputField)"
@@ -619,6 +630,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_quantity_quarantine_pre_shipment_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
@@ -631,6 +643,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
+                  :id="`${cell.item.index}_decision_quarantine_pre_shipment_${tabName}`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
@@ -787,6 +800,7 @@
             <b-col lg="4">
               <b-input-group class="modal-group" :prepend="labels['quantity']">
                 <fieldGenerator
+                  :id="`${modal_data.index}_quantity_${order}_${tabName}`"
                   :fieldInfo="{index:modal_data.index,tabName: tabName, field:`quantity_${order}`}"
                   :disabled="!canEditSubstanceData"
                   :field="modal_data.field[`quantity_${order}`]"
@@ -796,6 +810,7 @@
             <b-col lg="5">
               <b-input-group class="modal-group" :prepend="labels['decision']">
                 <fieldGenerator
+                  :id="`${modal_data.index}_decision_${order}_${tabName}`"
                   :fieldInfo="{index:modal_data.index,tabName: tabName, field:`decision_${order}`}"
                   :disabled="!canEditSubstanceData"
                   :field="modal_data.field[`decision_${order}`]"
@@ -995,11 +1010,11 @@ export default {
             }
           }
           if (element.substance.selected) {
-            tableRow[key] = this.typeOfDisplayObj[key]
-              ? this.$store.state.initialData.display[
-                this.typeOfDisplayObj[key]
-              ][element[key].selected]
-              : (tableRow[key] = element[key].selected)
+            if (this.typeOfDisplayObj[key] && this.$store.state.initialData.display[this.typeOfDisplayObj[key]]) {
+              tableRow[key] = this.$store.state.initialData.display[this.typeOfDisplayObj[key]][element[key].selected]
+            } else {
+              tableRow[key] = element[key].selected
+            }
           }
         })
         if (Object.keys(tableRow).length) {
@@ -1022,11 +1037,11 @@ export default {
         const tableRow = {}
         Object.keys(element).forEach(key => {
           if (this.tabName === 'has_produced' && element.substance.selected && this.$store.getters.getCapturedSubstance(element.substance.selected)) {
-            tableRow[key] = this.typeOfDisplayObj[key]
-              ? this.$store.state.initialData.display[
-                this.typeOfDisplayObj[key]
-              ][element[key].selected]
-              : (tableRow[key] = element[key].selected)
+            if (this.typeOfDisplayObj[key] && this.$store.state.initialData.display[this.typeOfDisplayObj[key]]) {
+              tableRow[key] = this.$store.state.initialData.display[this.typeOfDisplayObj[key]][element[key].selected]
+            } else {
+              tableRow[key] = element[key].selected
+            }
           }
         })
         if (Object.keys(tableRow).length) {
