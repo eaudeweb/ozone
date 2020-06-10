@@ -1477,7 +1477,7 @@ class Submission(models.Model):
         # Purge old submission aggregated data and populate according to new
         # current submission.
         # Kept out of the atomic block due to execution time.
-        self.purge_aggregated_data(invalidate_cache=False)
+        self.purge_aggregated_data()
         if latest:
             latest.fill_aggregated_data()
 
