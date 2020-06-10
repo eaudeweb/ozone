@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 
 from ozone.core.models import (
     Submission,
+    Transfer,
     ProdCons,
     Party,
     ReportingPeriod,
@@ -62,10 +63,12 @@ class Command(BaseCommand):
             flag_superseded=False,
             submitted_at__isnull=False,
         )
+        transfer_queryset = Transfer.objects.all()
         if options['party']:
             party = Party.objects.get(abbr=options['party'])
             prodcons_queryset = prodcons_queryset.filter(party=party)
             submission_queryset = submission_queryset.filter(party=party)
+            transfer_queryset = transfer_queryset.filter(source_party=party)
 
         if options['period']:
             period = ReportingPeriod.objects.get(name=options['period'])
@@ -75,11 +78,15 @@ class Command(BaseCommand):
             submission_queryset = submission_queryset.filter(
                 reporting_period=period
             )
+            transfer_queryset = transfer_queryset.filter(
+                reporting_period=period
+            )
 
         if not options['confirm']:
             logger.info(
                 f"Run with --confirm to process {submission_queryset.count()} "
-                f"submissions, delete {prodcons_queryset.count()} aggregations "
+                f"submissions and {transfer_queryset.count()} transfers,"
+                f" delete {prodcons_queryset.count()} aggregations "
                 f"and create from scratch around "
                 f"{9 * submission_queryset.count()} aggregations."
             )
@@ -114,3 +121,10 @@ class Command(BaseCommand):
                         f"calculated production: {a.calculated_production}, "
                         f"calculated consumption: {a.calculated_consumption}."
                     )
+
+        for t in transfer_queryset:
+            if options['confirm']:
+                logger.info(f"Aggregating data for transfer {t.id}")
+                t.fill_aggregated_data()
+            else:
+                logger.debug(f"Found transfer {t.id}")
