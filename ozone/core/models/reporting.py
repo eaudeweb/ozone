@@ -1474,13 +1474,12 @@ class Submission(models.Model):
                 latest.flag_superseded = False
                 latest.save(update_fields=('flag_superseded',))
 
-        # Populate submission-specific aggregated data. Kept out of the atomic
-        # block due to execution time.
+        # Purge old submission aggregated data and populate according to new
+        # current submission.
+        # Kept out of the atomic block due to execution time.
+        self.purge_aggregated_data(invalidate_cache=False)
         if latest:
             latest.fill_aggregated_data()
-        else:
-            # If no submission is now current, purge all related aggregated data
-            self.purge_aggregated_data()
 
     @classmethod
     @transaction.atomic
