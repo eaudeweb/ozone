@@ -11,6 +11,22 @@
     <b-badge v-if="tabStatus === null && tabDataLength" variant="primary" sm>
       {{tabDataLength}}
     </b-badge>
+    <b-badge
+      v-if="tabStatus === null && tab.name === 'questionaire_questions' && questionaireTabs.yesTabs > 0"
+      id="questionaire_yes_tabs"
+      variant="primary"
+      sm
+    >
+      {{questionaireTabs.yesTabs}}
+    </b-badge>
+    <b-badge
+      v-if="tabStatus === null && tab.name === 'questionaire_questions' && questionaireTabs.noTabs > 0"
+      id="questionaire_no_tabs"
+      variant="dark"
+      sm
+    >
+      {{questionaireTabs.noTabs}}
+    </b-badge>
   </div>
 </template>
 
@@ -27,6 +43,23 @@ export default {
     tabDataLength() {
       if (this.tab.name === 'files') return this.$store.state.form.tabs[this.tab.name].form_fields.files.length
       return this.$store.state.form.tabs[this.tab.name].form_fields.length
+    },
+    questionaireTabs() {
+      if (this.tab.name === 'questionaire_questions') {
+        let yesTabs = 0
+        let noTabs = 0
+        Object.keys(this.tab.form_fields).forEach(form => {
+          if (this.tab.form_fields[form].selected !== null) {
+            // eslint-disable-next-line
+            this.tab.form_fields[form].selected ? yesTabs++ : noTabs++
+          }
+        })
+        return {
+          yesTabs,
+          noTabs
+        }
+      }
+      return null
     }
   }
 }

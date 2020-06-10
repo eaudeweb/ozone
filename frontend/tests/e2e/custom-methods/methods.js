@@ -831,7 +831,7 @@ const addFacility = (browser, table, tab, row, row_values, check = false) => {
   showFixedElements(browser)
 }
 
-const addValues = (browser, table, tab, row, row_values, modal_values) => {
+const addValues = (browser, table, tab, row, row_values, modal_values, cell_order = 0) => {
   logMessage(browser, 'Adding values to entity')
   /* Enable edit mode if disabled */
   browser
@@ -852,14 +852,14 @@ const addValues = (browser, table, tab, row, row_values, modal_values) => {
     /* Add values to entity */
     for (const field_id of Object.keys(row_values)) {
       browser
-        .element('css selector', `#${tab} #${table} tbody tr:nth-child(${row}) textarea#${field_id}`, (result) => {
+        .element('css selector', `#${tab} #${table} tbody tr:nth-child(${row}) textarea#tr_${cell_order}_${field_id}_${tab}`, (result) => {
           if (result.status !== -1) {
             browser
-              .setValue(`#${tab} #${table} tbody tr:nth-child(${row}) textarea#${field_id}`, row_values[field_id])
+              .setValue(`#${tab} #${table} tbody tr:nth-child(${row}) textarea#tr_${cell_order}_${field_id}_${tab}`, row_values[field_id])
               .pause(eventDelay)
           } else {
             browser
-              .setValue(`#${tab} #${table} tbody tr:nth-child(${row}) input#${field_id}`, row_values[field_id])
+              .setValue(`#${tab} #${table} tbody tr:nth-child(${row}) input#tr_${cell_order}_${field_id}_${tab}`, row_values[field_id])
               .pause(eventDelay)
           }
         })
@@ -880,10 +880,10 @@ const addValues = (browser, table, tab, row, row_values, modal_values) => {
     /* Add values in modal */
     for (const field_id of Object.keys(modal_values)) {
       browser
-        .click(`#edit_modal .modal-body #${field_id}`)
+        .click(`#edit_modal .modal-body #tr_${cell_order}_${field_id}_${tab}`)
         .pause(eventDelay)
-        .clearValue(`#edit_modal .modal-body #${field_id}`)
-        .setValue(`#edit_modal .modal-body #${field_id}`, modal_values[field_id])
+        .clearValue(`#edit_modal .modal-body #tr_${cell_order}_${field_id}_${tab}`)
+        .setValue(`#edit_modal .modal-body #tr_${cell_order}_${field_id}_${tab}`, modal_values[field_id])
         .pause(eventDelay)
     }
     /* Close modal */
@@ -914,7 +914,7 @@ const addComment = (browser, tab, comment) => {
 }
 
 // eslint-disable-next-line no-unused-vars
-const rowIsEmpty = (browser, table, tab, row, row_values, modal_values, start_column = 1) => {
+const rowIsEmpty = (browser, table, tab, row, row_values, modal_values, cell_order = 0) => {
   hideFixedElements(browser)
   browser
     .useCss()
@@ -923,15 +923,15 @@ const rowIsEmpty = (browser, table, tab, row, row_values, modal_values, start_co
   /* Check if row is empty */
   for (const field_id of Object.keys(row_values)) {
     browser
-      .element('css selector', `#${tab} #${table} tbody tr:nth-child(${row}) textarea#${field_id}`, (result) => {
+      .element('css selector', `#${tab} #${table} tbody tr:nth-child(${row}) textarea#tr_${cell_order}_${field_id}_${tab}`, (result) => {
         if (result.status !== -1) {
           browser
-            .getValue(`#${tab} #${table} tbody tr:nth-child(${row}) textarea#${field_id}`, (data) => {
+            .getValue(`#${tab} #${table} tbody tr:nth-child(${row}) textarea#tr_${cell_order}_${field_id}_${tab}`, (data) => {
               browser.assert.equal(data.value, '')
             })
         } else {
           browser
-            .getValue(`#${tab} #${table} tbody tr:nth-child(${row}) input#${field_id}`, (data) => {
+            .getValue(`#${tab} #${table} tbody tr:nth-child(${row}) input#tr_${cell_order}_${field_id}_${tab}`, (data) => {
               browser.assert.equal(data.value, '')
             })
         }
@@ -950,7 +950,7 @@ const rowIsEmpty = (browser, table, tab, row, row_values, modal_values, start_co
   /* Check if modal inputs are empty */
   for (const field_id of Object.keys(modal_values)) {
     browser
-      .getValue(`#edit_modal .modal-body #${field_id}`, (data) => {
+      .getValue(`#edit_modal .modal-body #tr_${cell_order}_${field_id}_${tab}`, (data) => {
         browser.assert.equal(data.value, '')
       })
   }

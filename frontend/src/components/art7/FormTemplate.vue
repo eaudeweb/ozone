@@ -85,8 +85,8 @@
 
           <template v-for="inputField in getTabInputFields"  v-slot:[`cell(${inputField})`]="cell">
             <fieldGenerator
-              :id="`${cell.item.index}_${inputField}_${tabName}`"
-              :key="`${cell.item.index}_${inputField}_${tabName}`"
+              :id="`tr_${cell.item.index}_${inputField}_${tabName}_tab`"
+              :key="`tr_${cell.item.index}_${inputField}_${tabName}_tab`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
               :disabled="isSubstanceDataReadOnly(inputField)"
               :field="cell.item.originalObj[inputField]"
@@ -169,7 +169,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_quantity_quarantine_pre_shipment_${tabName}`"
+                  :id="`tr_${cell.item.index}_quantity_quarantine_pre_shipment_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
@@ -182,7 +182,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_decision_quarantine_pre_shipment_${tabName}`"
+                  :id="`tr_${cell.item.index}_decision_quarantine_pre_shipment_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
@@ -211,7 +211,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_quantity_polyols_${tabName}`"
+                  :id="`tr_${cell.item.index}_quantity_polyols_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_polyols'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_polyols"
@@ -224,7 +224,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_decision_polyols_${tabName}`"
+                  :id="`tr_${cell.item.index}_decision_polyols_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_polyols'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_polyols"
@@ -314,8 +314,8 @@
             v-slot:[`cell(${inputField})`]="cell"
           >
             <fieldGenerator
-              :id="`${cell.item.index}_${inputField}_${tabName}`"
-              :key="`${cell.item.index}_${inputField}_${tabName}`"
+              :id="`tr_${cell.item.index}_${inputField}_${tabName}_tab`"
+              :key="`tr_${cell.item.index}_${inputField}_${tabName}_tab`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
               :disabled="!canEditSubstanceData"
               :field="cell.item.originalObj[inputField]"
@@ -390,7 +390,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_quantity_quarantine_pre_shipment_${tabName}`"
+                  :id="`tr_${cell.item.index}_quantity_quarantine_pre_shipment_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
@@ -403,7 +403,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_decision_quarantine_pre_shipment_${tabName}`"
+                  :id="`tr_${cell.item.index}_decision_quarantine_pre_shipment_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
@@ -432,7 +432,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_quantity_polyols_${tabName}`"
+                  :id="`tr_${cell.item.index}_quantity_polyols_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_polyols'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_polyols"
@@ -445,7 +445,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_decision_polyols_${tabName}`"
+                  :id="`tr_${cell.item.index}_decision_polyols_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_polyols'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_polyols"
@@ -546,8 +546,8 @@
 
           <template v-for="inputField in getTabInputFields" v-slot:[`cell(${inputField})`]="cell">
             <fieldGenerator
-              :id="`${cell.item.index}_${inputField}_${tabName}`"
-              :key="`${cell.item.index}_${inputField}_${tabName}`"
+              :id="`tr_${cell.item.index}_${inputField}_${tabName}_tab`"
+              :key="`tr_${cell.item.index}_${inputField}_${tabName}_tab`"
               :fieldInfo="{index:cell.item.index,tabName: tabName, field:inputField}"
               :disabled="isSubstanceDataReadOnly(inputField)"
               :field="cell.item.originalObj[inputField]"
@@ -630,7 +630,7 @@
                     </b-tooltip>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_quantity_quarantine_pre_shipment_${tabName}`"
+                  :id="`tr_${cell.item.index}_quantity_quarantine_pre_shipment_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'quantity_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.quantity_quarantine_pre_shipment"
@@ -643,7 +643,7 @@
                   </span>
                 </b-input-group-prepend>
                 <fieldGenerator
-                  :id="`${cell.item.index}_decision_quarantine_pre_shipment_${tabName}`"
+                  :id="`tr_${cell.item.index}_decision_quarantine_pre_shipment_${tabName}_tab`"
                   :fieldInfo="{index:cell.item.index,tabName: tabName, field:'decision_quarantine_pre_shipment'}"
                   :disabled="!canEditSubstanceData"
                   :field="cell.item.originalObj.decision_quarantine_pre_shipment"
@@ -766,6 +766,7 @@
             </b-col>
             <b-col>
               <fieldGenerator
+                :id="`tr_${modal_data.index}_${order}_${tabName}_tab`"
                 :fieldInfo="{index:modal_data.index,tabName: tabName, field:order}"
                 :disabled="!canEditSubstanceData"
                 v-if="modal_data.field[order].type != 'multiselect'"
@@ -800,7 +801,7 @@
             <b-col lg="4">
               <b-input-group class="modal-group" :prepend="labels['quantity']">
                 <fieldGenerator
-                  :id="`${modal_data.index}_quantity_${order}_${tabName}`"
+                  :id="`tr_${modal_data.index}_quantity_${order}_${tabName}_tab`"
                   :fieldInfo="{index:modal_data.index,tabName: tabName, field:`quantity_${order}`}"
                   :disabled="!canEditSubstanceData"
                   :field="modal_data.field[`quantity_${order}`]"
@@ -810,7 +811,7 @@
             <b-col lg="5">
               <b-input-group class="modal-group" :prepend="labels['decision']">
                 <fieldGenerator
-                  :id="`${modal_data.index}_decision_${order}_${tabName}`"
+                  :id="`tr_${modal_data.index}_decision_${order}_${tabName}_tab`"
                   :fieldInfo="{index:modal_data.index,tabName: tabName, field:`decision_${order}`}"
                   :disabled="!canEditSubstanceData"
                   :field="modal_data.field[`decision_${order}`]"
