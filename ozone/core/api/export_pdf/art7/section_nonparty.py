@@ -16,10 +16,7 @@ from ..util import (
     col_widths,
 )
 
-subtitle = Paragraph(
-    _("Imports from and/or exports to non-parties"),
-    h2_style
-)
+subtitle_text = _("Imports from and/or exports to non-parties")
 
 table_header = (
     (
@@ -120,6 +117,8 @@ def export_nonparty(submission, queryset):
         table_style
     )
 
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keepWithNext = True
     return (subtitle, table) + comments
 
 
@@ -169,6 +168,8 @@ def export_nonparty_diff(
         return ()
 
     # Now populate PDF
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keepWithNext = True
     ret = (subtitle,)
     all_data = (
         (_('Added'), added_keys, data_dict, {}),

@@ -146,6 +146,7 @@ h2_style = _style(
     alignment=TA_LEFT,
     fontSize=FONTSIZE_DEFAULT + 4,
     fontName='Helvetica-Bold',
+    spaceBefore=1
 )
 
 h3_style = _style(
@@ -376,7 +377,7 @@ def rows_to_table(header, rows, colWidths, style):
         style=style,
         hAlign='LEFT',
         repeatRows=len(header)  # repeat header on page break
-    ) if rows else None
+    ) if rows else Paragraph('', no_spacing_style)
 
 
 def exclude_blend_items(data):

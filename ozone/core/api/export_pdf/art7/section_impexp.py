@@ -329,6 +329,7 @@ def _export(data, comments, party_field, texts):
     Export data for one submission.
     """
     subtitle = Paragraph(texts['section_title'], h2_style)
+    subtitle.keepWithNext = True
     header = _get_header(texts)
 
     if not data and not any(comments):
