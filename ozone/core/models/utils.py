@@ -1,5 +1,7 @@
 import enum
 import decimal
+import re
+from django.core.validators import validate_email
 
 
 # Default values for decimal
@@ -88,3 +90,10 @@ def quantize(value):
     """Quantize to DECIMAL_FIELD_DECIMALS decimal places"""
     quant = decimal.Decimal(10) ** -DECIMAL_FIELD_DECIMALS
     return value.quantize(quant)
+
+
+def validate_multiple_emails(value):
+    emails = filter(None, re.split("[, ;]", value))
+    for email in emails:
+        validate_email(email)
+

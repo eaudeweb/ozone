@@ -14,7 +14,7 @@ from .aggregation import ProdCons
 from .legal import ReportingPeriod
 from .party import Party, PartyHistory
 from .substance import Group
-from .utils import model_to_dict
+from .utils import model_to_dict, validate_multiple_emails
 from .workflows import (
     BaseWorkflow,
     DefaultArticle7Workflow,
@@ -2085,7 +2085,7 @@ class SubmissionInfo(ModifyPreventionMixin, models.Model):
         on_delete=models.PROTECT
     )
     phone = models.CharField(max_length=128, blank=True)
-    email = models.EmailField(null=True, blank=True)
+    email = models.CharField(max_length=128, null=True, blank=True, validators=(validate_multiple_emails,))
     date = models.DateField(null=True, blank=True)
     submission_format = models.ForeignKey(
         SubmissionFormat,
