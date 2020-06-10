@@ -106,6 +106,7 @@ class Command(BaseCommand):
                 logger.debug(f"Found submission {s.id}")
 
             if options['confirm']:
+                s.purge_all_related_aggregated_data()
                 created_aggregations = s.fill_aggregated_data()
                 for a in ProdCons.objects.filter(id__in=created_aggregations):
                     logger.debug(

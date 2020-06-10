@@ -10,7 +10,7 @@ from django.utils import timezone
 from model_utils import FieldTracker
 from simple_history.models import HistoricalRecords
 
-from .aggregation import ProdCons
+from .aggregation import ProdCons, ProdConsMT
 from .legal import ReportingPeriod
 from .party import Party, PartyHistory
 from .substance import Group
@@ -1620,6 +1620,21 @@ class Submission(models.Model):
         return PartyHistory.objects.filter(
             party=self.party, reporting_period=self.reporting_period
         ).first()
+
+    def purge_all_related_aggregated_data(self, invalidate_cache=True):
+        """
+        Deletes *all* aggregated data corresponding to the submission's party
+        and reporting period.
+        """
+        if not self.obligation.is_aggregateable:
+            return
+
+        ProdCons.objects.filter(
+            party=self.party, reporting_period=self.reporting_period
+        ).delete()
+        ProdConsMT.objects.filter(
+            party=self.party, reporting_period=self.reporting_period
+        ).delete()
 
     def purge_aggregated_data(self, invalidate_cache=True):
         """
