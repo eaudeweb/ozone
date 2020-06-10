@@ -6,6 +6,7 @@ from ozone.core.models import (
     Submission,
     Transfer,
     ProdCons,
+    ProdConsMT,
     Party,
     ReportingPeriod,
     ObligationTypes,
@@ -52,6 +53,7 @@ class Command(BaseCommand):
             logger.setLevel(logging.DEBUG)
 
         prodcons_queryset = ProdCons.objects.all()
+        prodcons_mt_queryset = ProdConsMT.objects.all()
         # Only use Article 7 submissions.
         # Also only use the "current" ones, it seems better to do this using
         # filter than to use the is_current property for each one at a time.
@@ -67,12 +69,16 @@ class Command(BaseCommand):
         if options['party']:
             party = Party.objects.get(abbr=options['party'])
             prodcons_queryset = prodcons_queryset.filter(party=party)
+            prodcons_mt_queryset = prodcons_mt_queryset.filter(party=party)
             submission_queryset = submission_queryset.filter(party=party)
             transfer_queryset = transfer_queryset.filter(source_party=party)
 
         if options['period']:
             period = ReportingPeriod.objects.get(name=options['period'])
             prodcons_queryset = prodcons_queryset.filter(
+                reporting_period=period
+            )
+            prodcons_mt_queryset = prodcons_mt_queryset.filter(
                 reporting_period=period
             )
             submission_queryset = submission_queryset.filter(
@@ -92,6 +98,7 @@ class Command(BaseCommand):
             )
         else:
             prodcons_queryset.delete()
+            prodcons_mt_queryset.delete()
 
         for s in submission_queryset:
             if s.flag_valid is False:
@@ -113,7 +120,6 @@ class Command(BaseCommand):
                 logger.debug(f"Found submission {s.id}")
 
             if options['confirm']:
-                s.purge_all_related_aggregated_data()
                 created_aggregations = s.fill_aggregated_data()
                 for a in ProdCons.objects.filter(id__in=created_aggregations):
                     logger.debug(
