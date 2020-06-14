@@ -225,7 +225,7 @@ class BaseBulkUpdateSerializer(serializers.ListSerializer):
         return ret
 
     def create(self, validated_data):
-        # Call this method to check for duplicates
+        # Call this method to check for duplicates in validated_data
         self.construct_data_dictionary(validated_data)
         return super().create(validated_data)
 
