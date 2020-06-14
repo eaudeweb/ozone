@@ -4,7 +4,9 @@ from django.core.management.base import BaseCommand
 
 from ozone.core.models import (
     Submission,
+    Transfer,
     ProdCons,
+    ProdConsMT,
     Party,
     ReportingPeriod,
     ObligationTypes,
@@ -51,6 +53,7 @@ class Command(BaseCommand):
             logger.setLevel(logging.DEBUG)
 
         prodcons_queryset = ProdCons.objects.all()
+        prodcons_mt_queryset = ProdConsMT.objects.all()
         # Only use Article 7 submissions.
         # Also only use the "current" ones, it seems better to do this using
         # filter than to use the is_current property for each one at a time.
@@ -62,29 +65,40 @@ class Command(BaseCommand):
             flag_superseded=False,
             submitted_at__isnull=False,
         )
+        transfer_queryset = Transfer.objects.all()
         if options['party']:
             party = Party.objects.get(abbr=options['party'])
             prodcons_queryset = prodcons_queryset.filter(party=party)
+            prodcons_mt_queryset = prodcons_mt_queryset.filter(party=party)
             submission_queryset = submission_queryset.filter(party=party)
+            transfer_queryset = transfer_queryset.filter(source_party=party)
 
         if options['period']:
             period = ReportingPeriod.objects.get(name=options['period'])
             prodcons_queryset = prodcons_queryset.filter(
                 reporting_period=period
             )
+            prodcons_mt_queryset = prodcons_mt_queryset.filter(
+                reporting_period=period
+            )
             submission_queryset = submission_queryset.filter(
+                reporting_period=period
+            )
+            transfer_queryset = transfer_queryset.filter(
                 reporting_period=period
             )
 
         if not options['confirm']:
             logger.info(
                 f"Run with --confirm to process {submission_queryset.count()} "
-                f"submissions, delete {prodcons_queryset.count()} aggregations "
+                f"submissions and {transfer_queryset.count()} transfers,"
+                f" delete {prodcons_queryset.count()} aggregations "
                 f"and create from scratch around "
                 f"{9 * submission_queryset.count()} aggregations."
             )
         else:
             prodcons_queryset.delete()
+            prodcons_mt_queryset.delete()
 
         for s in submission_queryset:
             if s.flag_valid is False:
@@ -97,6 +111,12 @@ class Command(BaseCommand):
                 logger.info(
                     f"Submission {s} has been recalled and will not be "
                     f"processed."
+                )
+                continue
+            if s.in_initial_state:
+                logger.info(
+                    f"Submission {s} is in data entry state been recalled "
+                    f"and will not be processed."
                 )
                 continue
 
@@ -113,3 +133,10 @@ class Command(BaseCommand):
                         f"calculated production: {a.calculated_production}, "
                         f"calculated consumption: {a.calculated_consumption}."
                     )
+
+        for t in transfer_queryset:
+            if options['confirm']:
+                logger.info(f"Aggregating data for transfer {t.id}")
+                t.fill_aggregated_data()
+            else:
+                logger.debug(f"Found transfer {t.id}")
