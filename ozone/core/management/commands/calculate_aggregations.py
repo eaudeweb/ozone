@@ -113,6 +113,12 @@ class Command(BaseCommand):
                     f"processed."
                 )
                 continue
+            if s.in_initial_state:
+                logger.info(
+                    f"Submission {s} is in data entry state been recalled "
+                    f"and will not be processed."
+                )
+                continue
 
             if options['confirm']:
                 logger.info(f"Aggregating data for submission {s.id}")
