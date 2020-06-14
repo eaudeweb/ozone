@@ -103,6 +103,9 @@ from .models import (
 )
 
 
+from .exceptions import AlreadySubmitted
+
+
 User = get_user_model()
 
 
@@ -734,6 +737,43 @@ class SubmissionInfoAdmin(admin.ModelAdmin):
     )
     search_fields = ('submission__party__name',)
     readonly_fields = ('submission', )
+
+    def save_model(self, request, obj, form, change):
+        """
+        Overridden to allow changes through admin after related submission has
+        passed the data entry state.
+        """
+        original_clean = obj.clean
+
+        def custom_clean():
+            try:
+                return original_clean()
+            except AlreadySubmitted as e:
+                return True
+
+        setattr(obj, 'clean', custom_clean)
+        return super().save_model(request, obj, form, change)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        """
+        Overridden to allow changes through admin after related submission has
+        passed the data entry state.
+        """
+
+        form = super().get_form(request, obj, change, **kwargs)
+        original_is_valid = form.is_valid
+
+        def custom_is_valid(form_instance):
+            """
+            Used for allowing changes on already submitted info.
+            """
+            try:
+                return original_is_valid(form_instance)
+            except AlreadySubmitted as e:
+                return True
+
+        setattr(form, 'is_valid', custom_is_valid)
+        return form
 
 
 @admin.register(ReportingChannel)

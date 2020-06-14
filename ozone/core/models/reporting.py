@@ -30,8 +30,8 @@ from ..exceptions import (
     MethodNotAllowed,
     TransitionDoesNotExist,
     TransitionNotAvailable,
+    AlreadySubmitted,
 )
-from ..utils.cache import invalidate_aggregation_cache
 
 __all__ = [
     'ModifyPreventionMixin',
@@ -62,21 +62,21 @@ class ModifyPreventionMixin:
         ]
 
     def clean(self):
+        super().clean()
         if (
             Submission.non_exempted_fields_modified(self)
             and not self.submission.data_changes_allowed
         ):
-            raise ValidationError(
+            raise AlreadySubmitted(
                 _(
                     "Unable to change submission because it is already "
                     "submitted."
                 )
             )
-        super().clean()
 
     def delete(self, *args, **kwargs):
         if not self.submission.deletion_allowed:
-            raise MethodNotAllowed(
+            raise AlreadySubmitted(
                 _(
                     "Unable to delete data because submission is already "
                     "submitted."
