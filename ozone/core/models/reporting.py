@@ -10,11 +10,11 @@ from django.utils import timezone
 from model_utils import FieldTracker
 from simple_history.models import HistoricalRecords
 
-from .aggregation import ProdCons
+from .aggregation import ProdCons, ProdConsMT
 from .legal import ReportingPeriod
 from .party import Party, PartyHistory
 from .substance import Group
-from .utils import model_to_dict
+from .utils import model_to_dict, validate_multiple_emails
 from .workflows import (
     BaseWorkflow,
     DefaultArticle7Workflow,
@@ -30,8 +30,8 @@ from ..exceptions import (
     MethodNotAllowed,
     TransitionDoesNotExist,
     TransitionNotAvailable,
+    AlreadySubmitted,
 )
-from ..utils.cache import invalidate_aggregation_cache
 
 __all__ = [
     'ModifyPreventionMixin',
@@ -62,21 +62,21 @@ class ModifyPreventionMixin:
         ]
 
     def clean(self):
+        super().clean()
         if (
             Submission.non_exempted_fields_modified(self)
             and not self.submission.data_changes_allowed
         ):
-            raise ValidationError(
+            raise AlreadySubmitted(
                 _(
                     "Unable to change submission because it is already "
                     "submitted."
                 )
             )
-        super().clean()
 
     def delete(self, *args, **kwargs):
         if not self.submission.deletion_allowed:
-            raise MethodNotAllowed(
+            raise AlreadySubmitted(
                 _(
                     "Unable to delete data because submission is already "
                     "submitted."
@@ -1474,13 +1474,12 @@ class Submission(models.Model):
                 latest.flag_superseded = False
                 latest.save(update_fields=('flag_superseded',))
 
-        # Populate submission-specific aggregated data. Kept out of the atomic
-        # block due to execution time.
+        # Purge old submission aggregated data and populate according to new
+        # current submission.
+        # Kept out of the atomic block due to execution time.
+        self.purge_aggregated_data()
         if latest:
             latest.fill_aggregated_data()
-        else:
-            # If no submission is now current, purge all related aggregated data
-            self.purge_aggregated_data()
 
     @classmethod
     @transaction.atomic
@@ -2085,7 +2084,7 @@ class SubmissionInfo(ModifyPreventionMixin, models.Model):
         on_delete=models.PROTECT
     )
     phone = models.CharField(max_length=128, blank=True)
-    email = models.EmailField(null=True, blank=True)
+    email = models.CharField(max_length=128, null=True, blank=True, validators=(validate_multiple_emails,))
     date = models.DateField(null=True, blank=True)
     submission_format = models.ForeignKey(
         SubmissionFormat,

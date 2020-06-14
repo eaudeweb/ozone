@@ -493,11 +493,11 @@ export default {
         for (const key of Object.keys(form_field)) {
           if (key === 'quantity_use_categories') continue
           if (form_field.substance.selected && !this.$store.getters.getCriticalSubstances(form_field.substance.selected)) {
-            tableRow[key] = this.typeOfDisplayObj[key]
-              ? this.$store.state.initialData.display[
-                this.typeOfDisplayObj[key]
-              ][form_field[key].selected]
-              : (tableRow[key] = form_field[key].selected)
+            if (this.typeOfDisplayObj[key] && this.$store.state.initialData.display[this.typeOfDisplayObj[key]]) {
+              tableRow[key] = this.$store.state.initialData.display[this.typeOfDisplayObj[key]][form_field[key].selected]
+            } else {
+              tableRow[key] = form_field[key].selected
+            }
             tableRow.year = this.currentPeriod
           }
         }
@@ -524,11 +524,11 @@ export default {
         for (const key of Object.keys(element)) {
           if (key === 'quantity_use_categories') continue
           if (element.substance.selected && this.$store.getters.getCriticalSubstances(element.substance.selected)) {
-            tableRow[key] = this.typeOfDisplayObj[key]
-              ? this.$store.state.initialData.display[
-                this.typeOfDisplayObj[key]
-              ][element[key].selected]
-              : (tableRow[key] = element[key].selected)
+            if (this.typeOfDisplayObj[key] && this.$store.state.initialData.display[this.typeOfDisplayObj[key]]) {
+              tableRow[key] = this.$store.state.initialData.display[this.typeOfDisplayObj[key]][element[key].selected]
+            } else {
+              tableRow[key] = element[key].selected
+            }
             tableRow.year = this.currentPeriod
           }
         }

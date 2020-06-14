@@ -79,7 +79,7 @@ const getTabSubInfo = ($gettext) => {
         selected: ''
       },
       email: {
-        type: 'email',
+        type: 'email-text',
         selected: '',
         validation: null,
         description: $gettext('required')

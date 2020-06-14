@@ -388,19 +388,20 @@ class BaseProdCons(models.Model):
             - self.import_quarantine
         )
 
-    def calculate_totals(self, is_eu_member=None):
+    def calculate_totals(self, is_eu_member=None, is_article5=None):
         """
         Called on save() to automatically update fields.
         Calculates values for:
             - calculated_production
             - calculated_consumption
         """
-        # Check whether this instance has the is_eu_member field properly
-        # populated. If not (which may happen when the method is called for
-        # generating non-persistent data, then the is_eu_member parameter should
-        # be used.
+        # Check whether this instance has the is_eu_member and is_article5 fields
+        # properly populated. If not (which may happen when the method is called
+        # for generating non-persistent data, then the method parameters are used
         if self.is_eu_member is None:
             self.is_eu_member = is_eu_member
+        if self.is_article5 is None:
+            self.is_article5 = is_article5
         # Production
         if self.is_european_union:
             self.calculated_production = None

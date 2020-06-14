@@ -19,10 +19,10 @@
       <b-row v-for="order in blank_flags" :key="order">
         <b-col cols="1">
           <fieldGenerator
+            :id="'modal_' + order"
             :fieldInfo="{index:order, tabName: 'flags', field:order}"
-            :disabled="$store.getters.transitionState"
             :field="formTabs.flags.form_fields[order]"
-            :id="order"
+            :disabled="$store.getters.transitionState"
           ></fieldGenerator>
         </b-col>
         <b-col>

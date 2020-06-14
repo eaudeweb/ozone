@@ -53,3 +53,7 @@ class TransitionFailed(BaseCustomException):
 
 class Forbidden(BaseCustomException):
     status_code = 403
+
+
+class AlreadySubmitted(BaseCustomException):
+    status_code = 422

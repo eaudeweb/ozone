@@ -123,11 +123,7 @@ def to_row(obj, row_index, diff=False, previous_obj=None):
     return rows, styles
 
 
-# These will be used for
-subtitle = KeepTogether(Paragraph(
-    "%s (%s)" % (_('Production'), _('metric tonnes')),
-    h2_style
-))
+subtitle_text = "%s (%s)" % (_('Production'), _('metric tonnes'))
 
 base_styles = list(DOUBLE_HEADER_TABLE_STYLES) + [
     ('SPAN', (0, 0), (0, 1)),  # Annex/Group
@@ -225,6 +221,8 @@ def export_production(submission, queryset):
         captured_styles
     )
 
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keepWithNext = True
     return (subtitle, table_f1, table_f2) + comments
 
 
@@ -274,6 +272,8 @@ def export_production_diff(
         return ()
 
     # Now populate PDF
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keepWithNext = True
     ret = (subtitle,)
     all_data = (
         (_('Added'), added_keys, data_dict, {}),

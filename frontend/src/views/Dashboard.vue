@@ -206,7 +206,7 @@
                   class="my-0"
                 />
               </b-col>
-              <b-col md="2">
+              <b-col md="2" class="mb-3">
                 <b-input-group horizontal :prepend="$gettext('Per page')" class="mb-0">
                   <b-form-select :options="table.pageOptions" v-model="tableOptions.perPage"/>
                 </b-input-group>
@@ -671,9 +671,11 @@ export default {
       deep: true
     },
     tableOptionsExceptFilters: {
-      handler() {
-        console.log(this.dataLoaded)
-
+      handler(newOptions, oldOptions) {
+        if (newOptions.perPage !== oldOptions.perPage && newOptions.currentPage !== 1) {
+          this.tableOptions.currentPage = 1
+          return
+        }
         if (this.dataLoaded) {
           if (this.tableOptionsCurrentPageWasSetFromWatcher) {
             this.tableOptionsCurrentPageWasSetFromWatcher = false

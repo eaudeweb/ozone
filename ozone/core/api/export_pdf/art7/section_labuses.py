@@ -100,11 +100,9 @@ def join_labuse_data(imports, production):
     return data
 
 
-subtitle = Paragraph(
-    "%s (%s)" % (
-        _('Laboratory and analytical uses under the global exemption'),
-        _('metric tonnes')
-    ), h2_style
+subtitle_text = "%s (%s)" % (
+    _('Laboratory and analytical uses under the global exemption'),
+    _('metric tonnes')
 )
 
 table_header = ((
@@ -128,6 +126,8 @@ def export_labuses(imports, production):
         SINGLE_HEADER_TABLE_STYLES
     )
 
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keepWithNext = True
     return (subtitle, table)
 
 
@@ -158,6 +158,8 @@ def export_labuses_diff(
         return ()
 
     # Now populate PDF
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keepWithNext = True
     ret = (subtitle,)
     all_data = (
         (_('Added'), added_keys, data, {}),

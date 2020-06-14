@@ -1,7 +1,7 @@
 <template>
   <div v-if="field" class="position-relative">
     <div
-      v-if="field.type === 'text' || field.type === 'number' || field.type ==='email' || field.type === 'nonInput'"
+      v-if="field.type === 'text' || field.type === 'number' || field.type ==='email-text' || field.type === 'nonInput'"
     >
       <span
         class="nonInput"
@@ -10,7 +10,7 @@
       >{{field.selected}}</span>
       <input
         v-else
-        :id="fieldInfo ? fieldInfo.field : ''"
+        :id="id ? id : fieldInfo ? fieldInfo.field : ''"
         @keyup="validateInput"
         @change="updateFormField"
         autocomplete="off"
@@ -64,6 +64,7 @@
       :id="id"
       @change="updateFormFieldWithTabs"
       :disabled="field.disabled || disabled"
+      :name="id"
       v-else-if="field.type === 'checkbox'"
       v-model="currentTyping"
     ></b-form-checkbox>
@@ -159,7 +160,7 @@ export default {
   },
 
   methods: {
-    validateInput() {
+    validateInput(key) {
       if (this.field.type === 'number') {
         const valid = /^-?\d+\.\d*$|^-?[\d]*$/
         const number = /-\d+\.\d*|-[\d]*|[\d]+\.[\d]*|[\d]+/
@@ -167,6 +168,13 @@ export default {
           const n = this.currentTyping.match(number)
           this.currentTyping = n ? parseFloat(n[0]) : null
         }
+      }
+      this.doCustomActions(key)
+    },
+
+    doCustomActions(key) {
+      if (this.field.type === 'email-text') {
+        if (key && ['Enter'].includes(key.code) && this.currentTyping.slice(-1) !== ';') this.currentTyping += ';'
       }
     },
 

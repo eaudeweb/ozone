@@ -404,7 +404,7 @@ class AggregationMixin:
             # correct and need to be passed as parameters.
             if populate_baselines:
                 aggregation.populate_limits_and_baselines(is_article5, is_eu_member)
-            aggregation.calculate_totals(is_eu_member)
+            aggregation.calculate_totals(is_eu_member, is_article5)
 
     @classmethod
     def get_aggregated_mt_data(cls, submission, queryset, reported_substances):
@@ -423,6 +423,7 @@ class AggregationMixin:
         # The submission's party_history property is cached.
         ph = submission.party_history
         is_eu_member = ph.is_eu_member if ph else None
+        is_article5 = ph.is_article5 if ph else None
 
         for entry in queryset:
             # Add entry to dictionary if necessary
@@ -447,7 +448,7 @@ class AggregationMixin:
                 value += model_value
                 setattr(aggregation, aggr_field, value)
 
-            aggregation.calculate_totals(is_eu_member)
+            aggregation.calculate_totals(is_eu_member, is_article5)
 
 
 class BaseReport(models.Model):

@@ -178,10 +178,10 @@ module.exports = {
     fillSubmissionInfo(browser, submissionInfo)
     clickQuestionnaireRadios(browser, ['has_imports'])
     addEntity(browser, 'has_imports_tab', 'substance', 'A/I Chlorofluorocarbons (CFCs)', ['CFC-11'])
-    addValues(browser, 'substance-table', 'has_imports_tab', 1, row_values, modal_values)
+    addValues(browser, 'substance-table', 'has_imports_tab', 1, row_values, modal_values, 0)
 
     addEntity(browser, 'has_imports_tab', 'blend', 'Zeotrope', ['R-401B'])
-    addValues(browser, 'blend-table', 'has_imports_tab', 1, row_values, modal_values)
+    addValues(browser, 'blend-table', 'has_imports_tab', 1, row_values, modal_values, 1)
 
     saveSubmission(browser, ['Questionnaire', 'Imports'])
   },
@@ -211,10 +211,10 @@ module.exports = {
     clickQuestionnaireRadios(browser, ['has_exports'])
 
     addEntity(browser, 'has_exports_tab', 'substance', 'A/I Chlorofluorocarbons (CFCs)', ['CFC-11'], 1, true)
-    addValues(browser, 'substance-table', 'has_exports_tab', 1, row_values, modal_values)
+    addValues(browser, 'substance-table', 'has_exports_tab', 1, row_values, modal_values, 0)
 
     addEntity(browser, 'has_exports_tab', 'blend', 'Zeotrope', ['R-401A'], 1, true)
-    addValues(browser, 'blend-table', 'has_exports_tab', 1, row_values, modal_values)
+    addValues(browser, 'blend-table', 'has_exports_tab', 1, row_values, modal_values, 1)
 
     addComment(browser, 'has_exports_tab', 'Hakuna Matata')
     saveSubmission(browser, ['Questionnaire', 'Exports'])
@@ -245,10 +245,10 @@ module.exports = {
     clickQuestionnaireRadios(browser, ['has_produced'])
 
     addEntity(browser, 'has_produced_tab', 'substance', 'A/I Chlorofluorocarbons (CFCs)', ['CFC-11'], 1, true)
-    addValues(browser, 'substance-table', 'has_produced_tab', 1, row_values, modal_values)
+    addValues(browser, 'substance-table', 'has_produced_tab', 1, row_values, modal_values, 0)
 
     addEntity(browser, 'has_produced_tab', 'substance', 'F Hydrofluorocarbons (HFCs)', ['HFC-23'], 1, true)
-    addValues(browser, 'fii-table', 'has_produced_tab', 1, row_values, modal_values)
+    addValues(browser, 'fii-table', 'has_produced_tab', 1, row_values, modal_values, 1)
 
     addComment(browser, 'has_produced_tab', 'Hakuna Matata')
     saveSubmission(browser, ['Questionnaire', 'Production'])
@@ -275,10 +275,10 @@ module.exports = {
     clickQuestionnaireRadios(browser, ['has_destroyed'])
 
     addEntity(browser, 'has_destroyed_tab', 'substance', 'A/I Chlorofluorocarbons (CFCs)', ['CFC-11'], 1, true)
-    addValues(browser, 'substance-table', 'has_destroyed_tab', 1, row_values, modal_values)
+    addValues(browser, 'substance-table', 'has_destroyed_tab', 1, row_values, modal_values, 0)
 
     addEntity(browser, 'has_destroyed_tab', 'blend', 'Zeotrope', ['R-401A'], 1, true)
-    addValues(browser, 'blend-table', 'has_destroyed_tab', 1, row_values, modal_values)
+    addValues(browser, 'blend-table', 'has_destroyed_tab', 1, row_values, modal_values, 1)
 
     addComment(browser, 'has_destroyed_tab', 'Hakuna Matata')
     saveSubmission(browser, ['Questionnaire', 'Destruction'])
@@ -309,10 +309,10 @@ module.exports = {
     clickQuestionnaireRadios(browser, ['has_nonparty'])
 
     addEntity(browser, 'has_nonparty_tab', 'substance', 'A/I Chlorofluorocarbons (CFCs)', ['CFC-11'], 1, true)
-    addValues(browser, 'substance-table', 'has_nonparty_tab', 1, row_values, modal_values)
+    addValues(browser, 'substance-table', 'has_nonparty_tab', 1, row_values, modal_values, 0)
 
     addEntity(browser, 'has_nonparty_tab', 'blend', 'Zeotrope', ['R-401A'], 1, true)
-    addValues(browser, 'blend-table', 'has_nonparty_tab', 1, row_values, modal_values)
+    addValues(browser, 'blend-table', 'has_nonparty_tab', 1, row_values, modal_values, 1)
 
     addComment(browser, 'has_nonparty_tab', 'Hakuna Matata')
     saveSubmission(browser, ['Questionnaire', 'Non-Party'])
@@ -535,10 +535,10 @@ module.exports = {
     fillSubmissionInfo(browser, submissionInfo)
     clickQuestionnaireRadios(browser, ['has_exports'])
     addEntity(browser, 'has_exports_tab', 'substance', 'A/I Chlorofluorocarbons (CFCs)', ['CFC-11'], 1)
-    addValues(browser, 'substance-table', 'has_exports_tab', 1, row_values, modal_values)
+    addValues(browser, 'substance-table', 'has_exports_tab', 1, row_values, modal_values, 0)
     addEntity(browser, 'has_exports_tab', 'substance', 'A/I Chlorofluorocarbons (CFCs)', ['CFC-12'], 1)
-    rowIsEmpty(browser, 'substance-table', 'has_exports_tab', 2, row_values, modal_values)
-    addValues(browser, 'substance-table', 'has_exports_tab', 2, row_values, modal_values)
+    rowIsEmpty(browser, 'substance-table', 'has_exports_tab', 2, row_values, modal_values, 1)
+    addValues(browser, 'substance-table', 'has_exports_tab', 2, row_values, modal_values, 1)
     saveSubmission(browser, ['Submission Info'])
     logout(browser)
   },
@@ -567,7 +567,7 @@ module.exports = {
     fillSubmissionInfo(browser, submissionInfo)
     clickQuestionnaireRadios(browser, ['has_exports'])
     addEntity(browser, 'has_exports_tab', 'blend', 'Zeotrope', ['R-401A'], 1, true)
-    addValues(browser, 'blend-table', 'has_exports_tab', 1, row_values, modal_values)
+    addValues(browser, 'blend-table', 'has_exports_tab', 1, row_values, modal_values, 0)
     toggleMixtureDetails(browser, 'blend-table', 'has_exports_tab', 1)
   }
 }

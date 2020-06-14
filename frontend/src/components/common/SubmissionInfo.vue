@@ -22,7 +22,9 @@
                   <i class="fa fa-info-circle fa-sm"></i>
                 </span>
                 <span v-else>
-                  <label>
+                  <label
+                    :class="{'with-error': info.form_fields[field].description }"
+                  >
                     {{labels[field]}}
                     <div
                       v-if="info.form_fields[field].description"
@@ -45,7 +47,9 @@
               v-if="isSecretariat || (!isSecretariat && info.form_fields['submitted_at'].selected)"
             >
               <b-col lg="3">
-                <label>
+                <label
+                  :class="{'with-error': info.form_fields['submitted_at'].description }"
+                >
                   {{labels.submitted_at}}
                   <div
                     v-if="info.form_fields['submitted_at'].description"

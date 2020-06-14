@@ -3,6 +3,7 @@ from collections import defaultdict
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Count
 from django.db.models import Sum
+from django.db.models import Q
 
 from ozone.core.models import Baseline
 from ozone.core.models import Group
@@ -498,7 +499,12 @@ class SummaryByRegion(ProdConsSummary):
         )
         parties = (
             Party.get_main_parties()
-            .filter(submissions__reporting_period=self.period)
+            # must filter out parties with submissions in data entry
+            .filter(
+                Q(submissions__reporting_period=self.period) &
+                Q(submissions__obligation___obligation_type=ObligationTypes.ART7.value) &
+                ~Q(submissions___current_state='data_entry')
+            )
         )
         stats = self.get_stats(parties)
 
@@ -514,10 +520,15 @@ class SummaryByRegion(ProdConsSummary):
                 .filter(reporting_period=self.period)
                 .filter(party__subregion__region=region)
             )
+            # must filter out parties with submissions in data entry
             parties = (
                 Party.get_main_parties()
                 .filter(subregion__region=region)
-                .filter(submissions__reporting_period=self.period)
+                .filter(
+                    Q(submissions__reporting_period=self.period) &
+                    Q(submissions__obligation___obligation_type=ObligationTypes.ART7.value) &
+                    ~Q(submissions___current_state='data_entry')
+                )
             )
             stats = self.get_stats(parties)
 
@@ -553,10 +564,14 @@ class SummaryByArt5(ProdConsSummary):
                 .filter(reporting_period=self.period)
                 .filter(is_article5=is_article5)
             )
+            # must filter out parties with submissions in data entry
             parties = (
                 Party.get_main_parties()
-                .filter(submissions__reporting_period=self.period)
-                .filter(history__in=histories)
+                .filter(
+                    Q(submissions__reporting_period=self.period) &
+                    Q(submissions__obligation___obligation_type=ObligationTypes.ART7.value) &
+                    ~Q(submissions___current_state='data_entry')
+                ).filter(history__in=histories)
             )
             prodcons_groups = self.get_prodcons_groups(
                 ProdCons.objects
@@ -612,10 +627,14 @@ class SummaryParties(ProdConsSummary):
             .filter(reporting_period=self.period)
             .filter(is_article5=self.is_article5)
         )
+        # must filter out parties with submissions in data entry
         parties = (
             Party.get_main_parties()
-            .filter(submissions__reporting_period=self.period)
-            .filter(history__in=histories)
+            .filter(
+                Q(submissions__reporting_period=self.period) &
+                Q(submissions__obligation___obligation_type=ObligationTypes.ART7.value) &
+                ~Q(submissions___current_state='data_entry')
+            ).filter(history__in=histories)
             .distinct()
         )
 

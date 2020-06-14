@@ -132,18 +132,13 @@ export default {
       const endpoints = []
       const tabsList = []
       Object.keys(form.tabs).forEach((tab) => {
-        if (form.tabs[tab].endpoint_url && Object.keys(this.$store.state.current_submission).includes(form.tabs[tab].endpoint_url)) {
+        if (
+          this.$store.state.current_submission
+          && form.tabs[tab].endpoint_url
+          && Object.keys(this.$store.state.current_submission).includes(form.tabs[tab].endpoint_url)
+        ) {
           endpoints.push(fetch(prefill_data[form.tabs[tab].endpoint_url]))
           tabsList.push(tab)
-          // fetch().then(response => {
-          //   if (response.data.length) {
-          //     this.prefill(form.tabs[tab].name, response.data)
-          //   } else {
-          //
-          //   }
-          // }).catch(error => {
-          //   console.log(error)
-          // })
         }
       })
       Promise.all(endpoints,).then((responses) => {
