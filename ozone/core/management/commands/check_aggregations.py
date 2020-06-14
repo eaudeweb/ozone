@@ -102,7 +102,7 @@ class Command(BaseCommand):
             if count_db != len(aggregations):
                 logger.warning(
                     f"Number of rows is different ({len(aggregations)} vs {count_db})"
-                    " in ProdCons for {submission_name}"
+                    f" in ProdCons for {submission_name}"
                 )
             for group, prodcons in aggregations.items():
                 prodcons_db = qs1.filter(
