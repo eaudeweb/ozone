@@ -243,21 +243,29 @@ class BulkCreateUpdateMixin:
 class PreventMultiplePostsMixin:
     def create(self, request, *args, **kwargs):
         """
-        If there is already data for this submission, POST requests will not do
-        anything (and return an empty list response).
+        If there is already data for this submission, POST requests will
+        behave like updates.
         This is transparent for the user (as long as UI ends multiple posts only
         accidentally) and solves an issue where multiple frontend POSTs caused
         duplicated data.
         """
-        if self.get_queryset().count():
-            # Replacing actual request data with empty list.
-            serializer = self.get_serializer(data=[])
-            serializer.is_valid(raise_exception=True)
-            headers = self.get_success_headers(serializer.data)
-            self.perform_create(serializer)
-            return Response(
-                serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        existing_instance = self.get_queryset()
+        if existing_instance.count():
+            # If there is existing data, POST requests will perform exactly as
+            # PUT requests.
+            serializer = self.get_serializer(
+                existing_instance, data=request.data, partial=False
             )
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+
+            if getattr(existing_instance, '_prefetched_objects_cache', None):
+                # If 'prefetch_related' has been applied to a queryset, we need
+                # to forcibly invalidate the prefetch cache on the instance.
+                existing_instance._prefetched_objects_cache = {}
+
+            return Response(serializer.data)
+
         return super().create(request, *args, **kwargs)
 
 
