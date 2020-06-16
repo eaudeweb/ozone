@@ -239,8 +239,6 @@ class BulkCreateUpdateMixin:
             # If it's not one we return many!
             return self.get_queryset()
 
-
-class PreventMultiplePostsMixin:
     def create(self, request, *args, **kwargs):
         """
         If there is already data for this submission, POST requests will
@@ -250,6 +248,7 @@ class PreventMultiplePostsMixin:
         duplicated data.
         """
         existing_instance = self.get_queryset()
+
         if existing_instance.count():
             # If there is existing data, POST requests will perform exactly as
             # PUT requests.
@@ -1928,8 +1927,7 @@ class Article7QuestionnaireViewSet(viewsets.ModelViewSet):
 
 
 class Article7DestructionViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet
 ):
     obligation_types = ("art7",)
     serializer_class = Article7DestructionSerializer
@@ -1955,8 +1953,7 @@ class Article7DestructionViewSet(
 
 
 class Article7ProductionViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet
 ):
     obligation_types = ("art7",)
     serializer_class = Article7ProductionSerializer
@@ -1979,8 +1976,7 @@ class Article7ProductionViewSet(
 
 
 class Article7ExportViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet
 ):
     obligation_types = ("art7",)
     serializer_class = Article7ExportSerializer
@@ -2005,8 +2001,7 @@ class Article7ExportViewSet(
 
 
 class Article7ImportViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet
 ):
     obligation_types = ("art7",)
     serializer_class = Article7ImportSerializer
@@ -2031,8 +2026,7 @@ class Article7ImportViewSet(
 
 
 class Article7NonPartyTradeViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet
 ):
     obligation_types = ("art7",)
     serializer_class = Article7NonPartyTradeSerializer
@@ -2057,8 +2051,7 @@ class Article7NonPartyTradeViewSet(
 
 
 class Article7EmissionViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet
 ):
     obligation_types = ("art7",)
     serializer_class = Article7EmissionSerializer
@@ -2079,8 +2072,7 @@ class Article7EmissionViewSet(
 
 
 class HighAmbientTemperatureImportViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet
 ):
     obligation_types = ("hat",)
     serializer_class = HighAmbientTemperatureImportSerializer
@@ -2101,8 +2093,7 @@ class HighAmbientTemperatureImportViewSet(
 
 
 class HighAmbientTemperatureProductionViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet
 ):
     obligation_types = ("hat",)
     serializer_class = HighAmbientTemperatureProductionSerializer
@@ -2142,8 +2133,7 @@ class DataOtherViewSet(SerializerDataContextMixIn, viewsets.ModelViewSet):
 
 
 class ExemptionNominationViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet
 ):
     obligation_types = ("exemption",)
     serializer_class = ExemptionNominationSerializer
@@ -2162,8 +2152,7 @@ class ExemptionNominationViewSet(
 
 
 class ExemptionApprovedViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet,
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet,
 ):
     obligation_types = ("exemption",)
     serializer_class = ExemptionApprovedSerializer
@@ -2182,8 +2171,7 @@ class ExemptionApprovedViewSet(
 
 
 class RAFViewSet(
-    BulkCreateUpdateMixin, SerializerDataContextMixIn,
-    PreventMultiplePostsMixin, viewsets.ModelViewSet,
+    BulkCreateUpdateMixin, SerializerDataContextMixIn, viewsets.ModelViewSet,
 ):
     obligation_types = ("essencrit",)
     serializer_class = RAFSerializer
