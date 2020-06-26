@@ -10,7 +10,7 @@ from .legal import ReportingPeriod
 from .party import Party, PartyHistory
 from .substance import Group, Substance
 from .utils import round_decimal_half_up, DECIMAL_FIELD_DECIMALS, DECIMAL_FIELD_DIGITS
-from .control import Limit, LimitTypes, Baseline
+from .control import ActualBaselineAndLimit
 
 
 __all__ = [
@@ -559,73 +559,31 @@ class ProdCons(BaseProdCons):
         in practice. Otherwise, this method might be triggered by other means.
 
         We may also fetch the limits/baselines data without having first saved
-        the instance. In this case the is_article5 parameter is used.
+        the instance. In this case the is_article5 and is_eu_member parameters
+        are used, as there is no such information on the unsaved instance.
         """
         # If this instance had already been saved, fields is_article5
         # and is_eu_member should already be populated with a coherent value.
         # If the instance has not been saved (as in the case of non-persistent
         # instances used to generate on-the-fly data), then use the
         # externally-provided parameter.
-        if self.is_article5 is None:
-            self.is_article5 = is_article5
-        if self.is_eu_member is None:
-            self.is_eu_member = is_eu_member
+        if self.is_article5 is not None:
+            is_article5 = self.is_article5
+        if self.is_eu_member is not None:
+            is_eu_member = self.is_eu_member
 
-        # Reset baselines and limits to None, in case previous values exist
-        self.limit_prod = self.limit_cons = self.limit_bdn = None
-        self.baseline_prod = self.baseline_cons = self.baseline_bdn = None
-
-        # Populate limits
-        for limit in Limit.objects.filter(
-            party=self.party,
-            reporting_period=self.reporting_period,
-            group=self.group
-        ):
-            if limit.limit_type == LimitTypes.PRODUCTION.value:
-                self.limit_prod = limit.limit
-            elif limit.limit_type == LimitTypes.CONSUMPTION.value:
-                self.limit_cons = limit.limit
-            elif limit.limit_type == LimitTypes.BDN.value:
-                self.limit_bdn = limit.limit
-
-        # Populate baselines; first get appropriate baseline types
-        if self.is_article5:
-            prod_bt = 'A5Prod'
-            cons_bt = 'A5Cons'
-            # Non-existent name
-            bdn_bt = None
-        else:
-            prod_bt = 'NA5Prod'
-            cons_bt = 'NA5Cons'
-            bdn_bt = 'BDN_NA5'
-
-        for baseline in Baseline.objects.filter(
-            party=self.party,
-            group=self.group
-        ).values('baseline_type__name', 'baseline'):
-            if (baseline['baseline_type__name'] == prod_bt):
-                # In theory we should check self.is_european_union
-                # but production baselines are not persisted for EU
-                self.baseline_prod = baseline['baseline']
-            if (baseline['baseline_type__name'] == cons_bt
-                    and not self.is_eu_member):
-                self.baseline_cons = baseline['baseline']
-            # This is actually not correct for all cases - see below
-            if (baseline['baseline_type__name'] == bdn_bt):
-                self.baseline_bdn = baseline['baseline']
-
-        # Finally, set or overwrite baseline_bdn if needed.
-        # The above-set value is valid only for NA5 parties, year >= 2000
-        # and annex groups A/I, A/II, B/I and E/I.
-        # For all other cases, the BDN baseline is the A5 or NA5 prod baseline.
-        if self.limit_bdn is not None:
-            start_date_2000 = datetime.strptime('2000-01-01', '%Y-%m-%d').date()
-            if (
-                self.reporting_period.start_date < start_date_2000
-                or self.is_article5
-                or self.group.group_id not in ['AI', 'AII', 'BI', 'EI']
-            ):
-                self.baseline_bdn = self.baseline_prod
+        calculated_data = ActualBaselineAndLimit.get_actual_data(
+            self.party, self.reporting_period, self.group,
+            is_article5, is_eu_member
+        )
+        # calculated_data is a group-based dictionary of dictionaries
+        calculated_data = calculated_data[self.group]
+        self.limit_prod = calculated_data['limit_prod']
+        self.limit_cons = calculated_data['limit_cons']
+        self.limit_bdn = calculated_data['limit_bdn']
+        self.baseline_prod = calculated_data['baseline_prod']
+        self.baseline_cons = calculated_data['baseline_cons']
+        self.baseline_bdn = calculated_data['baseline_bdn']
 
     def update_limits_and_baselines(self, invalidate_cache=False):
         """

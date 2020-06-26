@@ -1,5 +1,6 @@
 import datetime
 import enum
+from functools import lru_cache
 
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -7,7 +8,6 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
-from ..exceptions import MethodNotAllowed
 from .meeting import Treaty
 from .party import Party, PartyRatification
 
@@ -168,6 +168,11 @@ class Group(models.Model):
         """
         current_ratifications = Group._get_ratifications(party, reporting_period)
         return Group.objects.filter(report_treaty_id__in=current_ratifications)
+
+    @staticmethod
+    @lru_cache(maxsize=1)
+    def get_all_groups():
+        return list(Group.objects.all())
 
     def __str__(self):
         return f'Group {self.group_id}'
