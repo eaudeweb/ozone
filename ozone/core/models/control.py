@@ -3,11 +3,17 @@ from datetime import datetime
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils.functional import cached_property
 
 from .party import Party, PartyType, PartyHistory
 from .legal import ReportingPeriod
 from .substance import Group
-from .utils import DECIMAL_FIELD_DECIMALS, DECIMAL_FIELD_DIGITS
+from .utils import (
+    DECIMAL_FIELD_DECIMALS,
+    DECIMAL_FIELD_DIGITS,
+    DecimalRoundingRules,
+    round_decimal_half_up,
+)
 
 
 __all__ = [
@@ -162,11 +168,20 @@ class Limit(models.Model):
         db_table = 'limit_prod_cons'
 
 
+class ActualBaselineAndLimitManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'party', 'reporting_period', 'group'
+        )
+
+
 class ActualBaselineAndLimit(models.Model):
     """
     Actual baselines and limits for a specific party-period-group-type
     combination.
     """
+    objects = ActualBaselineAndLimitManager()
+
     party = models.ForeignKey(
         Party, related_name='actual_baselines', on_delete=models.PROTECT
     )
@@ -178,6 +193,13 @@ class ActualBaselineAndLimit(models.Model):
     group = models.ForeignKey(
         Group, related_name='actual_baselines', on_delete=models.PROTECT
     )
+
+    # For easy access (especially to avoid horrible joins in aggregation views),
+    # duplicating these flags once again!
+    # Since these are pre-populated, there is no need for NullBooleanField.
+    # TODO: remove default when re-doing migrations
+    is_article5 = models.BooleanField(default=True)
+    is_eu_member = models.BooleanField(default=True)
 
     # TODO: should these be null-able?
     baseline_prod = models.DecimalField(
@@ -320,6 +342,8 @@ class ActualBaselineAndLimit(models.Model):
                 'limit_prod': limit_prod,
                 'limit_cons': limit_cons,
                 'limit_bdn': limit_bdn,
+                'is_article5': is_article5,
+                'is_eu_member': is_eu_member,
             }
 
         # Finally return dict with values for all groups
@@ -327,29 +351,73 @@ class ActualBaselineAndLimit(models.Model):
 
     @classmethod
     def populate_actual_data(
-        cls, party, reporting_period,
-        group=None, is_article5=None, is_eu_member=None
+        cls, party, reporting_period, group=None
     ):
         """
         Creates and populates new ActualBaselineAndLimit entries (or updates
         existing ones).
         If the optional `group` parameter is given, only fill entries for that
         group.
-        If the optional is_eu_member and is_article5 parameters are given,
-        use them instead of fetching party history. This would be used when
-        calculating non-persistent ProdCons data.
         """
         calculated_values = cls.get_actual_data(
-            party, reporting_period, group, is_article5, is_eu_member
+            party, reporting_period, group
         )
         for group in calculated_values.keys():
             # Update or create actual object for this group
-            actual_baseline_limit = cls.objects.update_or_create(
+            obj, created = cls.objects.update_or_create(
                 party=party,
                 reporting_period=reporting_period,
                 group=group,
                 defaults=calculated_values[group]
             )
+            obj.apply_rounding()
+            obj.save()
+        return calculated_values
+
+    @classmethod
+    def decimal_fields(cls):
+        return [
+            f.name for f in cls._meta.fields
+            if isinstance(f, models.fields.DecimalField)
+        ]
+
+    @cached_property
+    def decimals(self):
+        """
+        Returns the number of rounding decimals for this particular instance,
+        based on reporting period, group and party.
+        Using getattr instead of the standard self.field_name as this property
+        can be used on unsaved and inconsistent (e.g. party==None) model
+        instances, in which case Django will complain.
+        """
+        return DecimalRoundingRules.get_decimals(
+            self.reporting_period,
+            getattr(self, 'group', None),
+            getattr(self, 'party', None),
+        )
+
+    def get_roundable_fields(self):
+        """
+        Returns fields that should be rounded after all calculations are
+        performed, together with the number of decimals to be rounded to.
+        """
+        return {
+            'baseline_prod': self.decimals,
+            'baseline_cons': self.decimals,
+            'baseline_bdn': self.decimals,
+            'limit_prod': self.decimals,
+            'limit_cons': self.decimals,
+            'limit_bdn': self.decimals,
+        }
+
+    def apply_rounding(self):
+        for field_name, decimals in self.get_roundable_fields().items():
+            field_value = getattr(self, field_name)
+            if field_value is not None and field_value != '':
+                setattr(
+                    self, field_name,
+                    round_decimal_half_up(field_value, decimals)
+                )
 
     class Meta:
         db_table = 'actual_baseline'

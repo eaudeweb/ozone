@@ -9,7 +9,12 @@ from django.utils.functional import cached_property
 from .legal import ReportingPeriod
 from .party import Party, PartyHistory
 from .substance import Group, Substance
-from .utils import round_decimal_half_up, DECIMAL_FIELD_DECIMALS, DECIMAL_FIELD_DIGITS
+from .utils import (
+    round_decimal_half_up,
+    DECIMAL_FIELD_DECIMALS,
+    DECIMAL_FIELD_DIGITS,
+    DecimalRoundingRules,
+)
 from .control import ActualBaselineAndLimit
 
 
@@ -231,6 +236,7 @@ class BaseProdCons(models.Model):
         return [
             f.name for f in cls._meta.fields
             if isinstance(f, models.fields.DecimalField)
+            and 'baseline' not in f.name and 'limit' not in f.name
         ]
 
     @cached_property
@@ -262,32 +268,6 @@ class BaseProdCons(models.Model):
         for aggregation in aggregations:
             if aggregation.is_empty():
                 aggregation.delete()
-
-    special_cases_2009 = [
-        'CD', 'CG', 'DZ', 'EC', 'ER', 'GQ', 'GW', 'HT', 'LC', 'MA', 'MK',
-        'MZ', 'NE', 'NG', 'SZ', 'FJ', 'PK', 'PH'
-    ]
-    special_cases_2010 = [
-        'DZ', 'EC', 'ER', 'HT', 'LC', 'LY', 'MA', 'NG', 'PE', 'SZ', 'TR',
-        'YE', 'FJ', 'PK', 'PH'
-    ]
-
-    @classmethod
-    def get_decimals(cls, period, group, party):
-        """
-        Returns the number of decimals according to the following
-        rounding rules.
-        """
-        if group and group.group_id == 'CI':
-            if (
-                period.start_date >= datetime.strptime('2011-01-01', "%Y-%m-%d").date()
-                or period.name == '2009' and party.abbr in cls.special_cases_2009
-                or period.name == '2010' and party.abbr in cls.special_cases_2010
-            ):
-                return 2
-        if group and group.group_id == 'F':
-            return 0
-        return 1
 
     @property
     def decimals(self):
@@ -505,6 +485,17 @@ class ProdCons(BaseProdCons):
         help_text="Annex Group for which this aggregation was calculated",
     )
 
+    #TODO: this should supersede the baselines/limits below, but only when/if
+    # it's safe to do so. :)
+    actual_baseline_and_limit = models.ForeignKey(
+        ActualBaselineAndLimit,
+        null=True,
+        blank=True,
+        related_name="%(class)s_aggregations",
+        on_delete=models.PROTECT,
+        help_text="Actual baselines and limits for this aggregation",
+    )
+
     # Baselines - they can be null!
     baseline_prod = models.DecimalField(
         max_digits=DECIMAL_FIELD_DIGITS, decimal_places=DECIMAL_FIELD_DECIMALS,
@@ -546,13 +537,18 @@ class ProdCons(BaseProdCons):
         can be used on unsaved and inconsistent (e.g. party==None) model
         instances, in which case Django will complain.
         """
-        return BaseProdCons.get_decimals(
+        return DecimalRoundingRules.get_decimals(
             self.reporting_period,
             getattr(self, 'group', None),
             getattr(self, 'party', None),
         )
 
-    def populate_limits_and_baselines(self, is_article5=None, is_eu_member=None):
+    #TODO: should be removed if we stop storing limits/baselines in ProdCons,
+    # but then we should take care of data preview and the ProdCons
+    # un-aggregated view.
+    def populate_limits_and_baselines(
+        self, is_article5=None, is_eu_member=None
+    ):
         """
         At save we fetch the limits/baselines from the corresponding tables.
         This assumes that said tables are pre-populated, which should happen
@@ -576,7 +572,9 @@ class ProdCons(BaseProdCons):
             self.party, self.reporting_period, self.group,
             is_article5, is_eu_member
         )
-        # calculated_data is a group-based dictionary of dictionaries
+        # `calculated_data` is a group-based dictionary of dictionaries
+        # It contains unrounded data, but that will be later rounded explicitly
+        # when needed.
         calculated_data = calculated_data[self.group]
         self.limit_prod = calculated_data['limit_prod']
         self.limit_cons = calculated_data['limit_cons']
