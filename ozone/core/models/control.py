@@ -259,9 +259,12 @@ class ActualBaselineAndLimit(models.Model):
         if is_article5 is None or is_eu_member is None:
             # If the get() fails we let the error propagate, so we don't hide
             # the problem.
-            history = PartyHistory.objects.get(
+            history = PartyHistory.objects.filter(
                 party=party, reporting_period=reporting_period
-            )
+            ).first()
+            if not history:
+                # Return empty dictionary if no history entry was found.
+                return {}
             is_article5 = history.is_article5
             is_eu_member = history.is_eu_member
 
