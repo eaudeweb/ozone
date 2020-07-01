@@ -909,7 +909,7 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
             parties = parties | set(
                 baseline_limit_queryset.values_list('party', flat=True)
             )
-            all_baseline_limit_values = queryset.values(
+            all_baseline_limit_values = baseline_limit_queryset.values(
                 'id',
                 *baseline_limit_fields,
                 'party', 'reporting_period', 'group',
