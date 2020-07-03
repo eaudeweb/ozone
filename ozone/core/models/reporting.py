@@ -661,6 +661,17 @@ class Submission(models.Model):
 
     history = HistoricalRecords()
 
+    @property
+    def remarks_fields_values(self):
+        """
+        Dictionary of field_name: field_value for all remarks fields.
+        """
+        return {
+            f.name: getattr(self, f.name, '')
+            for f in self.__class__._meta.fields
+            if isinstance(f, models.fields.CharField) and 'remarks' in f.name
+        }
+
     @cached_property
     def is_versionable(self):
         return self.obligation.has_versions
@@ -1337,7 +1348,9 @@ class Submission(models.Model):
                 cloned_from=self,
                 created_by=user,
                 last_edited_by=user,
-                reporting_channel=channel
+                reporting_channel=channel,
+                # clone all submission's remarks fields
+                **self.remarks_fields_values
             )
             if hasattr(self, 'info'):
                 # Clone submission might already have some pre-populated
