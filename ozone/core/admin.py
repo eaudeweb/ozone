@@ -502,7 +502,9 @@ class SubstanceAdmin(admin.ModelAdmin):
         'name', 'group', 'description', 'odp', 'gwp',
         'formula', 'number_of_isomers', 'sort_order',
     )
-    list_filter = ('group', 'is_contained_in_polyols', 'is_captured', 'has_critical_uses')
+    list_filter = (
+        'group', 'is_contained_in_polyols', 'is_captured', 'has_critical_uses',
+    )
     search_fields = ['name', 'description', 'substance_id']
 
 
@@ -510,7 +512,7 @@ class SubstanceAdmin(admin.ModelAdmin):
 class BlendAdmin(admin.ModelAdmin):
     list_display = (
         'blend_id', 'composition',
-        'type', 'party', 'odp', 'gwp',
+        'type', 'party', 'odp', 'gwp', 'is_contained_in_polyols',
         'trade_name', 'sort_order',
     )
     list_filter = (

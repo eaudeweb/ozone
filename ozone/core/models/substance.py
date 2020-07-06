@@ -360,6 +360,8 @@ class Blend(models.Model):
     composition_alt = models.CharField(max_length=256, blank=True)
     cnumber = models.CharField(max_length=256, blank=True)
 
+    is_contained_in_polyols = models.BooleanField(default=False)
+
     sort_order = models.IntegerField(null=True, default=0)
 
     @property
