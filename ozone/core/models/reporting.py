@@ -665,6 +665,11 @@ class Submission(models.Model):
     def is_versionable(self):
         return self.obligation.has_versions
 
+    @property
+    def revision(self):
+        return '-' if self.revision_major is None else \
+            f'{self.revision_major}.{self.revision_minor}'
+
     @cached_property
     def filled_by_secretariat(self):
         return self.created_by.is_secretariat
@@ -1792,10 +1797,8 @@ class Submission(models.Model):
         return subst_mapping
 
     def __str__(self):
-        revision = '-' if self.revision_major is None else \
-            f'{self.revision_major}.{self.revision_minor}'
         return f'{self.party.name} report on {self.obligation.name} ' \
-               f'for {self.reporting_period.name} - # {revision}'
+               f'for {self.reporting_period.name} - # {self.revision}'
 
     class Meta:
         # TODO: this constraint may not be true in the corner case of

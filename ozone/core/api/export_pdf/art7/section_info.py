@@ -89,6 +89,9 @@ def get_submission_info(info):
 
 def get_questionnaire_table_contents(submission):
     def _yn(condition):
+        # Questionnaire flags are nullable booleans
+        if condition is None:
+            return '-'
         return _('Yes') if condition else _('No')
     return (
         _yn(submission.article7questionnaire.has_imports)
@@ -135,13 +138,15 @@ def get_questionnaire_table_diff(submission, previous_submission):
     previous_row = get_questionnaire_table_contents(previous_submission)
 
     diff_row = []
+    found_diff = False
     for item, previous_item in itertools.zip_longest(row, previous_row):
         if item != previous_item:
             diff_row.append(b_c(item))
+            found_diff = True
         else:
             diff_row.append(b_c(' '))
 
-    if not diff_row:
+    if not found_diff:
         # Return empty tuple so we do not display the table
         return ()
 
@@ -175,13 +180,25 @@ def export_info(submission):
 
 
 def export_info_diff(submission, previous_submission):
+    provisional = ('(%s)' % (_('Provisional'),)) \
+        if submission.flag_provisional else ''
+    revision = "%s %s" % (submission.revision, provisional)
+    previous_provisional = ('(%s)' % (_('Provisional'),)) \
+        if previous_submission.flag_provisional else ''
+    previous_revision = "%s %s" % (
+        previous_submission.revision, previous_provisional
+    )
     title = (
-        Paragraph("%s %s - %s %s" % (
-            submission.reporting_period.description,
-            submission.obligation.name,
-            submission.party.name,
-            ('(%s)' % (_('Provisional'),)) if submission.flag_provisional else '',
-        ), h1_style),
+        Paragraph(
+            "Comparison for %s %s - %s between revisions %s and %s" % (
+                submission.reporting_period.description,
+                submission.obligation.name,
+                submission.party.name,
+                revision,
+                previous_revision,
+            ),
+            h1_style
+        ),
     )
     # TODO: display info about both current and previous submission
     # (date of reporting and submission info)

@@ -106,7 +106,8 @@ def export_submission_diff(submission):
     previous_submission = submission.get_previous_version()
     if previous_submission is None:
         yield Paragraph(
-            'No previous submission to compare to', left_paragraph_style
+            f'No previous submission to compare to for {submission}',
+            left_paragraph_style
         )
     else:
         yield from export_info_diff(submission, previous_submission)
