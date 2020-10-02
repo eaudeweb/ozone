@@ -138,48 +138,52 @@ export default {
             errors.push($gettext('Please fill-in column Facility name or identifier (1)'))
           }
 
-          if (!this.quantity_emitted.selected) {
-            errors.push($gettext('Please fill-in column Amount of generated emissions (6)'))
-          }
+          // if (!this.quantity_emitted.selected) {
+          //   errors.push($gettext('Please fill-in column Amount of generated emissions (6)'))
+          // }
 
           if (valueConverter(this.quantity_captured_all_uses.selected)
-					|| valueConverter(this.quantity_captured_feedstock.selected)
-					|| valueConverter(this.quantity_captured_for_destruction.selected)) {
+          && (valueConverter(this.quantity_captured_feedstock.selected)
+          || valueConverter(this.quantity_captured_for_destruction.selected))) {
             if (valueConverter(this.quantity_captured_all_uses.selected) < doSum([this.quantity_captured_feedstock.selected, this.quantity_captured_for_destruction.selected])) {
               errors.push($gettext('Amount generated and captured for all uses (3a) must be greater than or equal to the sum of Amount generated and captured for feedstock use in your country (3b) and Amount generated and captured for destruction (3c)'))
             }
           }
 
           if (valueConverter(this.quantity_generated.selected)
-					&& valueConverter(this.quantity_captured_all_uses.selected)
-					&& valueConverter(this.quantity_feedstock.selected)
-					&& valueConverter(this.quantity_destroyed.selected)
-					&& valueConverter(this.quantity_emitted.selected)) {
+          && valueConverter(this.quantity_captured_all_uses.selected)
+          && valueConverter(this.quantity_feedstock.selected)
+          && valueConverter(this.quantity_destroyed.selected)
+          && valueConverter(this.quantity_emitted.selected)) {
             if (valueConverter(this.quantity_generated.selected)
-						!== doSum([this.quantity_captured_all_uses.selected, this.quantity_feedstock.selected, this.quantity_destroyed.selected, this.quantity_emitted.selected])) {
+            !== doSum([this.quantity_captured_all_uses.selected, this.quantity_feedstock.selected, this.quantity_destroyed.selected, this.quantity_emitted.selected])) {
               errors.push($gettext('Total amount generated (2) must be equal to the sum of its components Amount generated and captured for all uses (3a), Amount used for feedstock without prior capture (4), Amount destroyed without prior capture (5) and Amount of generated emissions (6)'))
             }
           }
 
-          if (valueConverter(this.quantity_generated.selected)
-					|| valueConverter(this.quantity_captured_all_uses.selected)
-					|| valueConverter(this.quantity_feedstock.selected)
-					|| valueConverter(this.quantity_destroyed.selected)
-					|| valueConverter(this.quantity_emitted.selected)) {
-            if (!(valueConverter(this.quantity_generated.selected)
-						&& valueConverter(this.quantity_captured_all_uses.selected)
-						&& valueConverter(this.quantity_feedstock.selected)
-						&& valueConverter(this.quantity_destroyed.selected)
-						&& valueConverter(this.quantity_emitted.selected))) {
-              if (valueConverter(this.quantity_generated.selected) < doSum([
-                this.quantity_captured_all_uses.selected,
-                this.quantity_feedstock.selected,
-                this.quantity_destroyed.selected,
-                this.quantity_emitted.selected])
-              ) {
-                errors.push($gettext('Total amount generated (2) must be greater than or equal to the sum of its components Amount generated and captured for all uses (3a), Amount used for feedstock without prior capture (4), Amount destroyed without prior capture (5) and Amount of generated emissions (6)'))
-              }
-            }
+          // refs #8949, depending on whether 3a has been reported or not (in which case we use 3b+3c instead)
+          if (
+            valueConverter(this.quantity_generated.selected)
+            && valueConverter(this.quantity_captured_all_uses.selected)
+            && valueConverter(this.quantity_generated.selected) < doSum([
+              this.quantity_captured_all_uses.selected,
+              this.quantity_feedstock.selected,
+              this.quantity_destroyed.selected,
+              this.quantity_emitted.selected])
+          ) {
+            errors.push($gettext('Total amount generated (2) must be greater than or equal to the sum of its components Amount generated and captured for all uses (3a), Amount used for feedstock without prior capture (4), Amount destroyed without prior capture (5) and Amount of generated emissions (6)'))
+          }
+          if (
+            valueConverter(this.quantity_generated.selected)
+            && !valueConverter(this.quantity_captured_all_uses.selected)
+            && valueConverter(this.quantity_generated.selected) < doSum([
+              this.quantity_captured_feedstock.selected,
+              this.quantity_captured_for_destruction.selected,
+              this.quantity_feedstock.selected,
+              this.quantity_destroyed.selected,
+              this.quantity_emitted.selected])
+          ) {
+            errors.push($gettext('Total amount generated (2) must be greater than or equal to the sum of its components Amount generated and captured for all uses (3a), Amount used for feedstock without prior capture (4), Amount destroyed without prior capture (5) and Amount of generated emissions (6)'))
           }
           const returnObj = {
             type: 'nonInput',
