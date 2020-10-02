@@ -1160,13 +1160,13 @@ class Article7Emission(ModifyPreventionMixin, BaseReport):
                         'for all Article 7 Emissions entries.'
                     )
                 )
-            if entry.quantity_emitted is None:
-                raise ValidationError(
-                    _(
-                        'Please fill-in column Amount of generated emissions '
-                        '(6) for all Article 7 Emissions entries.'
-                    )
-                )
+            # if entry.quantity_emitted is None:
+            #     raise ValidationError(
+            #         _(
+            #             'Please fill-in column Amount of generated emissions '
+            #             '(6) for all Article 7 Emissions entries.'
+            #         )
+            #     )
 
     class Meta(BaseReport.Meta):
         db_table = 'reporting_art7_emissions'
