@@ -37,7 +37,7 @@ export default {
         },
         contain_technologies: {
           selected: null,
-          type: 'list'
+          type: 'nonInput'
         },
         emissions: {
           selected: null,
