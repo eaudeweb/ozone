@@ -604,6 +604,81 @@ def get_date_of_reporting(submission):
         return ()
 
 
+def get_date_of_reporting_diff(submission, previous_submission):
+    # TODO: this logic does two similar queries on the Submission table, can
+    # be improved.
+    date_received, date_revised = get_submission_dates(submission)
+    prev_date_received, prev_date_revised = get_submission_dates(
+        previous_submission
+    )
+
+    extra_text = ''
+    version_date = format_date(
+        submission.submitted_at or submission.info.date or submission.created_at
+    )
+    if submission.in_initial_state:
+        extra_text = _(
+            '. This version from %s was not yet submitted.' % (version_date,)
+        )
+    elif submission.in_incorrect_state:
+        extra_text = _(
+            '. This version from %s has been recalled.' % (version_date,)
+        )
+    elif submission.flag_superseded:
+        extra_text = _(
+            '. This version from %s has been superseded.' % (version_date,)
+        )
+
+    prev_extra_text = ''
+    prev_version_date = format_date(
+        previous_submission.submitted_at
+        or previous_submission.info.date
+        or previous_submission.created_at
+    )
+    if previous_submission.in_initial_state:
+        prev_extra_text = _(
+            '. This version from %s was not yet submitted.' % (
+                prev_version_date,
+            )
+        )
+    elif previous_submission.in_incorrect_state:
+        prev_extra_text = _(
+            '. This version from %s has been recalled.' % (prev_version_date,)
+        )
+    elif previous_submission.flag_superseded:
+        prev_extra_text = _(
+            '. This version from %s has been superseded.' % (prev_version_date,)
+        )
+
+    if date_revised or prev_date_revised:
+        return (
+            Paragraph('%s: %s (%s), %s: %s%s (%s%s)' % (
+                _('Date first received'),
+                format_date(date_received) if date_received else '-',
+                format_date(prev_date_received) if prev_date_received else '-',
+                _('Date revised'),
+                format_date(date_revised),
+                extra_text,
+                format_date(prev_date_revised),
+                prev_extra_text,
+            ), style=no_spacing_style),
+            p_l(''),
+        )
+    elif date_received or prev_date_received:
+        return (
+            Paragraph('%s: %s%s (%s%s)' % (
+                _('Date received'),
+                format_date(date_received),
+                extra_text,
+                format_date(prev_date_received),
+                prev_extra_text,
+            ), style=no_spacing_style),
+            p_l(''),
+        )
+    else:
+        return ()
+
+
 class TableBuilder:
 
     def __init__(self, styles, column_widths, repeat_rows=None):
