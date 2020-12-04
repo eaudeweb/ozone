@@ -431,7 +431,7 @@ class BlendSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'blend_id', 'custom', 'is_qps', 'party', 'type',
             'other_names', 'composition', 'components', 'sort_order',
-            'trade_name', 'odp', 'gwp',
+            'trade_name', 'odp', 'gwp', 'is_contained_in_polyols',
         )
         read_only_fields = ('custom', 'is_qps',)
 
