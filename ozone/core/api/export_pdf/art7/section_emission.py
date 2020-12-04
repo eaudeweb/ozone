@@ -14,10 +14,7 @@ from ..util import (
     col_widths,
 )
 
-subtitle = Paragraph(
-    "%s (%s)" % (_("Emissions of HFC-23"), _("metric tonnes")),
-    h2_style
-)
+subtitle_text = "%s (%s)" % (_("Emissions of HFC-23"), _("metric tonnes"))
 
 table_header = (
     (
@@ -110,6 +107,9 @@ def export_emission(submission, queryset):
     if not data and not any(comments):
         return tuple()
 
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keep_with_next = True
+
     table = rows_to_table(
         table_header,
         tuple(map(table_row, data)),
@@ -166,6 +166,8 @@ def export_emission_diff(
         return ()
 
     # Now populate PDF
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keep_with_next = True
     ret = (subtitle,)
     all_data = (
         (_('Added'), added_keys, data_dict, {}),

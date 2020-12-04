@@ -40,10 +40,7 @@ def table_row_diff(obj, previous_obj):
 
 
 # Used for exporting both submission and diff
-subtitle = Paragraph(
-    "%s (%s)" % (_('Destroyed'), _('metric tonnes')),
-    h2_style
-)
+subtitle_text = "%s (%s)" % (_('Destroyed'), _('metric tonnes'))
 
 table_header = ((
     sm_c(_('Annex/Group')),
@@ -59,6 +56,9 @@ def export_destruction(submission, queryset):
 
     if not data and not any(comments):
         return tuple()
+
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keep_with_next = True
 
     table = rows_to_table(
         table_header,
@@ -114,6 +114,9 @@ def export_destruction_diff(
     if not added_keys and not changed_keys and not removed_keys:
         # Nothing has been changed, return empty tuple
         return ()
+
+    subtitle = Paragraph(subtitle_text, h2_style)
+    subtitle.keep_with_next = True
 
     # Now populate PDF
     ret = (subtitle,)
