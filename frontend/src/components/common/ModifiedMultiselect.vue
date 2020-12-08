@@ -3,7 +3,7 @@
     v-bind="$attrs"
     v-on="forwardListeners"
     v-model="completeValue"
-    :options="[...options].filter(option => option)"
+    :options="Array.isArray(options) ? [...options].filter(option => option) : []"
     :track-by="trackBy"
     :label="label"
     :disabled="disabled"
