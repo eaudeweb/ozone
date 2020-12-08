@@ -6,9 +6,9 @@ import 'vue-multiselect/dist/vue-multiselect.min.css'
 
 import * as Sentry from '@sentry/browser'
 import store from '@/store/index'
+import { initLanguages } from '@/components/common/services/languageService'
 import App from './App'
 import router from './router'
-import { initLanguages } from '@/components/common/services/languageService'
 
 if (process.env.NODE_ENV !== 'development') {
   Sentry.init({

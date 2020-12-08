@@ -1,7 +1,7 @@
-import { getQuestionnaireFields } from './questionnaireFields'
 import { getTabSubInfo } from '@/components/common/dataDefinitions/tabSubInfo'
 import { setTabFiles } from '@/components/common/dataDefinitions/tabFiles'
 import { getTabFlags } from '@/components/common/dataDefinitions/tabFlags'
+import { getQuestionnaireFields } from './questionnaireFields'
 
 const getFormArt7 = ($gettext) => {
   const form = {

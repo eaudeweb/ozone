@@ -13,12 +13,12 @@
 
 <script>
 
-import FilesMixin from './FilesMixin'
 import { post, update } from '@/components/common/services/api'
 import { isObject } from '@/components/common/services/utilsService'
 import { dateFormatToYYYYMMDD } from '@/components/common/services/languageService'
 import { getCommonLabels } from '@/components/common/dataDefinitions/labels'
 import { getAlerts } from '@/components/common/dataDefinitions/alerts'
+import FilesMixin from './FilesMixin'
 
 export default {
   mixins: [FilesMixin],
