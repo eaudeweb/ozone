@@ -817,7 +817,7 @@ button img.icon {
 // }
 
 .aside-menu {
-  z-index: 1041;
+  z-index: 1037;
   .navbar-toggler-wrapper {
     position: absolute;
     right: 100%;
@@ -1539,7 +1539,7 @@ body .vdp-datepicker__calendar {
 }
 
 .app-footer {
-  z-index: 1040;
+  z-index: 1036;
   box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.34);
   border-top: none;
 }
@@ -1687,20 +1687,16 @@ html:not([dir="rtl"]) .sidebar-show.sidebar-fixed.sidebar-minimized .app-footer 
   margin-left: 120px;
 }
 
-#transition_modal___BV_modal_outer_ {
-  z-index: 1044 !important;
-}
-
 .sidebar {
   background-color: $dark-blue;
   height: 100%;
-  z-index: 1043 !important;
+  z-index: 1039 !important;
 }
 
 .sidebar-show .main::before {
   top: -55px;
   height: calc(100% + 55px);
-  z-index: 1042;
+  z-index: 1038;
 }
 
 @media (max-width: 1050px) {
@@ -1989,5 +1985,9 @@ span.cog:after {
     color: #f04d29;
     font-size: 1.8rem;
     opacity: 1;
+  }
+
+  .modal-body {
+    overflow: auto;
   }
 }
