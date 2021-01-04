@@ -8,7 +8,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0044_submission_info_multi_email'),
+        ('core', '0045_blend_is_contained_in_polyols'),
     ]
 
     operations = [
