@@ -55,6 +55,7 @@ const getMessage = (message, prefix = '') => {
   if (typeof message === 'string') {
     return `${prefix}${message}`
   }
+  return ''
 }
 
 const getLevel2PropertyValue = (obj, level2PropertyKey) => {
