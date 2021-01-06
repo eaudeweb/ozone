@@ -15,7 +15,7 @@ export default {
     },
     getUseCategories(useCategories = []) {
       return useCategories.filter(
-        category => category.quantity > 0
+        category => category.quantity !== 0
       )
     }
   }
