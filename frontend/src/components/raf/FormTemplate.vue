@@ -342,10 +342,14 @@
                 :fieldInfo="{index:modal_data.index,tabName: tabName, field: country, party:country.party}"
                 :field="country"
                 :disabled="!canEditSubstanceData"
+                :allowDelete="country.party !== 9999"
+                @onDelete="$store.commit('removeFormField', {
+                  index: modal_data.index,
+                  tabName: tabName,
+                  fieldName: 'imports',
+                  fieldIndex: modal_data.field.imports.indexOf(country)
+                })"
               />
-            </b-col>
-            <b-col cols="1" class="d-flex align-items-center">
-                <i v-if="country.party !== 9999" class="fa fa-trash fa-lg cursor-pointer" @click="$store.commit('removeFormField', { index: modal_data.index, tabName: tabName, fieldName: 'imports', fieldIndex: modal_data.field.imports.indexOf(country)})"></i>
             </b-col>
           </b-row>
           <hr>
@@ -372,13 +376,17 @@
               <b-col cols="5">{{$store.state.initialData.display.criticalUseCategoryList[category.critical_use_category]}}</b-col>
               <b-col>
                 <fieldGenerator
-                  :fieldInfo="{ index:modal_data.index,tabName: tabName, field: category, category: category.critical_use_category }"
+                  :fieldInfo="{ index: modal_data.index, tabName: tabName, field: category, category: category.critical_use_category }"
                   :field="category"
                   :disabled="!canEditSubstanceData"
+                  :allowDelete="idOfOtherCategory != category.critical_use_category"
+                  @onDelete="$store.commit('removeFormField', {
+                    index: modal_data.index,
+                    tabName: tabName,
+                    fieldName: 'use_categories',
+                    fieldIndex: modal_data.field.use_categories.indexOf(category)
+                  })"
                 />
-              </b-col>
-              <b-col cols="1">
-                  <i v-if="idOfOtherCategory != category.critical_use_category" class="fa fa-trash fa-lg cursor-pointer d-flex align-items-center" @click="$store.commit('removeFormField', { index: modal_data.index, tabName: tabName, fieldName: 'use_categories', fieldIndex: modal_data.field.use_categories.indexOf(category)})"></i>
               </b-col>
             </b-row>
           <hr>
