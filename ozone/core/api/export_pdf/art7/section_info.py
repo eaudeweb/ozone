@@ -128,9 +128,9 @@ def get_submission_info_diff(info, previous_info):
     address_country = None
     previous_address_country = None
     if info.country and info.country.name != info.submission.party.name:
-        address_country = info.country_name
+        address_country = info.country.name
     if previous_info.country and previous_info.country.name != previous_info.submission.party.name:
-        previous_address_country = previous_info.country_name
+        previous_address_country = previous_info.country.name
 
     return (
         reporters,
