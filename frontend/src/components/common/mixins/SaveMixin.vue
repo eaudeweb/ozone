@@ -64,7 +64,12 @@ export default {
     },
     updateEditMode(edit_mode) {
       this.$store.commit('updateEditMode', edit_mode)
-      this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode } })
+      try {
+        if (JSON.parse(this.$route.query.edit_mode) !== edit_mode) {
+          this.$router.push({ name: this.$route.name, query: { submission: this.submission, edit_mode } })
+        }
+      // eslint-disable-next-line no-empty
+      } catch (error) {}
     },
     validation() {
       this.invalidTabs = []
@@ -146,7 +151,7 @@ export default {
       //  This can be reimplemented in every component
       this.tabsToSave = []
       const doNotSave = []
-      this.updateEditMode(false)
+      // this.updateEditMode(false)
       Object.values(this.form.tabs).filter(tab => tab.hasOwnProperty('form_fields') && tab.hasOwnProperty('endpoint_url')).forEach(async tab => {
         if (this.form.tabs.questionaire_questions && this.form.tabs.questionaire_questions.form_fields) {
           if ( //  Tabs that are in questionaire_questions and are set to YES OR NO
