@@ -1,6 +1,9 @@
 import fromExponential from 'from-exponential/dist/index.min.js'
 import { Decimal } from 'decimal.js'
 
+const isObject = (value) => !!(value && typeof value === 'object' && value.constructor === Object)
+const isNumber = (n) => !isNaN(parseFloat(n)) && isFinite(n)
+
 const filterObject = (obj, predicate) => {
   const result = {}
   for (const key in obj) {
@@ -29,6 +32,30 @@ const getObjectValue = (path, obj) => {
   }, obj || self)
 
   return result
+}
+
+const getMessage = (message, prefix = '') => {
+  if (Array.isArray(message)) {
+    return message.map(item => {
+      if (Array.isArray(item)) {
+        return getMessage(item, prefix)
+      }
+      if (isObject(item)) {
+        return Object.keys(item).map(key => getMessage(item[key], `${prefix}[${key}] `)).join('<br/>')
+      }
+      if (typeof item === 'string') {
+        return `${prefix}${item}`
+      }
+      return null
+    }).filter(item => item).join('<br/>')
+  }
+  if (isObject(message)) {
+    return Object.keys(message).map(key => getMessage(message[key], `${prefix}[${key}] `)).filter(item => item).join('<br/>')
+  }
+  if (typeof message === 'string') {
+    return `${prefix}${message}`
+  }
+  return ''
 }
 
 const getLevel2PropertyValue = (obj, level2PropertyKey) => {
@@ -65,8 +92,6 @@ const debounce = (func, wait, immediate) => {
   }
 }
 
-const isObject = (value) => !!(value && typeof value === 'object' && value.constructor === Object)
-
 const pushUnique = (array, item) => {
   if (!array) {
     return
@@ -93,8 +118,6 @@ const getPropertyValue = (obj, propertyPath) => {
 
   return getObjectValue(propertyPath, obj)
 }
-
-const isNumber = (n) => !isNaN(parseFloat(n)) && isFinite(n)
 
 const sortAscending = (array, propertyName) => {
   if (!Array.isArray(array)) {
@@ -177,6 +200,7 @@ const escapeHTML = (html) => {
 export {
   filterObject,
   getObjectValue,
+  getMessage,
   getLevel2PropertyValue,
   isObject,
   pushUnique,

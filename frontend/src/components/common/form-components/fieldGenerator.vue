@@ -21,6 +21,7 @@
         :type="field.type ==='number' ? 'text' : field.type"
       >
     </div>
+
     <Datepicker
       input-class="form-control"
       :disabled="disabled"
@@ -68,6 +69,7 @@
       v-else-if="field.type === 'checkbox'"
       v-model="currentTyping"
     ></b-form-checkbox>
+
     <div v-else-if="field.type === 'select'">
       <multiselect
         :placeholder="$gettext('Select option')"
@@ -81,6 +83,7 @@
         :options="fieldOptions"
       />
     </div>
+
     <textarea
       :id="fieldInfo ? fieldInfo.field : ''"
       @change="updateFormField"
@@ -94,18 +97,25 @@
       <li v-for="(item, id) in field.selected" :key="id">{{item}}</li>
     </ul>
 
-    <input
-      v-if="isMultipleField"
-      :id="fieldInfo ? fieldInfo.field : ''"
-      @keyup="validateInput"
-      :disabled="disabled"
-      autocomplete="off"
-      @change="updateFormFieldMultiple"
-      actual_type="number"
-      class="form-control"
-      v-model="currentTyping"
-      type="text"
-    >
+    <div v-if="isMultipleField" :style="{ display: 'flex', alignItems: 'center' }">
+      <input
+        :id="fieldInfo ? fieldInfo.field : ''"
+        @keyup="validateInput"
+        :disabled="disabled"
+        autocomplete="off"
+        @change="updateFormFieldMultiple"
+        actual_type="number"
+        class="form-control"
+        v-model="currentTyping"
+        type="text"
+      >
+      <i v-if="allowDelete" class="fa fa-trash fa-lg cursor-pointer" :style="{ margin: '0 15px' }" @click="() => {
+        currentTyping = null
+        updateFormFieldMultiple()
+        this.$emit('onDelete')
+      }"></i>
+    </div>
+
     <i v-if="icon" :class="[icon.fa, 'field-icon']" v-b-tooltip:hover="icon.tooltip" @click="$emit('icon-clicked')"></i>
   </div>
 </template>
@@ -120,6 +130,7 @@ export default {
   props: {
     field: Object,
     disabled: { type: Boolean, default: () => false },
+    allowDelete: { type: Boolean, default: () => false },
     fieldInfo: Object,
     id: String,
     icon: Object

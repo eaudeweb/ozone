@@ -177,7 +177,7 @@ export default {
         if (!doNotSave.includes(tab.name)) {
           const url = this.$store.state.current_submission[tab.endpoint_url]
           if (this.tabsToSave.includes(tab.name)) {
-            await this.submitData(tab, url)
+            await this.submitData(this.getData(tab), url)
           } else {
             url && await this.submitData(tab, url)
           }
@@ -329,6 +329,9 @@ export default {
         }
         resolve()
       })
+    },
+    getData(tab) {
+      return tab
     },
     checkIfThereIsAnotherActionToDoBeforeReturning(tabName) {
       this.tabsToSave = this.tabsToSave.filter(t => t !== tabName)
