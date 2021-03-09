@@ -38,8 +38,8 @@
           ref="table"
         >
 
-          <template v-for="field in tableFields" v-slot:[`head(${field.key})`]="field">
-            <div :style="`width: ${field.width ? field.width + 'px' : 'auto'}`" v-html="field.label" :key="field.key"></div>
+          <template #head()="data">
+            <div :style="{width: data.field.width ? `${data.field.width}px` : 'auto'}" :class="data.class" v-html="data.label"></div>
           </template>
 
           <template v-slot:thead-top>
@@ -68,6 +68,7 @@
           <template v-slot:cell(group)="cell">
             <div class="group-cell">{{cell.item.group}}</div>
           </template>
+
           <template v-slot:cell(substance)="cell">
             <div class="substance-blend-cell">{{cell.item.substance}}</div>
           </template>
@@ -267,9 +268,10 @@
           :filter="tableFII.filters.search"
           ref="tableFII"
         >
-          <template v-for="field in tableFieldsFII" v-slot:[`head(${field.key})`]="field">
-            <div :style="`width: ${field.width ? field.width + 'px' : 'auto'}`" v-html="field.label" :key="field.key"></div>
+          <template #head()="data">
+            <div :style="{width: data.field.width ? `${data.field.width}px` : 'auto'}" :class="data.class" v-html="data.label"></div>
           </template>
+
           <template v-slot:thead-top>
             <tr class="first-header">
               <th
@@ -491,9 +493,10 @@
           :filter="tableBlends.filters.search"
           ref="tableBlends"
         >
-          <template v-for="field in tableFieldsBlends" v-slot:[`head(${field.key})`]="field">
-            <div :style="`width: ${field.width ? field.width + 'px' : 'auto'}`" v-html="field.label" :key="field.key"></div>
+          <template #head()="data">
+            <div :style="{width: data.field.width ? `${data.field.width}px` : 'auto'}" :class="data.class" v-html="data.label"></div>
           </template>
+
           <template v-slot:thead-top>
             <tr class="first-header">
               <th
@@ -1066,6 +1069,7 @@ export default {
         tableHeaders.push({
           key: element.name,
           label: element.label,
+          width: element.width,
           ...options
         })
       })

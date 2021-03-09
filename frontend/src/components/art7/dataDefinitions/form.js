@@ -91,22 +91,20 @@ const getFormArt7 = ($gettext) => {
         section_subheaders: [
           {
             label: `(1a) ${$gettext('Annex <br> Group')}`,
-            name: 'group',
-            width: 72
+            name: 'group'
           },
           {
             label: `(1b) <br> ${$gettext('Substance')}`,
-            name: 'substance',
-            width: 95
+            name: 'substance'
           },
           {
             label: `(2) ${$gettext('Destination country/<br>region/territory')}`,
-            name: 'destination_party',
-            width: 190
+            name: 'destination_party'
           },
           {
             label: `(3) <br> ${$gettext('New')}`,
-            name: 'quantity_total_new'
+            name: 'quantity_total_new',
+            width: 150
           },
           {
             label: `(4) ${$gettext('Recovered <br> and reclaimed')}`,
@@ -122,7 +120,8 @@ const getFormArt7 = ($gettext) => {
           },
           {
             label: `(7) <br> ${$gettext('Decision / type of use or remark')}`,
-            name: 'decision_exempted'
+            name: 'decision_exempted',
+            width: 200
           },
           {
             label: `<br> ${$gettext('Actions')}`,
@@ -229,22 +228,20 @@ const getFormArt7 = ($gettext) => {
         blend_substance_headers: ['substance', 'percent', 'quantity_total_new', 'quantity_total_recovered', 'quantity_feedstock', 'quantity_exempted'],
         section_subheaders: [{
           name: 'group',
-          label: `(1) ${$gettext('Annex <br> Group')}`,
-          width: 72
+          label: `(1) ${$gettext('Annex <br> Group')}`
         },
         {
           name: 'substance',
-          label: `(2a) ${$gettext('Substance')}`,
-          width: 95
+          label: `(2a) ${$gettext('Substance')}`
         },
         {
           name: 'source_party',
-          label: `(2b) ${$gettext('Exporting country<br>/region/territory')}`,
-          width: 180
+          label: `(2b) ${$gettext('Exporting country<br>/region/territory')}`
         },
         {
           label: `(3) <br> ${$gettext('New')}`,
-          name: 'quantity_total_new'
+          name: 'quantity_total_new',
+          width: 150
         },
         {
           label: `(4) <br> ${$gettext('Recovered and reclaimed')}`,
@@ -260,7 +257,8 @@ const getFormArt7 = ($gettext) => {
         },
         {
           label: `(7) <br> ${$gettext('Decision / type of use or remark')}`,
-          name: 'decision_exempted'
+          name: 'decision_exempted',
+          width: 200
         },
         {
           label: `<br> ${$gettext('Actions')}`,
@@ -351,22 +349,21 @@ const getFormArt7 = ($gettext) => {
         section_subheaders: [
           {
             name: 'group',
-            label: `(1) ${$gettext('Annex<br>Group')}`,
-            width: 72
+            label: `(1) ${$gettext('Annex<br>Group')}`
           },
           {
             label: `(2) <br> ${$gettext('Substance')}`,
-            name: 'substance',
-            width: 95
+            name: 'substance'
           },
           {
             label: `(3) <br> ${$gettext('Total production for all uses')}`,
             name: 'quantity_total_produced',
-            width: 180
+            width: 150
           },
           {
             label: `(4) <br> ${$gettext('Production for feedstock uses within your country')}`,
-            name: 'quantity_feedstock'
+            name: 'quantity_feedstock',
+            width: 150
           },
           {
             label: `(5) <br> ${$gettext('Quantity')}`,
@@ -374,7 +371,8 @@ const getFormArt7 = ($gettext) => {
           },
           {
             label: `(6) <br> ${$gettext('Decision / type of use')}`,
-            name: 'decision_exempted'
+            name: 'decision_exempted',
+            width: 200
           },
           {
             label: `(7) <br> ${$gettext('Production for BDN for A5 Parties')}`,
@@ -455,11 +453,13 @@ const getFormArt7 = ($gettext) => {
             },
             {
               label: `(3) <br> ${$gettext('Captured for all uses')}`,
-              name: 'quantity_total_produced'
+              name: 'quantity_total_produced',
+              width: 150
             },
             {
               label: `(4a) <br> ${$gettext('Captured for feedstock uses within your country')}`,
-              name: 'quantity_feedstock'
+              name: 'quantity_feedstock',
+              width: 150
             },
             {
               label: `(4b) <br> ${$gettext('Captured for destruction')}`,
@@ -471,7 +471,8 @@ const getFormArt7 = ($gettext) => {
             },
             {
               label: `(6) <br> ${$gettext('Decision / type of use')}`,
-              name: 'decision_exempted'
+              name: 'decision_exempted',
+              width: 200
             },
             {
               label: `(8) <br> ${$gettext('Actions')}`,
