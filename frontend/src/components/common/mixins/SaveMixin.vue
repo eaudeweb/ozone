@@ -144,7 +144,6 @@ export default {
       } else {
         this.prepareCommentsForSave()
         this.prepareDataForSave()
-        console.log('HERE SAVING....')
       }
     },
 
