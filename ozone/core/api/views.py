@@ -72,6 +72,7 @@ from ..models import (
     ProdCons,
     ProdConsMT,
     Limit,
+    ActualBaselineAndLimit,
     Email,
     EmailTemplate,
     CriticalUseCategory,
@@ -734,7 +735,10 @@ def filter_eu_items(field, items_list, exclude_eu_and_members):
 
 
 def populate_aggregation(
-        aggregation, mt, fields, to_add, exclude_eu_and_members
+        aggregation, mt,
+        prodcons_fields, prodcons_to_add,
+        baseline_limit_fields, baseline_limit_to_add,
+        exclude_eu_and_members
     ):
     """
     Helper function to populate an aggregation dictionary's fields based on a
@@ -751,16 +755,22 @@ def populate_aggregation(
     # null, then the sum of all values is considered null.
     limit_fields = ('limit_prod', 'limit_cons')
 
-    for field in fields:
-        # A null value in any limit field means that the sum of all
-        # values for that field across an aggregation should be null
-        # (because null means no limits)
-        if field in limit_fields:
-            aggregation[field] = (
-                None if any([a[field] is None for a in to_add]) else
-                rounding_method(sum([a[field] for a in to_add]))
-            )
-        else:
+    for fields, to_add in (
+        (prodcons_fields, prodcons_to_add),
+        (baseline_limit_fields, baseline_limit_to_add)
+    ):
+        for field in fields:
+            # A null value in any limit field means that the sum of all
+            # values for that field across an aggregation should be null
+            # (because null means no limits)
+            if field in limit_fields:
+                aggregation[field] = (
+                    None if any([a[field] is None for a in to_add]) else
+                    rounding_method(sum([a[field] for a in to_add]))
+                )
+                continue
+
+            #TODO: is it correct to not perform filtering for limit-fields???
             filtered_to_add = list(
                 filter_eu_items(
                     field, to_add, exclude_eu_and_members
@@ -862,6 +872,8 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
 
         # All decimal fields need to be retrieved from DB
         fields = self.model_class.decimal_fields()
+        # Baseline and limit fields are taken from proper model
+        baseline_limit_fields = ActualBaselineAndLimit.decimal_fields()
         # Using `distinct()` does not work because this queryset is
         # ordered by fields from related models, which makes similar
         # values seem distinct.
@@ -871,13 +883,47 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
         groups = set(
             queryset.values_list(self.group_field, flat=True)
         )
-        parties = set(queryset.values_list('party', flat=True))
+        parties = set(
+            queryset.values_list('party', flat=True)
+        )
         all_values = queryset.values(
             'id',
             *fields,
             'party', 'reporting_period', self.group_field,
             *grouping_mapping.values()
         )
+
+        if self.mt is False:
+            # There are no baselines and limits displayed for MT aggregations.
+            baseline_limit_queryset = ActualBaselineAndLimit.objects.filter(
+                party=F('party__parent_party')
+            ).select_related(
+                'party__subregion__region'
+            )
+            # Filter the ActualBaselineAndLimit with the same filters as the
+            # ProdCons ones!
+            baseline_limit_queryset = self.filter_queryset(
+                baseline_limit_queryset
+            )
+            periods = periods | set(
+                baseline_limit_queryset.values_list(
+                    'reporting_period', flat=True
+                )
+            )
+            groups = groups | set(
+                baseline_limit_queryset.values_list(self.group_field, flat=True)
+            )
+            parties = parties | set(
+                baseline_limit_queryset.values_list('party', flat=True)
+            )
+            all_baseline_limit_values = baseline_limit_queryset.values(
+                'id',
+                *baseline_limit_fields,
+                'party', 'reporting_period', 'group',
+                # Grouping mapping fields are needed to be able to apply the
+                # same filters and groupings as for ProdCons.
+                *grouping_mapping.values()
+            )
 
         # Field names that will be used for grouping, based on the 'group_by'
         # parameter
@@ -891,6 +937,10 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
         values_dict = {period: [] for period in periods}
         for value in all_values:
             values_dict[value['reporting_period']].append(value)
+        if self.mt is False:
+            baseline_values_dict = {period: [] for period in periods}
+            for value in all_baseline_limit_values:
+                baseline_values_dict[value['reporting_period']].append(value)
 
         if aggregates and 'party' in aggregates:
             exclude_eu_and_members = True
@@ -905,11 +955,20 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
             filtered_values = filter_aggregated_data_by_grouping(
                 grouping_fields, values_for_period
             )
+            if self.mt is False:
+                baseline_values_for_period = baseline_values_dict.get(period, [])
+                baseline_filtered_values = filter_aggregated_data_by_grouping(
+                    grouping_fields, baseline_values_for_period
+                )
+            else:
+                baseline_filtered_values = dict()
+
             for key in filtered_values.keys():
                 # We must construct an aggregation for each key-value item
                 # in the filtered_values dictionary
                 grouping_fields_values = dict(zip(grouping_fields, key))
-                to_add = filtered_values[key]
+                to_add = filtered_values.get(key, [])
+                baseline_limit_to_add = baseline_filtered_values.get(key, [])
                 params_dict = {
                     key: grouping_fields_values.get(value, None)
                     for key, value in grouping_mapping.items()
@@ -925,7 +984,9 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
                         **params_dict
                     })
                     populate_aggregation(
-                        aggregation, self.mt, fields, to_add,
+                        aggregation, self.mt,
+                        fields, to_add,
+                        baseline_limit_fields, baseline_limit_to_add,
                         exclude_eu_and_members
                     )
                     values.append(aggregation)
@@ -936,6 +997,10 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
                             if value[self.group_field] == group
                         ]
                         if entries:
+                            baseline_limit_entries = [
+                                value for value in baseline_limit_to_add
+                                if value['group'] == group
+                            ]
                             aggregation = dict({
                                 'group': group,
                                 'reporting_period': period,
@@ -943,7 +1008,9 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
                                 **params_dict
                             })
                             populate_aggregation(
-                                aggregation, self.mt, fields, entries,
+                                aggregation, self.mt,
+                                fields, entries,
+                                baseline_limit_fields, baseline_limit_entries,
                                 exclude_eu_and_members
                             )
                             values.append(aggregation)
@@ -953,6 +1020,10 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
                         entries[value['party']].append(value)
                     for party in parties:
                         if entries.get(party, []):
+                            baseline_limit_entries = [
+                                value for value in baseline_limit_to_add
+                                if value['party'] == party
+                            ]
                             aggregation = dict({
                                 'party': party,
                                 'reporting_period': period,
@@ -960,7 +1031,9 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
                                 **params_dict
                             })
                             populate_aggregation(
-                                aggregation, self.mt, fields, entries[party],
+                                aggregation, self.mt,
+                                fields, entries[party],
+                                baseline_limit_fields, baseline_limit_entries,
                                 exclude_eu_and_members
                             )
                             values.append(aggregation)
@@ -991,6 +1064,8 @@ class AggregationViewSet(viewsets.ReadOnlyModelViewSet):
                                 populate_aggregation(
                                     aggregation, self.mt,
                                     fields, entries[(party, group)],
+                                    # no baseline/limit data for MT aggregations
+                                    [], [],
                                     exclude_eu_and_members
                                 )
                                 values.append(aggregation)
@@ -1181,7 +1256,11 @@ class AggregationDestructionViewSet(AggregationViewSet):
                         **params_dict
                     })
                     populate_aggregation(
-                        aggregation, self.mt, ['destroyed',], to_add,
+                        aggregation, self.mt,
+                        ['destroyed'], to_add,
+                        # no baseline/limit data included in destruction
+                        # aggregations.
+                        [], [],
                         exclude_eu_and_members
                     )
                     values.append(aggregation)
@@ -1210,7 +1289,11 @@ class AggregationDestructionViewSet(AggregationViewSet):
                                 **params_dict
                             })
                             populate_aggregation(
-                                aggregation, self.mt, ['destroyed',], entries,
+                                aggregation, self.mt,
+                                ['destroyed'], entries,
+                                # no baseline/limit data included in destruction
+                                # aggregations
+                                [], [],
                                 exclude_eu_and_members
                             )
                             values.append(aggregation)

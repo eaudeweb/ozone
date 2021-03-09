@@ -1,6 +1,8 @@
 import enum
 import decimal
 import re
+from datetime import datetime
+
 from django.core.validators import validate_email
 
 
@@ -24,6 +26,34 @@ class RatificationTypes(enum.Enum):
     RATIFICATION = 'Ratification'
     SUCCESSION = 'Succession'
     SIGNING = 'Signing'
+
+
+class DecimalRoundingRules:
+    special_cases_2009 = [
+        'CD', 'CG', 'DZ', 'EC', 'ER', 'GQ', 'GW', 'HT', 'LC', 'MA', 'MK',
+        'MZ', 'NE', 'NG', 'SZ', 'FJ', 'PK', 'PH'
+    ]
+    special_cases_2010 = [
+        'DZ', 'EC', 'ER', 'HT', 'LC', 'LY', 'MA', 'NG', 'PE', 'SZ', 'TR',
+        'YE', 'FJ', 'PK', 'PH'
+    ]
+
+    @classmethod
+    def get_decimals(cls, period, group, party):
+        """
+        Returns the number of decimals according to the following
+        rounding rules.
+        """
+        if group and group.group_id == 'CI':
+            if (
+                period.start_date >= datetime.strptime('2011-01-01', "%Y-%m-%d").date()
+                or period.name == '2009' and party.abbr in cls.special_cases_2009
+                or period.name == '2010' and party.abbr in cls.special_cases_2010
+            ):
+                return 2
+        if group and group.group_id == 'F':
+            return 0
+        return 1
 
 
 def model_to_dict(instance, fields=None, exclude=None):
