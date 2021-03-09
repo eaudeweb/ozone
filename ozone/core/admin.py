@@ -61,6 +61,7 @@ from .models import (
     ControlMeasure,
     Baseline,
     Limit,
+    ActualBaselineAndLimit,
     PartyRatification,
     PartyDeclaration,
     Nomination,
@@ -823,6 +824,23 @@ class LimitAdmin(admin.ModelAdmin):
         'group', 'limit_type',
         ('reporting_period__name', custom_title_dropdown_filter('period')),
         ('party', MainPartyFilter)
+    )
+    search_fields = ['party__name', 'party__abbr']
+
+
+@admin.register(ActualBaselineAndLimit)
+class ActualBaselineAndLimitAdmin(admin.ModelAdmin):
+    list_display = (
+        'party', 'group', 'reporting_period',
+        'is_article5', 'is_eu_member',
+        'baseline_prod', 'baseline_cons', 'baseline_bdn',
+        'limit_prod', 'limit_cons', 'limit_bdn',
+    )
+    list_filter = (
+        'group',
+        ('reporting_period__name', custom_title_dropdown_filter('period')),
+        ('party', MainPartyFilter),
+        'is_article5', 'is_eu_member',
     )
     search_fields = ['party__name', 'party__abbr']
 
