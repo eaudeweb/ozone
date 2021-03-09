@@ -320,6 +320,10 @@ export default {
         type: 'textarea',
         selected: ''
       },
+      derived_substance_data: {
+        type: 'select',
+        selected: []
+      },
       get validation() {
         const errors = []
         if (this.skipValidation === 0) {

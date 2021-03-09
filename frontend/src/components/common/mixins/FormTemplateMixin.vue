@@ -120,23 +120,27 @@ export default {
     },
     tableItemsBlends() {
       const tableFields = []
-      this.tab_info.form_fields.forEach(form_field => {
+      if (this.tab_info.form_fields[3]) {
+        console.log(this.getMixtureComposition(this.tab_info.form_fields[3].derived_substance_data.selected))
+      }
+      this.tab_info.form_fields.filter(
+        form_field => form_field.blend.selected
+      ).forEach(form_field => {
         const tableRow = {}
         Object.keys(form_field).forEach(key => {
-          if (form_field.blend.selected) {
-            if (this.typeOfDisplayObj[key]) {
-              if (this.typeOfDisplayObj[key] === 'blends') {
-                tableRow[key] = this.tab_data.display[
-                  this.typeOfDisplayObj[key]
-                ][form_field[key].selected].name
-              } else {
-                tableRow[key] = this.tab_data.display[
-                  this.typeOfDisplayObj[key]
-                ][form_field[key].selected]
-              }
+          if (this.typeOfDisplayObj[key]) {
+            if (this.typeOfDisplayObj[key] === 'blends') {
+              const blend = this.tab_data.display[
+                this.typeOfDisplayObj[key]
+              ][form_field[key].selected] || {}
+              tableRow[key] = blend.name || form_field[key].selected
             } else {
-              tableRow[key] = form_field[key].selected
+              tableRow[key] = this.tab_data.display[
+                this.typeOfDisplayObj[key]
+              ][form_field[key].selected]
             }
+          } else {
+            tableRow[key] = form_field[key].selected
           }
         })
         if (Object.keys(tableRow).length) {
@@ -288,6 +292,22 @@ export default {
 
     getGroupBySubstance(value) {
       return this.tab_data.substances.find(g => value === g.value).group.group_id
+    },
+
+    getBlendType(selectedBlendId) {
+      const selectedBlend = this.tab_data.blends.find(blend => selectedBlendId === blend.id)
+      if (!selectedBlend) return 'Unknown'
+      return selectedBlend.type
+    },
+
+    getMixtureComposition(mixture) {
+      const totalNewQuantity = mixture.map(substance => substance.quantity_total_new).reduce((a, b) => a + b)
+
+      return mixture.map(substance => ({
+        component_name: substance.substance,
+        percentage: substance.quantity_total_new / totalNewQuantity,
+        substance: this.tab_data.substances.find(tabDataSubstance => tabDataSubstance.text === substance.substance).value
+      })).sort((a, b) => b.percentage - a.percentage)
     },
 
     expandedStatus(status) {
