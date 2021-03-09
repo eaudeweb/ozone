@@ -120,9 +120,6 @@ export default {
     },
     tableItemsBlends() {
       const tableFields = []
-      if (this.tab_info.form_fields[3]) {
-        console.log(this.getMixtureComposition(this.tab_info.form_fields[3].derived_substance_data.selected))
-      }
       this.tab_info.form_fields.filter(
         form_field => form_field.blend.selected
       ).forEach(form_field => {
@@ -139,7 +136,7 @@ export default {
                 this.typeOfDisplayObj[key]
               ][form_field[key].selected]
             }
-          } else {
+          } else if (form_field[key]) {
             tableRow[key] = form_field[key].selected
           }
         })
@@ -301,7 +298,7 @@ export default {
     },
 
     getMixtureComposition(mixture) {
-      const totalNewQuantity = mixture.map(substance => substance.quantity_total_new).reduce((a, b) => a + b)
+      const totalNewQuantity = mixture.map(substance => substance.quantity_total_new).reduce((a, b) => a + b, 0)
 
       return mixture.map(substance => ({
         component_name: substance.substance,
