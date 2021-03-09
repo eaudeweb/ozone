@@ -531,11 +531,13 @@
               {{cell.item.blend}}
             </span>
           </template>
+
           <template v-slot:cell(type)="cell">
             <div
               class="group-cell"
-            >{{tab_data.blends.find(blend => cell.item.originalObj.blend.selected === blend.id).type}}</div>
+            >{{getBlendType(cell.item.originalObj.blend.selected)}}</div>
           </template>
+
           <template v-slot:[`cell(${getCountrySlot})`]="cell">
             <CloneField
               :key="`${cell.item.index}_${getCountrySlot}_${tabName}`"
@@ -656,35 +658,39 @@
           </template>
 
           <template v-slot:row-details="row">
-            <thead>
-              <tr>
-                <th
+            <table :style="{ width: '100%' }">
+              <thead>
+                <tr>
+                  <th
+                    class="small"
+                    v-for="(header, header_index) in tab_info.blend_substance_headers"
+                    :colspan="header.colspan"
+                    :key="header_index"
+                  >
+                    <span>{{labels[header]}}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
                   class="small"
-                  v-for="(header, header_index) in tab_info.blend_substance_headers"
-                  :colspan="header.colspan"
-                  :key="header_index"
+                  v-for="
+                    (substance, substance_index) in tab_data.display.blends[row.item.originalObj.blend.selected]
+                      ? tab_data.display.blends[row.item.originalObj.blend.selected].components
+                      : getMixtureComposition(row.item.originalObj.derived_substance_data.selected)"
+                  :key="substance_index"
                 >
-                  <span>{{labels[header]}}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                class="small"
-                v-for="(substance, substance_index) in tab_data.display.blends[row.item.originalObj.blend.selected].components"
-                :key="substance_index"
-              >
-                <td>{{substance.component_name}}</td>
-                <td>
-                  <b>{{(substance.percentage * 100).toPrecision(3)}}%</b>
-                </td>
-                <td v-for="(order, order_index) in blendSubstanceHeaders" :key="order_index">
-                  <!-- <span v-if="row.item[order]"> -->
-                  {{splitBlend(row.item[order], substance.percentage)}}
-                  <!-- </span> -->
-                </td>
-              </tr>
-            </tbody>
+
+                  <td>{{substance.component_name}}</td>
+                  <td>
+                    <b>{{(substance.percentage * 100).toPrecision(3)}}%</b>
+                  </td>
+                  <td v-for="(order, order_index) in blendSubstanceHeaders" :key="order_index">
+                    {{splitBlend(row.item[order], substance.percentage)}}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </template>
         </b-table>
       </div>
@@ -1064,13 +1070,11 @@ export default {
 
     tableFieldsFII() {
       const tableHeaders = []
-      const options = {}
       this.tab_info.special_headers.section_subheaders.forEach((element) => {
         tableHeaders.push({
           key: element.name,
           label: element.label,
-          width: element.width,
-          ...options
+          width: element.width
         })
       })
       return tableHeaders
