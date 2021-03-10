@@ -1,5 +1,6 @@
 // http://nightwatchjs.org/gettingstarted#settings-file
-
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable global-require */
 module.exports = {
   src_folders: ['tests/e2e/specs'],
   output_folder: 'tests/e2e/reports',
@@ -7,11 +8,11 @@ module.exports = {
 
   selenium: {
     start_process: true,
-    server_path: process.env.OZONE_NIGHTWATCH_LOCAL_SELENIUM_JAR || './node_modules/selenium-server/lib/runner/selenium-server-standalone-3.141.59.jar',
+    server_path: process.env.OZONE_NIGHTWATCH_LOCAL_SELENIUM_JAR || require('selenium-server').path,
     host: '127.0.0.1',
     port: 4444,
     cli_args: {
-      'webdriver.chrome.driver': process.env.OZONE_NIGHTWATCH_LOCAL_CHROMEDRIVER || './node_modules/chromedriver/lib/chromedriver/chromedriver'
+      'webdriver.chrome.driver': process.env.OZONE_NIGHTWATCH_LOCAL_CHROMEDRIVER || require('chromedriver').path
     }
   },
 

@@ -82,6 +82,8 @@ matrix:
         - nohup tusd_linux_amd64/tusd -upload-dir $TUSD_UPLOADS_DIR -hooks-http http://$BACKEND_HOST:$BACKEND_PORT/api/uploads/ &
         # Install frontend dependencies
         - cd frontend && npm install
+        - npm install --save-dev chromedriver
+        - npm install --save-dev selenium-server
       script:
         - npm run e2e
       after_success:
