@@ -12,7 +12,7 @@ module.exports = {
     port: 4444,
     cli_args: {
       'webdriver.chrome.driver': process.env.OZONE_NIGHTWATCH_LOCAL_CHROMEDRIVER || '/usr/lib/node_modules/webdriver-manager/selenium/chromedriver_76.0.3809.12'
-    },
+    }
   },
 
   test_settings: {
@@ -47,7 +47,7 @@ module.exports = {
           ]
         }
       },
-      skip_testcases_on_fail: false,
+      skip_testcases_on_fail: false
     }
   }
 }
