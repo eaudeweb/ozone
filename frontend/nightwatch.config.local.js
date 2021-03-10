@@ -7,11 +7,11 @@ module.exports = {
 
   selenium: {
     start_process: true,
-    server_path: process.env.OZONE_NIGHTWATCH_LOCAL_SELENIUM_JAR || '/usr/lib/node_modules/webdriver-manager/selenium/selenium-server-standalone-3.141.59.jar',
+    server_path: process.env.OZONE_NIGHTWATCH_LOCAL_SELENIUM_JAR || './node_modules/selenium-server/lib/runner/selenium-server-standalone-3.141.59.jar',
     host: '127.0.0.1',
     port: 4444,
     cli_args: {
-      'webdriver.chrome.driver': process.env.OZONE_NIGHTWATCH_LOCAL_CHROMEDRIVER || '/usr/lib/node_modules/webdriver-manager/selenium/chromedriver_76.0.3809.12'
+      'webdriver.chrome.driver': process.env.OZONE_NIGHTWATCH_LOCAL_CHROMEDRIVER || './node_modules/chromedriver/lib/chromedriver/chromedriver'
     }
   },
 
