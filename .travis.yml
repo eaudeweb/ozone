@@ -59,7 +59,7 @@ matrix:
       before_install:
         # Install nvm
         - sudo apt update --allow-unauthenticated
-        - sudo apt install -y wget tar
+        - sudo apt install -y wget tar unzip
         - wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
         - source ~/.bashrc
         # Install node
@@ -82,8 +82,9 @@ matrix:
         - nohup tusd_linux_amd64/tusd -upload-dir $TUSD_UPLOADS_DIR -hooks-http http://$BACKEND_HOST:$BACKEND_PORT/api/uploads/ &
         # Install frontend dependencies
         - cd frontend && npm install
-        - npm install --save-dev chromedriver
-        - npm install --save-dev selenium-server
+        - wget https://chromedriver.storage.googleapis.com/89.0.4389.23/chromedriver_linux64.zip
+        - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
+        - unzip chromedriver_linux64.zip
       script:
         - npm run e2e
       after_success:
