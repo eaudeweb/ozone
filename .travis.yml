@@ -82,7 +82,7 @@ matrix:
         - nohup tusd_linux_amd64/tusd -upload-dir $TUSD_UPLOADS_DIR -hooks-http http://$BACKEND_HOST:$BACKEND_PORT/api/uploads/ &
         # Install frontend dependencies
         - cd frontend && npm install
-        - wget https://chromedriver.storage.googleapis.com/89.0.4389.23/chromedriver_linux64.zip
+        - wget https://chromedriver.storage.googleapis.com/83.0.4103.39/chromedriver_linux64.zip
         - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
         - unzip chromedriver_linux64.zip
       script:
