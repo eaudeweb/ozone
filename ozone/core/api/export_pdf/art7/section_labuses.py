@@ -109,7 +109,7 @@ table_header = ((
     sm_c(_('Annex/Group')),
     sm_c(_('Substance name')),
     sm_c(_('Production')),
-    sm_c(_('Consumption')),
+    sm_c(_('Imports')),
     sm_c(_('Remarks')),
 ),)
 
