@@ -94,7 +94,7 @@ export default {
         { key: 'calculated_consumption', label: this.$gettext('Calculated'), class: 'text-right' },
         { key: 'limit_cons', label: this.$gettext('Limit'), class: 'text-right' },
         // { key: 'baseline_bdn', label: this.$gettext('Baseline') },
-        { key: 'production_article_5', label: this.$gettext('Calculated'), class: 'text-right' },
+        { key: 'production_article_5', label: this.$gettext('Reported'), class: 'text-right' },
         { key: 'limit_bdn', label: this.$gettext('Limit'), class: 'text-right' }
       ],
       items: [],
