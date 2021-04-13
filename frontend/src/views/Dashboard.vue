@@ -167,6 +167,7 @@
             </div>
             <b-table
               id="all-submissions-table"
+              no-sort-reset
               show-empty
               outlined
               bordered
@@ -351,7 +352,7 @@ export default {
       }, {
         key: 'party', label: this.$gettext('Party'), sortable: true, sortDirection: 'desc'
       }, {
-        key: 'revision', label: this.$gettext('Version'), sortable: true, sortDirection: 'desc'
+        key: 'revision', label: this.$gettext('Version'), sortDirection: 'desc'
       }, {
         key: 'current_state', label: this.$gettext('Status'), sortable: true
       }, {

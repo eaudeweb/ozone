@@ -68,7 +68,8 @@ const getCommonLabels = ($gettext) => {
       flag_has_reported_c3: $gettext('C/III'),
       flag_has_reported_e: $gettext('E/I'),
       flag_has_reported_f: $gettext('F')
-    }
+    },
+    recall_tooltip: $gettext('NB: Recalling is best used when the data is to be withdrawn because it is completely wrong or significantly different from the correct data, otherwise it is advisable to revise and correct the wrong aspects of the data.')
   }
   return labels
 }

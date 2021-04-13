@@ -27,6 +27,7 @@
 
       <!-- Table -->
       <b-table
+        no-sort-reset
         show-empty
         outlined
         bordered
@@ -215,10 +216,12 @@ export default {
       })
     },
     sortings(el) {
-      this.tableOptions.params.page = null
-      this.canRequest = false
-      this.tableOptions.params.ordering = el.sortDesc ? `-${el.sortBy}` : el.sortBy
-      this.getItems()
+      if (el.sortBy) {
+        this.tableOptions.params.page = null
+        this.canRequest = false
+        this.tableOptions.params.ordering = el.sortDesc ? `-${el.sortBy}` : el.sortBy
+        this.getItems()
+      }
     },
     onResetFilters() {
       const currentFilters = JSON.parse(JSON.stringify(this.selectedFilters))

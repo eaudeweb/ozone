@@ -77,14 +77,15 @@
         >
           <span v-translate>Submit</span>
         </b-btn>
-        <b-btn
+        <ButtonWithTooltip
+          :key="transition"
+          :tooltip="labels[`${transition}_tooltip`]"
+          :hasTooltip="!!labels[`${transition}_tooltip`]"
+          :label="labels[transition]"
           variant="outline-primary"
           v-for="transition in availableTransitions"
-          :key="transition"
           @click="currentTransition = transition"
-        >
-          <span>{{labels[transition]}}</span>
-        </b-btn>
+        />
         <b-btn
           @click="removeSubmission"
           id="delete-button"
@@ -116,6 +117,7 @@ import TabTitleWithLoader from '@/components/common/TabTitleWithLoader'
 import FormTemplate from '@/components/exemption/FormTemplate.vue'
 import TransitionQuestions from '@/components/exemption/TransitionQuestions'
 import { getAlerts } from '@/components/common/dataDefinitions/alerts'
+import ButtonWithTooltip from '@/components/common/ButtonWithTooltip'
 
 export default {
   components: {
@@ -126,7 +128,8 @@ export default {
     Save,
     TabTitleWithLoader,
     FormTemplate,
-    TransitionQuestions
+    TransitionQuestions,
+    ButtonWithTooltip
   },
   props: {
     data: null,

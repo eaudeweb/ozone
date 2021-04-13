@@ -18,7 +18,7 @@ import otherRoTableRowConstructor from '@/components/otherRo/services/tableRowCo
 
 const options = {
   position: 'bottom-left',
-  duration: 10000,
+  duration: 4000,
   theme: 'bulma'
 }
 const toasted = new Toasted(options)

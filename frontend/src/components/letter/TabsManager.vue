@@ -83,14 +83,15 @@
         >
           <span v-translate>Submit</span>
         </b-btn>
-        <b-btn
+        <ButtonWithTooltip
+          :key="transition"
+          :tooltip="labels[`${transition}_tooltip`]"
+          :hasTooltip="!!labels[`${transition}_tooltip`]"
+          :label="labels[transition]"
           variant="outline-primary"
           v-for="transition in availableTransitions"
-          :key="transition"
           @click="currentTransition = transition"
-        >
-          <span>{{labels[transition]}}</span>
-        </b-btn>
+        />
         <b-btn
           variant="outline-primary"
           @click="clone($route.query.submission)"
@@ -147,6 +148,7 @@ import { getLabels } from '@/components/art7/dataDefinitions/labels'
 import TabTitleWithLoader from '@/components/common/TabTitleWithLoader'
 import TransitionQuestions from '@/components/common/TransitionQuestions'
 import { getAlerts } from '@/components/common/dataDefinitions/alerts'
+import ButtonWithTooltip from '@/components/common/ButtonWithTooltip'
 
 export default {
   components: {
@@ -157,7 +159,8 @@ export default {
     Save,
     SubmissionHistory,
     TabTitleWithLoader,
-    TransitionQuestions
+    TransitionQuestions,
+    ButtonWithTooltip
   },
   props: {
     data: null,
